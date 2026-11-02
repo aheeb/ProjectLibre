@@ -454,8 +454,8 @@ public class CommonSpreadSheet extends CommonTable implements CacheListener, Sav
         	}else
         		comp=editorComp;
 
-    		if (comp instanceof KeyboardFocusable)
-    			((KeyboardFocusable)comp).selectAll(e == null);
+    		if (comp instanceof KeyboardFocusable) // typing into the cell must replace its text right away, not after the first keys
+    			((KeyboardFocusable)comp).selectAll(!(e instanceof MouseEvent));
 
     		else if (comp instanceof ChangeAwareTextField){
         		ChangeAwareTextField text=((ChangeAwareTextField)comp);
