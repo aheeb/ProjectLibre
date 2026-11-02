@@ -439,6 +439,9 @@ public class CommonSpreadSheet extends CommonTable implements CacheListener, Sav
 	}
     // edit triggered by click
     public boolean editCellAt(int row, int column, EventObject e){
+    	// shift/cmd-click extends or toggles the selection; opening an editor there fights with the range
+    	if (e instanceof MouseEvent && (((MouseEvent)e).isShiftDown() || ((MouseEvent)e).isControlDown() || ((MouseEvent)e).isMetaDown()))
+    		return false;
     	boolean b=super.editCellAt(row,column,e);
     	if (b&&editorComp!=null){
 //    		System.out.println("editing cell at " + row + " " + column);
@@ -451,8 +454,8 @@ public class CommonSpreadSheet extends CommonTable implements CacheListener, Sav
         	}else
         		comp=editorComp;
 
-    		if (comp instanceof KeyboardFocusable)
-    			((KeyboardFocusable)comp).selectAll(e == null);
+    		if (comp instanceof KeyboardFocusable) // typing into the cell must replace its text right away, not after the first keys
+    			((KeyboardFocusable)comp).selectAll(!(e instanceof MouseEvent));
 
     		else if (comp instanceof ChangeAwareTextField){
         		ChangeAwareTextField text=((ChangeAwareTextField)comp);

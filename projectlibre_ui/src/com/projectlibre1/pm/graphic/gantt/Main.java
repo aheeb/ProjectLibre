@@ -56,10 +56,12 @@
 package com.projectlibre1.pm.graphic.gantt;
 
 import java.awt.Frame;
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Locale;
 
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 
 import com.projectlibre1.pm.graphic.frames.ApplicationStartupFactory;
 import com.projectlibre1.pm.graphic.frames.MainFrameFactory;
@@ -75,8 +77,7 @@ public class Main {
 		System.setProperty("apple.awt.application.name","ProjectLibre");
 		System.setProperty("apple.laf.useScreenMenuBar","true");
 		Locale.setDefault(ConfigurationFile.getLocale());
-		com.projectlibre1.pm.graphic.laf.ModernLaf.install();
-		HashMap opts=ApplicationStartupFactory.extractOpts(args);
+		final HashMap opts=ApplicationStartupFactory.extractOpts(args);
 		String osName=System.getProperty("os.name").toLowerCase();
 		if (osName.startsWith("linux")){
 			String javaExec=ConfigurationFile.getRunProperty("JAVA_EXE");
@@ -110,9 +111,22 @@ public class Main {
 //			} catch (Exception e) {
 //			}
 //		}
-		ApplicationStartupFactory startupFactory=new ApplicationStartupFactory(opts); //put before to initialize standalone flag
-		Frame frame = MainFrameFactory.creareMainFrame(Messages.getContextString("Text.ApplicationTitle"), null, null);
-		boolean doWelcome = true; // to do see if project param exists in args
-		startupFactory.instanceFromNewSession(frame,doWelcome);
+		// Swing is single-threaded: build and show the UI on the event dispatch thread, not on main.
+		try {
+			SwingUtilities.invokeAndWait(new Runnable() {
+				public void run() {
+					com.projectlibre1.pm.graphic.laf.ModernLaf.install();
+					com.projectlibre1.pm.graphic.frames.ToolbarFocus.install();
+					ApplicationStartupFactory startupFactory=new ApplicationStartupFactory(opts); //put before to initialize standalone flag
+					Frame frame = MainFrameFactory.creareMainFrame(Messages.getContextString("Text.ApplicationTitle"), null, null);
+					boolean doWelcome = true; // to do see if project param exists in args
+					startupFactory.instanceFromNewSession(frame,doWelcome);
+				}
+			});
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+		} catch (InvocationTargetException e) {
+			e.getCause().printStackTrace();
+		}
 	}
 }

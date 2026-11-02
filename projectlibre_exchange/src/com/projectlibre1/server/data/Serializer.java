@@ -1256,6 +1256,10 @@ public class Serializer {
 
     	(new DistributionConverter()).substractDistributionFromProject(project);
 
+    	// Reconnecting dependencies and default assignments above flags the project as modified,
+    	// but a freshly read project matches what was read.
+    	project.setGroupDirty(false);
+
 
     	//distribution map
     	//project.updateDistributionMap();

@@ -56,11 +56,16 @@
 package com.projectlibre1.session;
 
 import java.awt.Component;
+import java.awt.Dialog;
+import java.awt.FileDialog;
+import java.awt.Frame;
+import java.awt.Window;
 import java.io.File;
 import java.util.prefs.Preferences;
 
 import javax.swing.Icon;
 import javax.swing.JFileChooser;
+import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileView;
 import javax.swing.UIManager;
@@ -86,6 +91,7 @@ public class FileHelper {
     	if (!Environment.getStandAlone()&&save&&selectedFileName!=null&&selectedFileName.endsWith("."+DEFAULT_FILE_EXTENSION)){
     		selectedFileName=changeFileExtension(selectedFileName,save?"xml":"mpp");
     	}
+    	if (Environment.isMac()) return chooseFileNameNative(save, selectedFileName, fileChooserParent);
 	JFileChooser fileChooser = getFileChooser();
 	fileChooser=setUpdateUI(fileChooser);
     	fileChooser.setDialogType(save?JFileChooser.SAVE_DIALOG:JFileChooser.OPEN_DIALOG);
@@ -195,6 +201,10 @@ public class FileHelper {
 			fileChooser.addChoosableFileFilter(projectFilter);
 		}
 
+		// adding a filter selects it; pick the sensible default explicitly
+		if (save) fileChooser.setFileFilter(Environment.getStandAlone()&&!microsoftXMLFilter.accept(fileChooser.getSelectedFile())?projectlibreFilter:microsoftXMLFilter);
+		else fileChooser.setFileFilter(projectFilter);
+
 		if (fileChooser.showDialog(fileChooserParent, null)!=JFileChooser.APPROVE_OPTION)
 			return null;
 		File file=fileChooser.getSelectedFile();
@@ -210,6 +220,35 @@ public class FileHelper {
 		Preferences.userNodeForPackage(FileHelper.class).put("lastDirectory",file.getParent());
 		return fileName;
     	
+    }
+
+    /**
+     * macOS: the native open/save panel (Finder sidebar, recent folders, tags, iCloud) instead of the Swing chooser.
+     * Open only enables project files; Save proposes a .pod name, and a name typed without a known
+     * extension gets .pod. Type a name ending in .xml to save as Microsoft Project XML.
+     */
+    private String chooseFileNameNative(boolean save, String selectedFileName, Component parent) {
+    	Window window = parent == null ? null : (parent instanceof Window ? (Window) parent : SwingUtilities.getWindowAncestor(parent));
+    	String title = Messages.getString(save ? "T_SAVE" : "T_OPEN_TXT");
+    	int mode = save ? FileDialog.SAVE : FileDialog.LOAD;
+    	FileDialog dialog = (window instanceof Dialog) ? new FileDialog((Dialog) window, title, mode) : new FileDialog((Frame) (window instanceof Frame ? window : null), title, mode);
+    	String directory = Preferences.userNodeForPackage(FileHelper.class).get("lastDirectory", System.getProperty("user.home"));
+    	if (selectedFileName != null) {
+    		File selected = new File(selectedFileName);
+    		if (selected.getParent() != null) directory = selected.getParent();
+    		String name = selected.getName();
+    		if (save && !isFileNameAllowed(name, true)) name = changeFileExtension(name, DEFAULT_FILE_EXTENSION); // e.g. an imported .mpp
+    		dialog.setFile(name);
+    	}
+    	if (new File(directory).isDirectory()) dialog.setDirectory(directory);
+    	if (!save) dialog.setFilenameFilter((dir, name) -> isFileNameAllowed(name, false));
+    	dialog.setVisible(true);
+    	if (dialog.getFile() == null) return null;
+    	File file = new File(dialog.getDirectory(), dialog.getFile());
+    	String fileName = file.getPath();
+    	if (save && !isFileNameAllowed(fileName, true)) fileName += "." + DEFAULT_FILE_EXTENSION;
+    	Preferences.userNodeForPackage(FileHelper.class).put("lastDirectory", file.getParent());
+    	return fileName;
     }
 
     public static boolean isFileNameAllowed(String fileName,boolean save) {

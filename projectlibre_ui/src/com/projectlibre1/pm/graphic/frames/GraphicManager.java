@@ -555,7 +555,7 @@ public class GraphicManager implements  FrameHolder, NamedFrameListener, WindowS
 			 			public void run() {
 			 				focusFirstTaskName();
 			 			}});
-			 	}
+			 	} else frame.focusActiveView(true); // an opened file: typing should go to the grid
 			}});
 		getMenuManager().setActionEnabled(ACTION_OPEN_PROJECT,frame==null || !frame.isEditingResourcePool()); //resource pool can not be opened at same time as another proj
 		return frame;
@@ -565,6 +565,10 @@ public class GraphicManager implements  FrameHolder, NamedFrameListener, WindowS
 		String tabId = getTabIdForProject(project);
 		DocumentFrame frame = (DocumentFrame) frameMap.get(project);
 		if (frame!=null){ //TODO why is it sometimes null? Well, in the case of opening a subproject it can be
+			// the modeless information dialogs would keep showing (and editing) objects of the closed project
+			if (taskInformationDialog != null) taskInformationDialog.setVisible(false);
+			if (resourceInformationDialog != null) resourceInformationDialog.setVisible(false);
+			if (projectInformationDialog != null && currentFrame == frame) projectInformationDialog.setVisible(false);
 
 			if (currentFrame == frame){
 		    	frame.setVisible(false);

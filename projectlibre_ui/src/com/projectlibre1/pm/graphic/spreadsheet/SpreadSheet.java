@@ -453,14 +453,19 @@ public class SpreadSheet extends CommonSpreadSheet implements Cloneable {
 				if (row < 0)
 					return;
 				CommonSpreadSheetModel model = (CommonSpreadSheetModel) getModel();
-				if (e.getKeyCode() == KeyEvent.VK_INSERT)
+				// consume Insert/Delete: otherwise JTable's auto-start-edit opens an editor on the row that
+				// takes the deleted one's place, and committing it blanked that task's name
+				if (e.getKeyCode() == KeyEvent.VK_INSERT) {
+					e.consume();
 					executeAction(MenuActionConstants.ACTION_NEW);
-				else if (e.getKeyCode() == KeyEvent.VK_DELETE)
+				} else if (e.getKeyCode() == KeyEvent.VK_DELETE) {
+					e.consume();
 					executeAction(MenuActionConstants.ACTION_DELETE);
-				else if (e.getKeyCode() == KeyEvent.VK_F3)
+				}
+				else if (e.getKeyCode() == KeyEvent.VK_F3 || (e.getKeyCode() == KeyEvent.VK_F && e.getModifiers()== KeyEvent.CTRL_MASK)) {
+					e.consume();
 					GraphicManager.getInstance().doFind(SpreadSheet.this,null);
-				else if (e.getKeyCode() == KeyEvent.VK_F && e.getModifiers()== KeyEvent.CTRL_MASK)
-					GraphicManager.getInstance().doFind(SpreadSheet.this,null);
+				}
 
 
 			}
@@ -731,7 +736,11 @@ public class SpreadSheet extends CommonSpreadSheet implements Cloneable {
 			if (l.isEmpty())
 				return;
 			if (!GeneralOption.getInstance().isConfirmDeletes() || Alert.okCancel(Messages.getString("Message.confirmDeleteRows"))) {
+				int row = getSelectedRow(), column = getSelectedColumn();
 				getCache().deleteNodes(l);
+				// keep a cell selected where the deleted rows were, so Delete can be pressed again or typing continues
+				if (row >= 0 && getSelectedRow() < 0 && getRowCount() > 0)
+					changeSelection(Math.min(row, getRowCount() - 1), Math.max(column, 0), false, false);
 			}
 		}
 	};

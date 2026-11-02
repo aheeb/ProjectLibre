@@ -372,8 +372,12 @@ public class MicrosoftImporter extends ServerFileImporter{
 		setProgress(0.9f);
 				
 		log.debug("about to initialize");		 //$NON-NLS-1$
-			if (project.getName() == null)
-				project.setName("error - name not set on import"); //$NON-NLS-1$
+			if (project.getName() == null || project.getName().trim().length() == 0) {
+				// many .mpp files have no project title; name the project after its file instead of leaving it blank
+				String baseName = (fileName == null) ? null : new java.io.File(fileName).getName();
+				if (baseName != null && baseName.lastIndexOf('.') > 0) baseName = baseName.substring(0, baseName.lastIndexOf('.'));
+				project.setName((baseName == null || baseName.length() == 0) ? "error - name not set on import" : baseName); //$NON-NLS-1$
+			}
 
 //			CalendarService.getInstance().renameImportedBaseCalendars(project.getName());
 			try {

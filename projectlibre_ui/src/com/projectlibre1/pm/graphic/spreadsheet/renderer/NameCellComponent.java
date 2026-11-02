@@ -106,6 +106,50 @@ public class NameCellComponent extends JPanel {
 	/**
 	 *
 	 */
+	/**
+	 * The shared renderer instance is only stamped by the table's CellRendererPane, which lays it out right
+	 * before painting it. Like DefaultTableCellRenderer it must not queue repaints or revalidations (of the
+	 * whole scroll pane) every time a row sets its text and icon: that cost an extra paint and layout pass
+	 * after every grid paint.
+	 */
+	protected boolean quiet = false;
+	public void revalidate() {
+		if (quiet) invalidate();
+		else super.revalidate();
+	}
+	public void repaint(long tm, int x, int y, int width, int height) {
+		if (!quiet) super.repaint(tm, x, y, width, height);
+	}
+	public void repaint(Rectangle r) {
+		if (!quiet) super.repaint(r);
+	}
+	static class QuietLabel extends JLabel {
+		QuietLabel() {
+		}
+		QuietLabel(ImageIcon icon) {
+			super(icon);
+		}
+		public void revalidate() {
+			invalidate();
+		}
+		public void repaint(long tm, int x, int y, int width, int height) {
+		}
+		public void repaint(Rectangle r) {
+		}
+	}
+	static class QuietFiller extends Box.Filler {
+		QuietFiller(Dimension strut) {
+			super(strut, strut, new Dimension(strut.width, Short.MAX_VALUE));
+		}
+		public void revalidate() {
+			invalidate();
+		}
+		public void repaint(long tm, int x, int y, int width, int height) {
+		}
+		public void repaint(Rectangle r) {
+		}
+	}
+
 	public NameCellComponent() {
 		this(new JLabel(""));
 	}
@@ -132,10 +176,10 @@ public class NameCellComponent extends JPanel {
 		fetchedLazyExpandedIcon = IconManager.getIcon("spreadsheet.fetchedLazyExpanded.icon");
 		fetchedLazyCollapsedIcon = IconManager.getIcon("spreadsheet.fetchedLazyCollapsed.icon");
 
-		filler = (Box.Filler) Box
-				.createHorizontalStrut(leafIcon.getIconWidth());
+		Dimension strut = new Dimension(leafIcon.getIconWidth(), 0);
+		filler = quiet ? new QuietFiller(strut) : (Box.Filler) Box.createHorizontalStrut(strut.width);
 		add(filler);
-		iconLabel = new JLabel(leafIcon);
+		iconLabel = quiet ? new QuietLabel(leafIcon) : new JLabel(leafIcon);
 		iconLabel.setAlignmentY(Component.CENTER_ALIGNMENT);
 		iconLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 		add(iconLabel);
@@ -274,8 +318,9 @@ public class NameCellComponent extends JPanel {
 			return editorComponent;
 		}else{
 			if (rendererComponent==null){
-				JComponent textComponent=new JLabel();
+				JComponent textComponent=new QuietLabel();
 				rendererComponent=new NameCellComponent(textComponent);
+				rendererComponent.quiet=true;
 				savedRendererFont=UIManager.getFont("Table.font");//rendererComponent.getFont();
 				textComponent.setBorder(null);
 				rendererComponent.init();
