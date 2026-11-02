@@ -116,6 +116,7 @@ public class Main {
 			SwingUtilities.invokeAndWait(new Runnable() {
 				public void run() {
 					com.projectlibre1.pm.graphic.laf.ModernLaf.install();
+					com.projectlibre1.pm.graphic.frames.ToolbarFocus.install();
 					ApplicationStartupFactory startupFactory=new ApplicationStartupFactory(opts); //put before to initialize standalone flag
 					Frame frame = MainFrameFactory.creareMainFrame(Messages.getContextString("Text.ApplicationTitle"), null, null);
 					boolean doWelcome = true; // to do see if project param exists in args

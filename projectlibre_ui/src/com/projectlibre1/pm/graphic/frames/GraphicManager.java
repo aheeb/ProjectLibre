@@ -551,7 +551,7 @@ public class GraphicManager implements  FrameHolder, NamedFrameListener, WindowS
 			 			public void run() {
 			 				focusFirstTaskName();
 			 			}});
-			 	}
+			 	} else frame.focusActiveView(true); // an opened file: typing should go to the grid
 			}});
 		getMenuManager().setActionEnabled(ACTION_OPEN_PROJECT,frame==null || !frame.isEditingResourcePool()); //resource pool can not be opened at same time as another proj
 		return frame;

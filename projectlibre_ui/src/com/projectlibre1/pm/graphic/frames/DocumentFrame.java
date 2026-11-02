@@ -762,9 +762,32 @@ public class DocumentFrame extends NamedFrame implements
 		getGraphicManager().setTaskInformation(view.showsTasks(),view.showsResources());
 		refreshUndoButtons();
 		getGraphicManager().setEnabledDocumentMenuActions(true);
+		focusActiveView(false);
 		showWaitCursor(false);
 //this doesn't have any effect		setFrameIcon(menuManager.getToolButtonFromId(viewName).getIcon());
 
+	}
+
+	/**
+	 * Puts keyboard focus in the active view (its spreadsheet if it has one) so typing and shortcuts go there.
+	 * @param selectFirstCell select the first row's Name cell if nothing is selected yet
+	 */
+	public void focusActiveView(boolean selectFirstCell) {
+		Component target = getTopSpreadSheet();
+		if (target == null) target = (Component) activeTopView;
+		if (target == null) return;
+		if (selectFirstCell && target instanceof SpreadSheet) {
+			SpreadSheet ss = (SpreadSheet) target;
+			if (ss.getSelectedRow() < 0 && ss.getRowCount() > 0) ss.changeSelection(0, nameColumn(ss), false, false);
+		}
+		target.requestFocusInWindow();
+	}
+	private static int nameColumn(SpreadSheet ss) {
+		for (int i = 0; i < ss.getColumnCount(); i++) {
+			Object field = ss.getColumnModel().getColumn(i).getIdentifier();
+			if (field instanceof Field && "Field.name".equals(((Field) field).getId())) return i;
+		}
+		return 0;
 	}
 
 	void deactivateTopView() {
