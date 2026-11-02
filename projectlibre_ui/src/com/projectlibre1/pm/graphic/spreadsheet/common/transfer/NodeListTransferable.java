@@ -70,6 +70,8 @@ import java.util.StringTokenizer;
 
 import org.apache.commons.collections.CollectionUtils;
 
+import com.projectlibre1.pm.graphic.frames.GraphicManager;
+import com.projectlibre1.pm.graphic.model.cache.GraphicNode;
 import com.projectlibre1.pm.graphic.spreadsheet.SpreadSheet;
 import com.projectlibre1.pm.graphic.spreadsheet.common.CommonSpreadSheetModel;
 import com.projectlibre1.field.Field;
@@ -83,6 +85,7 @@ import com.projectlibre1.options.EditOption;
 import com.projectlibre1.pm.resource.ResourcePool;
 import com.projectlibre1.pm.task.Project;
 import com.projectlibre1.pm.task.Task;
+import com.projectlibre1.undo.UndoController;
 
 
 
@@ -263,8 +266,57 @@ public class NodeListTransferable implements Transferable {
 	public static void pasteString(String s,SpreadSheet spreadsheet){
 		int[] rows=spreadsheet.getSelectedRows();
 		int[] cols=spreadsheet.getSelectedColumns();
-		if (rows.length>0&&cols.length>0)
-			pasteString(s,spreadsheet,rows[0],cols[0]);
+		if (rows.length==0||cols.length==0)
+			return;
+		String value=s.endsWith("\n")?s.substring(0,s.length()-1):s;
+		if ((rows.length>1||cols.length>1)&&value.indexOf('\n')<0&&value.indexOf('\t')<0&&spreadsheet.getSelectedFields()!=null){
+			fillCells(value,spreadsheet,rows,cols); // one value into every selected cell, like a spreadsheet
+			return;
+		}
+		pasteString(s,spreadsheet,rows[0],cols[0]);
+	}
+
+	/** Copies the first selected row's cells into the other selected rows (Fill Down). */
+	public static void fillDown(SpreadSheet spreadsheet){
+		int[] rows=spreadsheet.getSelectedRows();
+		int[] cols=spreadsheet.getSelectedColumns();
+		if (rows.length<2||cols.length==0||spreadsheet.getSelectedFields()==null)
+			return;
+		String[] values=selectionToString(spreadsheet,new int[]{rows[0]},cols).split("\t",-1);
+		for (int c=0;c<cols.length;c++){
+			String v=values[c];
+			if (c==cols.length-1&&v.endsWith("\n")) v=v.substring(0,v.length()-1);
+			int[] rest=new int[rows.length-1];
+			System.arraycopy(rows,1,rest,0,rest.length);
+			fillCells(v,spreadsheet,rest,new int[]{cols[c]});
+		}
+	}
+
+	/** Sets the text in each of the given cells, skipping blank rows (they would become new tasks) and read-only cells. */
+	private static void fillCells(String value,SpreadSheet spreadsheet,int[] rows,int[] cols){
+		CommonSpreadSheetModel model=(CommonSpreadSheetModel)spreadsheet.getModel();
+		FieldContext fieldContext=model.getFieldContext();
+		boolean round=fieldContext.isRound();
+		fieldContext.setRound(true);
+		UndoController undo=GraphicManager.getInstance(spreadsheet).getUndoController();
+		if (undo!=null) undo.beginUpdate(); // one Undo step for all cells
+		try{
+			for (int r=0;r<rows.length;r++){
+				GraphicNode node=model.getNode(rows[r]);
+				if (node==null||node.getNode()==null||node.getNode().isVoid())
+					continue;
+				for (int c=0;c<cols.length;c++){
+					if (!spreadsheet.isCellEditable(rows[r],cols[c]))
+						continue;
+					try{
+						model.setValueAt(value,rows[r],cols[c]+1);
+					}catch(Exception e){}
+				}
+			}
+		}finally{
+			if (undo!=null) undo.endUpdate();
+			fieldContext.setRound(round);
+		}
 	}
 	public static void pasteString(String s,SpreadSheet spreadsheet,int row0, int col0){
 		StringTokenizer st=new StringTokenizer(s,"\n");
