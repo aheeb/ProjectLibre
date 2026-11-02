@@ -683,15 +683,31 @@ public class DocumentFrame extends NamedFrame implements
 	}
 
 
+	/** The Workload view shows the histogram of the selected person below it, unless the user chose another bottom pane. */
+	private boolean histogramWithWorkload = false, bottomPaneChosen = false;
+	private void workloadHistogram(String topViewName) {
+		if (ACTION_RESOURCE_USAGE_DETAIL.equals(topViewName)) {
+			if (activeBottomView == null && !bottomPaneChosen) {
+				activateBottomView(getHistogramView(), ACTION_HISTOGRAM);
+				histogramWithWorkload = true;
+			}
+		} else if (histogramWithWorkload) {
+			deactivateBottomView();
+			histogramWithWorkload = false;
+		}
+	}
+
 	public boolean activateView(String viewName) {
 		BaseView topView = null;
 		BaseView bottomView = null;
 		boolean top = true;
 		if (viewName.equals(ACTION_GANTT)) {
 			activateGanttView();
+			workloadHistogram(viewName);
 			return top;
 		} else if (viewName.equals(ACTION_TRACKING_GANTT)) {
 			activateTrackingGanttView();
+			workloadHistogram(viewName);
 			return top;
 		} else if (viewName.equals(ACTION_TASK_USAGE_DETAIL))
 			topView = getTaskUsageDetailView();
@@ -721,14 +737,20 @@ public class DocumentFrame extends NamedFrame implements
 			bottomView = getTaskUsageView();
 		else if (viewName.equals(ACTION_RESOURCE_USAGE))
 			bottomView = getResourceUsageView();
-		else if (viewName.equals(ACTION_NO_SUB_WINDOW))
+		else if (viewName.equals(ACTION_NO_SUB_WINDOW)) {
 			deactivateBottomView();
+			histogramWithWorkload = false;
+			bottomPaneChosen = true;
+		}
 
 		if (topView != null) {
 			activateTopView(topView,viewName);
+			workloadHistogram(viewName);
 		}
 
 		if (bottomView != null) {
+			histogramWithWorkload = false; // chosen by the user: keep it
+			bottomPaneChosen = true;
 			boolean clickNew = true;
 			if (!Environment.isNewLook()) {
 				clickNew = bottomView != activeBottomView; // if clicked on a non pressed button

@@ -83,33 +83,38 @@ public interface HasTimeDistributedData extends TimeDistributedConstants {
 	public boolean isLabor();
 	public Collection childrenToRollup();
 	
+	// OVERALLOCATED first: the histogram draws it underneath, so only the work above the availability line shows red
 	public static Object histogramTypes[] = {
-		SELECTED
+		OVERALLOCATED
+		,SELECTED
 		,THIS_PROJECT
 		,AVAILABILITY
 	};
 
 	public static Object reverseHistogramTypes[] = {
-		THIS_PROJECT
+		OVERALLOCATED
+		,THIS_PROJECT
 		,SELECTED
 		,AVAILABILITY
 	};
 	public static Object serverHistogramTypes[] = {
-		SELECTED
+		OVERALLOCATED
+		,SELECTED
 		,THIS_PROJECT
 		,OTHER_PROJECTS
 		,AVAILABILITY
 	};
 
 	public static Object serverReverseHistogramTypes[] = {
-		OTHER_PROJECTS
+		OVERALLOCATED
+		,OTHER_PROJECTS
 		,THIS_PROJECT
 		,SELECTED
 		,AVAILABILITY
 	};
 	
-	public static int tracesCount=3;
-	public static int serverTracesCount=4;
+	public static int tracesCount=4;
+	public static int serverTracesCount=5;
 	
 			
 
