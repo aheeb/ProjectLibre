@@ -545,6 +545,13 @@ public class GraphicManager implements  FrameHolder, NamedFrameListener, WindowS
 		if (!Environment.isPlugin()) SwingUtilities.invokeLater( new Runnable() {
 			public void run() {
 			 	frame.getFilterToolBarManager().clear();
+			 	if (focusNameOfNextFrame) {
+			 		focusNameOfNextFrame=false;
+			 		SwingUtilities.invokeLater(new Runnable() {
+			 			public void run() {
+			 				focusFirstTaskName();
+			 			}});
+			 	}
 			}});
 		getMenuManager().setActionEnabled(ACTION_OPEN_PROJECT,frame==null || !frame.isEditingResourcePool()); //resource pool can not be opened at same time as another proj
 		return frame;
@@ -615,7 +622,28 @@ public class GraphicManager implements  FrameHolder, NamedFrameListener, WindowS
 	public boolean doNewProjectDialog() {
 		ProjectDialog.Form form=doNewProjectDialog1();
 		if (form==null) return false;
-		else return doNewProjectDialog2(form);
+		focusNameOfNextFrame=true; // the frame is added asynchronously, see addProjectFrame
+		return doNewProjectDialog2(form);
+	}
+	private boolean focusNameOfNextFrame=false;
+	/**
+	 * Selects the Name cell of the first row of the Gantt spreadsheet so the user can type the first task.
+	 */
+	void focusFirstTaskName() {
+		if (currentFrame==null||currentFrame.getGanttView()==null) return;
+		currentFrame.activateView(ACTION_GANTT);
+		SpreadSheet spreadSheet=currentFrame.getGanttView().getSpreadSheet();
+		if (spreadSheet==null||spreadSheet.getRowCount()==0) return;
+		int column=0;
+		for (int i=0;i<spreadSheet.getColumnCount();i++){
+			Object field=spreadSheet.getColumnModel().getColumn(i).getIdentifier();
+			if (field instanceof Field&&"Field.name".equals(((Field)field).getId())){
+				column=i;
+				break;
+			}
+		}
+		spreadSheet.changeSelection(0,column,false,false);
+		spreadSheet.requestFocusInWindow();
 	}
 	public boolean doNewProjectNoDialog(HashMap opts) {
 		ProjectDialog.Form form=doNewProjectNoDialog1();
@@ -690,6 +718,7 @@ public class GraphicManager implements  FrameHolder, NamedFrameListener, WindowS
 				project.setFinishDate(form.getStartDate());
 			// copy any extra fields to the project
 			project.getExtraFields().putAll(form.getExtra().getExtraFields());
+			project.setGroupDirty(false); // closing a new project that wasn't edited shouldn't ask to save it
 
 //			PropertyUtils.copyProperties(project, projectDialog.getForm());
 		} catch (Exception propertyException) {
