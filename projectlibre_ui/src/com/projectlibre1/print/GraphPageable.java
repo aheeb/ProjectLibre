@@ -102,6 +102,14 @@ public class GraphPageable extends PrintDocument implements ViewPrintableParams{
 			saveZoom();
 			if (!scaleToSelected){
 				updateZoom(fitToSettings.getColumns(), fitToSettings.getRows());
+			}else if (printSettings!=null&&printSettings.getScalingSettings()==null){
+				// Scaling never chosen in Page Setup: shrink (never enlarge) so the whole plan is one page wide, like a shareable overview
+				double fit=extendedPrintService.getWRatio(1,pageFormat.getImageableWidth(),params);
+				if (fit>0&&fit<getTotalZoomX()){
+					setTotalZoomX(fit);
+					setTotalZoomY(fit);
+					saveZoom();
+				}
 			}
 
 	    }

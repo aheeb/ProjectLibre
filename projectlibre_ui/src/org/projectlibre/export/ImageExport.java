@@ -57,6 +57,7 @@ package org.projectlibre.export;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Desktop;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
@@ -78,10 +79,13 @@ import com.projectlibre1.job.Job;
 import com.projectlibre1.job.JobQueue;
 import com.projectlibre1.job.JobRunnable;
 import com.projectlibre1.session.SessionFactory;
+import com.projectlibre1.strings.Messages;
+import com.projectlibre1.workflow.Toast;
 
 public class ImageExport {
-	public static void export(final GraphPageable pageable,Component parentComponent) throws IOException{
+	public static void export(final GraphPageable pageable,final Component parentComponent) throws IOException{
 		final File file=chooseFile(pageable.getRenderer().getProject().getName(),parentComponent);
+		if (file==null) return; // cancelled
 		final JobQueue jobQueue=SessionFactory.getInstance().getJobQueue();
 		Job job=new Job(jobQueue,"Image Export","Exporting Image...",true,parentComponent);
 		job.addRunnable(new JobRunnable("Image Export",1.0f){
@@ -137,6 +141,19 @@ public class ImageExport {
 				return null;
 			}
 		});
+		job.addSwingRunnable(new JobRunnable("Image Export done",1.0f){
+			public Object run() throws Exception{
+				// say where the file went, and offer to open it
+				Toast.show(parentComponent,Messages.getStringWithParam("Export.saved",file.getName()),Messages.getString("Export.open"),e->{
+					try {
+						Desktop.getDesktop().open(file);
+					} catch (Exception ex) {
+						ex.printStackTrace();
+					}
+				});
+				return null;
+			}
+		});
 		jobQueue.schedule(job);
 	}
 
@@ -173,7 +190,7 @@ public class ImageExport {
 		chooser.setFileFilter(pdfFilter);
 		if (chooser.showDialog(parentComponent, null) == JFileChooser.APPROVE_OPTION){
 			File file=chooser.getSelectedFile();
-			if (!file.getName().endsWith(".pdf")/*&&!file.getName().endsWith(".png")*/) file=new File(file.getName()+".pdf"); //add pdf extension if missing
+			if (!file.getName().endsWith(".pdf")/*&&!file.getName().endsWith(".png")*/) file=new File(file.getParentFile(),file.getName()+".pdf"); //add pdf extension if missing, in the chosen folder
 			return file;
 		} else return null;
     }
