@@ -393,6 +393,8 @@ public class MicrosoftImporter extends ServerFileImporter{
 			}
 			//project.setGroupDirty(!Environment.getStandAlone());
 			if (!Environment.getStandAlone()) project.setAllDirty();
+			// building the project above flags it as modified, but a freshly imported project matches its file
+			else project.setGroupDirty(false);
 
 			project.setBoundsAfterReadProject();
 			
