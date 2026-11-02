@@ -265,6 +265,7 @@ public class MSPDISerializer implements ProjectSerializer {
         ProjectProperties projectHeader=projectFile.getProjectProperties();
         
 		MPXConverter.toMPXOptions(projectHeader);
+		CustomFieldAliases.toMpx(projectFile);
 
         MPXConverter.toMPXProject(project,projectHeader);
         if (job!=null) job.setProgress(0.2f);
