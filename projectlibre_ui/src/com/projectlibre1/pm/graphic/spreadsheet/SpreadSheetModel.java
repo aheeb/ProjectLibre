@@ -55,6 +55,7 @@
  *******************************************************************************/
 package com.projectlibre1.pm.graphic.spreadsheet;
 
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -74,6 +75,7 @@ import com.projectlibre1.pm.dependency.DependencyService;
 import com.projectlibre1.pm.dependency.DependencyType;
 import com.projectlibre1.pm.task.NormalTask;
 import com.projectlibre1.configuration.Configuration;
+import com.projectlibre1.pm.resource.Resource;
 import com.projectlibre1.pm.task.Project;
 import com.projectlibre1.strings.Messages;
 import com.projectlibre1.util.ClassUtils;
@@ -221,9 +223,28 @@ public class SpreadSheetModel extends CommonSpreadSheetModel {
 				note = note == null ? change : note + " " + change;
 			if (note != null)
 				Toast.show(null, note);
+			else
+				checkAvailability(field, rowNode, row, col);
 		} catch (FieldParseException e) {
 			throw new RuntimeException(e); // exceptions will be treated by the spreadsheet, not the model, because there is a popup.  Because this method doesn't have an exception, a runtime exception will be caught by the spreadsheet
 		}
+	}
+
+	/**
+	 * Availability is a percentage, so "0.5" means 0.5% (as in every percentage field), not half time. Such a
+	 * tiny availability is almost always meant as a fraction: say so, and offer the percentage that was meant.
+	 */
+	private void checkAvailability(Field field, Node rowNode, final int row, final int col) {
+		if (field != Configuration.getFieldFromId("Field.maximumUnits") || !(rowNode.getImpl() instanceof Resource)) //$NON-NLS-1$
+			return;
+		double units = ((Resource) rowNode.getImpl()).getMaximumUnits();
+		if (units <= 0 || units >= 0.01)
+			return;
+		final Double meant = Double.valueOf(units * 100);
+		NumberFormat percent = NumberFormat.getPercentInstance();
+		percent.setMaximumFractionDigits(2);
+		Toast.show(null, Messages.getStringWithParam("People.availabilityHint", new Object[] {percent.format(units), percent.format(meant)}), //$NON-NLS-1$
+				Messages.getStringWithParam("People.availabilityFix", percent.format(meant)), e -> setValueAt(meant, row, col)); //$NON-NLS-1$
 	}
 
 	public boolean isRowEditable(int row) {
