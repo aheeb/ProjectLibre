@@ -98,6 +98,7 @@ import com.projectlibre1.pm.graphic.spreadsheet.common.CommonSpreadSheetAction;
 import com.projectlibre1.pm.graphic.spreadsheet.common.CommonSpreadSheetModel;
 import com.projectlibre1.pm.graphic.spreadsheet.common.transfer.NodeListTransferHandler;
 import com.projectlibre1.pm.graphic.spreadsheet.editor.SimpleComboBoxEditor;
+import com.projectlibre1.workflow.TaskMenu;
 import com.projectlibre1.pm.graphic.spreadsheet.renderer.NameCellComponent;
 import com.projectlibre1.pm.graphic.spreadsheet.selection.SpreadSheetListSelectionModel;
 import com.projectlibre1.pm.graphic.spreadsheet.selection.SpreadSheetSelectionModel;
@@ -271,6 +272,7 @@ public class SpreadSheet extends CommonSpreadSheet implements Cloneable {
 		}
 		
 		registerEditors(); //Consume memory
+		if (TaskMenu.isTaskSheet(this)) TaskMenu.installKeys(this);
 		initRowHeader(spreadSheetModel);
 		initModel();
 		initListeners();
@@ -360,6 +362,10 @@ public class SpreadSheet extends CommonSpreadSheet implements Cloneable {
 					}
 								
 					
+				} else if (SwingUtilities.isRightMouseButton(e) && TaskMenu.isTaskSheet(SpreadSheet.this)) {
+					finishCurrentOperations();
+					if (row >= 0 && !isRowSelected(row)) changeSelection(row, Math.max(col, 0), false, false); // act on the row clicked
+					new TaskMenu(SpreadSheet.this).build().show(SpreadSheet.this, e.getX(), e.getY());
 				} else if (popup != null && SwingUtilities.isRightMouseButton(e)) { // e.isPopupTrigger() can be used too
 //					selection.getRowSelection().clearSelection();
 //					selection.getRowSelection().addSelectionInterval(row, row);
