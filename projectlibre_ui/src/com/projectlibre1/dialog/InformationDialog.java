@@ -156,5 +156,11 @@ public abstract class InformationDialog extends FieldDialog {
 	protected boolean hasCloseButton() {
 		return true;
 	}
+
+	/** Escape closes the window, like the Close button. */
+	protected void onCancel() {
+		super.onCancel();
+		setVisible(false);
+	}
 	
 }

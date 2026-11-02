@@ -483,6 +483,7 @@ public class ComponentFactory {
     		format = EditOption.getInstance().getShortDateFormat();
     	}
 	    ExtDateField df = new ExtDateField(format);
+	    df.useFormStyle();
 //	    df.setValue(new Date(date));
 	    df.getFormattedTextField().addPropertyChangeListener(new PropertyChangeListener() {
 

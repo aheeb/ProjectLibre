@@ -55,20 +55,128 @@
  *******************************************************************************/
 package com.projectlibre1.dialog;
 
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.Insets;
+import java.awt.LayoutManager;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JPanel;
-import javax.swing.plaf.basic.BasicOptionPaneUI;
+
+import com.projectlibre1.util.Environment;
 
 
-
+/**
+ * Dialog button bar. The confirm and cancel buttons sit on the right in platform order
+ * (macOS: Cancel then OK; elsewhere: OK then Cancel), the help button and any secondary
+ * actions sit on the left.
+ */
 public class ButtonPanel extends JPanel {
 	private static final long serialVersionUID = 1L;
+	static final String HELP_BUTTON = "ProjectLibre.helpButton"; //$NON-NLS-1$
+	private static final int GAP = 8;
+	private static final int GROUP_GAP = 24;
+	private AbstractButton confirm;
+	private AbstractButton dismiss;
+
 	public ButtonPanel() {
-	    super(new BasicOptionPaneUI.ButtonAreaLayout(true, 6));
-	    setBorder(BorderFactory.createEmptyBorder(9, 0, 0, 0));
+		setLayout(new BarLayout());
+		setBorder(BorderFactory.createEmptyBorder(16, 0, 0, 0));
 	}
 	public void addButton(JButton button) {
 		add(button);
+	}
+
+	/**
+	 * Marks the dialog's confirm (default) and cancel buttons. They are placed on the right in
+	 * platform order; every other button except help moves to the left. Either may be null.
+	 */
+	public void setActionButtons(AbstractButton confirm, AbstractButton dismiss) {
+		this.confirm = confirm;
+		this.dismiss = dismiss;
+		if (confirm != null && confirm.getParent() == this)
+			remove(confirm);
+		if (dismiss != null && dismiss.getParent() == this)
+			remove(dismiss);
+		AbstractButton first = Environment.isMac() ? dismiss : confirm;
+		AbstractButton last = Environment.isMac() ? confirm : dismiss;
+		if (first != null)
+			add(first);
+		if (last != null)
+			add(last);
+		revalidate();
+	}
+
+	private boolean onRight(Component c) {
+		if (isHelp(c))
+			return false;
+		if (confirm == null && dismiss == null)
+			return true;
+		return c == confirm || c == dismiss;
+	}
+	private static boolean isHelp(Component c) {
+		return c instanceof JComponent && ((JComponent) c).getClientProperty(HELP_BUTTON) != null;
+	}
+
+	private class BarLayout implements LayoutManager {
+		public void addLayoutComponent(String name, Component comp) {
+		}
+		public void removeLayoutComponent(Component comp) {
+		}
+		private List<Component> visible(Container parent, boolean right) {
+			List<Component> list = new ArrayList<Component>();
+			for (Component c : parent.getComponents()) {
+				if (!c.isVisible() || onRight(c) != right)
+					continue;
+				if (!right && isHelp(c))
+					list.add(0, c); // help always leftmost
+				else
+					list.add(c);
+			}
+			return list;
+		}
+		private int width(List<Component> list) {
+			int w = 0;
+			for (Component c : list)
+				w += c.getPreferredSize().width;
+			return w + Math.max(0, list.size() - 1) * GAP;
+		}
+		public Dimension preferredLayoutSize(Container parent) {
+			List<Component> left = visible(parent, false);
+			List<Component> right = visible(parent, true);
+			int h = 0;
+			for (Component c : parent.getComponents())
+				if (c.isVisible())
+					h = Math.max(h, c.getPreferredSize().height);
+			int w = width(left) + width(right) + (left.isEmpty() || right.isEmpty() ? 0 : GROUP_GAP);
+			Insets in = parent.getInsets();
+			return new Dimension(w + in.left + in.right, h + in.top + in.bottom);
+		}
+		public Dimension minimumLayoutSize(Container parent) {
+			return preferredLayoutSize(parent);
+		}
+		public void layoutContainer(Container parent) {
+			Insets in = parent.getInsets();
+			int h = parent.getHeight() - in.top - in.bottom;
+			int x = in.left;
+			for (Component c : visible(parent, false)) {
+				Dimension d = c.getPreferredSize();
+				c.setBounds(x, in.top + (h - d.height) / 2, d.width, d.height);
+				x += d.width + GAP;
+			}
+			List<Component> right = visible(parent, true);
+			x = parent.getWidth() - in.right - width(right);
+			for (Component c : right) {
+				Dimension d = c.getPreferredSize();
+				c.setBounds(x, in.top + (h - d.height) / 2, d.width, d.height);
+				x += d.width + GAP;
+			}
+		}
 	}
 }
