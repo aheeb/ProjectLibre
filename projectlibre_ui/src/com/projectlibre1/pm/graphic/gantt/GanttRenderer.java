@@ -67,6 +67,7 @@ import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.Stroke;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Area;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.PathIterator;
 import java.awt.geom.Rectangle2D;
@@ -240,9 +241,34 @@ public class GanttRenderer extends GraphRenderer implements Serializable {
 				intervalGenerator=format.getScheduleIntervalGenerator();
 			}
 
-			intervalGenerator.consumeIntervals(node,this);
+			// collect first so segments that touch (e.g. split at the progress point) get flat joins
+			intervalCount=0;
+			intervalGenerator.consumeIntervals(node,collector);
+			CoordinatesConverter coord=((GanttParams)graphInfo).getCoord();
+			for (int k=0;k<intervalCount;k++){
+				joinLeft=k>0&&coord.toX(intervalBounds[2*k])-coord.toX(intervalBounds[2*k-1])<=1;
+				joinRight=k<intervalCount-1&&coord.toX(intervalBounds[2*k+2])-coord.toX(intervalBounds[2*k+1])<=1;
+				consumeInterval(new ScheduleInterval(intervalBounds[2*k],intervalBounds[2*k+1]));
+			}
+			joinLeft=joinRight=false;
 
 		}
+
+		protected long[] intervalBounds=new long[16];
+		protected int intervalCount;
+		protected boolean joinLeft,joinRight;
+		protected IntervalConsumer collector=new IntervalConsumer(){
+			public void consumeInterval(ScheduleInterval interval){
+				if (2*intervalCount+1>=intervalBounds.length){
+					long[] bigger=new long[intervalBounds.length*2];
+					System.arraycopy(intervalBounds,0,bigger,0,intervalBounds.length);
+					intervalBounds=bigger;
+				}
+				intervalBounds[2*intervalCount]=interval.getStart();
+				intervalBounds[2*intervalCount+1]=interval.getEnd();
+				intervalCount++;
+			}
+		};
 
 
 
@@ -293,6 +319,16 @@ public class GanttRenderer extends GraphRenderer implements Serializable {
 							x,
 							y,
 							useTextures());
+					if ((joinLeft||joinRight)&&barShape!=null){
+						// square off the rounded ends where this segment touches its neighbour
+						Rectangle2D b=barShape.getBounds2D();
+						double r=Math.min(b.getHeight()/2,b.getWidth()/2);
+						Area joined=new Area(barShape);
+						if (joinLeft) joined.add(new Area(new Rectangle2D.Double(b.getX(),b.getY(),r,b.getHeight())));
+						if (joinRight) joined.add(new Area(new Rectangle2D.Double(b.getMaxX()-r,b.getY(),r+1,b.getHeight())));
+						format.getMiddle().paintShape(g2,joined,useTextures());
+						barShape=joined;
+					}
 
 				}
 				// draw middle before ends
