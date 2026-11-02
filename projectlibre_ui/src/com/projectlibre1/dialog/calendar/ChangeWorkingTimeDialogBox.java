@@ -249,6 +249,14 @@ public class ChangeWorkingTimeDialogBox extends AbstractDialog{
 		calendarType.setModel(calModel);
 	}
 
+	/** Today, unless the project runs at another time: then its start, where days off matter. */
+	private long initialMonth() {
+		long now = System.currentTimeMillis();
+		if (project != null && project.getStart() > 0 && (now < project.getStart() || now > project.getEnd()))
+			return project.getStart();
+		return now;
+	}
+
 	private void clearLastSelection() {
 		lastSelection.clear();
 		for (int i=0; i < 7; i++)
@@ -260,7 +268,7 @@ public class ChangeWorkingTimeDialogBox extends AbstractDialog{
 	    fillInCalendarNames();
 	    basedOnText =  new JLabel();
 
-	    sdCalendar=new CalendarView();
+	    sdCalendar=new CalendarView(initialMonth());
 
 	    unknownWorkingTime= new JRadioButton();
 	    notEditable = new JLabel(Messages.getString("ChangeWorkingTimeDialogBox.NotEdiableMessage")); // html provides word wrap //$NON-NLS-1$
@@ -532,7 +540,7 @@ public class ChangeWorkingTimeDialogBox extends AbstractDialog{
 	    if (wc.isBaseCalendar()) {
 	    	basedOnText.setText(" "); // a space.  need a space for vertical spacing //$NON-NLS-1$
 	    } else {
-	    	basedOnText.setText(Messages.getString("ChangeWorkingTimeDialogBox.BasedOn") + wc.getBaseCalendar().getName()); //$NON-NLS-1$
+	    	basedOnText.setText(Messages.getString("ChangeWorkingTimeDialogBox.BasedOn").trim() + " " + wc.getBaseCalendar().getName()); //$NON-NLS-1$
 	    }
 
 	    long first=sdCalendar.getFirstDisplayedDate();

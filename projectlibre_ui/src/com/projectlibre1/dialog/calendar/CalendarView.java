@@ -55,9 +55,14 @@
  *******************************************************************************/
 package com.projectlibre1.dialog.calendar;
 
+import java.awt.Point;
+import java.awt.event.InputEvent;
+import java.awt.event.MouseEvent;
+
 import com.projectlibre1.contrib.calendar.ContribIntervals;
 import com.projectlibre1.contrib.calendar.JXXMonthView;
 import com.projectlibre1.pm.graphic.laf.ModernLaf;
+import com.projectlibre1.util.Environment;
 
 
 /**
@@ -80,6 +85,34 @@ public class CalendarView extends JXXMonthView {
 		setPreferredCols(1);
 		setPreferredRows(1);
 		setSelectedBackground(ModernLaf.SELECTION_SOFT);
+	}
+
+	/** Where the mouse went down on a day, so dragging selects the whole range (e.g. a week of vacation). */
+	private Point dragAnchor;
+
+	protected void processMouseEvent(MouseEvent e) {
+		if (e.getID() == MouseEvent.MOUSE_PRESSED)
+			dragAnchor = getDayAt(e.getX(), e.getY()) > 0 ? e.getPoint() : null; // a day, not a weekday heading
+		super.processMouseEvent(commandAsControl(e));
+	}
+
+	protected void processMouseMotionEvent(MouseEvent e) {
+		e = commandAsControl(e);
+		boolean adding = (e.getModifiersEx() & (InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK)) != 0;
+		if (e.getID() == MouseEvent.MOUSE_DRAGGED && dragAnchor != null && !adding && getDayAt(e.getX(), e.getY()) > 0) {
+			// the month view alone selects just the day under the pointer: select from the anchor instead
+			selectFromEvent(new MouseEvent(this, MouseEvent.MOUSE_PRESSED, e.getWhen(), 0, dragAnchor.x, dragAnchor.y, 1, false));
+			e = new MouseEvent(this, e.getID(), e.getWhen(), e.getModifiersEx() | InputEvent.SHIFT_DOWN_MASK, e.getX(), e.getY(), 0, false);
+		}
+		super.processMouseMotionEvent(e);
+	}
+
+	/** On the Mac, Command-click adds days to the selection, as Ctrl-click does elsewhere. */
+	private MouseEvent commandAsControl(MouseEvent e) {
+		if (!Environment.isMac() || !e.isMetaDown())
+			return e;
+		int modifiers = (e.getModifiersEx() & ~InputEvent.META_DOWN_MASK) | InputEvent.CTRL_DOWN_MASK;
+		return new MouseEvent(this, e.getID(), e.getWhen(), modifiers, e.getX(), e.getY(), e.getClickCount(), false, e.getButton());
 	}
 
 	public Intervals getSelectedFixedIntervals(){
