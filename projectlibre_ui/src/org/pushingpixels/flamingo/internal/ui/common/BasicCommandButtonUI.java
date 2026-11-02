@@ -48,6 +48,7 @@ import org.pushingpixels.flamingo.api.common.CommandButtonLayoutManager.CommandB
 import org.pushingpixels.flamingo.api.common.JCommandButtonStrip.StripOrientation;
 import org.pushingpixels.flamingo.api.common.icon.FilteredResizableIcon;
 import org.pushingpixels.flamingo.api.common.icon.ResizableIcon;
+import org.pushingpixels.flamingo.api.common.icon.SvgResizableIcon;
 import org.pushingpixels.flamingo.api.common.model.PopupButtonModel;
 import org.pushingpixels.flamingo.api.common.popup.*;
 import org.pushingpixels.flamingo.internal.utils.*;
@@ -728,6 +729,16 @@ public class BasicCommandButtonUI extends CommandButtonUI {
 				.getPopupModel()
 				: null;
 
+		if (FlatRibbonStyle.isActive()) {
+			boolean popupOnly = (this.commandButton instanceof JCommandButton)
+					&& ((JCommandButton) this.commandButton).getCommandButtonKind() == JCommandButton.CommandButtonKind.POPUP_ONLY;
+			ButtonModel model = popupOnly ? popupModel : actionModel;
+			boolean popupShowing = popupModel != null && popupModel.isPopupShowing();
+			FlatRibbonStyle.paintButtonBackground(graphics, toFill, this.commandButton.isEnabled(),
+					model.isRollover() || (popupModel != null && popupModel.isRollover()),
+					(model.isPressed() && model.isArmed()) || popupShowing, actionModel.isSelected());
+			return;
+		}
 		// first time - paint the full background passing both models
 		this.paintButtonBackground(graphics, toFill, actionModel, popupModel);
 
@@ -1191,7 +1202,10 @@ public class BasicCommandButtonUI extends CommandButtonUI {
 		ResizableIcon icon = this.commandButton.getIcon();
 		if ((currDisabledIcon == null)
 				|| (currDisabledIcon instanceof UIResource)) {
-			if (icon != null) {
+			if (icon instanceof SvgResizableIcon) {
+				this.commandButton.setDisabledIcon(new ResizableIconUIResource(
+						((SvgResizableIcon) icon).getDisabledIcon()));
+			} else if (icon != null) {
 				this.commandButton.setDisabledIcon(new ResizableIconUIResource(
 						new FilteredResizableIcon(icon, new ColorConvertOp(
 								ColorSpace.getInstance(ColorSpace.CS_GRAY),

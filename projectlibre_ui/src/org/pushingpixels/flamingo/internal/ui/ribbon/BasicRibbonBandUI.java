@@ -48,6 +48,7 @@ import org.pushingpixels.flamingo.api.ribbon.resize.IconRibbonBandResizePolicy;
 import org.pushingpixels.flamingo.api.ribbon.resize.RibbonBandResizePolicy;
 import org.pushingpixels.flamingo.internal.ui.common.BasicCommandButtonUI;
 import org.pushingpixels.flamingo.internal.utils.FlamingoUtilities;
+import org.pushingpixels.flamingo.internal.utils.FlatRibbonStyle;
 import org.pushingpixels.flamingo.internal.utils.RenderingUtils;
 import org.pushingpixels.trident.Timeline;
 import org.pushingpixels.trident.swing.SwingRepaintCallback;
@@ -208,6 +209,8 @@ public class BasicRibbonBandUI extends RibbonBandUI {
 		Border b = this.ribbonBand.getBorder();
 		if (b == null || b instanceof UIResource) {
 			Border toSet = UIManager.getBorder("RibbonBand.border");
+			if (toSet == null && FlatRibbonStyle.isActive())
+				toSet = new BorderUIResource.EmptyBorderUIResource(4, 6, 2, 6);
 			if (toSet == null)
 				toSet = new BorderUIResource(new RoundBorder(FlamingoUtilities
 						.getBorderColor(), new Insets(2, 2, 2, 2)));
@@ -807,6 +810,8 @@ public class BasicRibbonBandUI extends RibbonBandUI {
 		Graphics2D graphics = (Graphics2D) g.create();
 		graphics.setFont(FlamingoUtilities.getFont(this.ribbonBand,
 				"Ribbon.font", "Button.font", "Panel.font"));
+		if (FlatRibbonStyle.isActive())
+			graphics.setFont(FlatRibbonStyle.smallFont(graphics.getFont()));
 
 		FontMetrics fm = graphics.getFontMetrics();
 		int y = titleRectangle.y - 2 + (titleRectangle.height + fm.getAscent())
@@ -821,7 +826,10 @@ public class BasicRibbonBandUI extends RibbonBandUI {
 		}
 
 		int x = titleRectangle.x + (titleRectangle.width - currLength) / 2;
-		graphics.setColor(this.ribbonBand.getForeground());
+		if (FlatRibbonStyle.isActive())
+			graphics.setColor(com.projectlibre1.pm.graphic.laf.ModernLaf.TEXT_SECONDARY);
+		else
+			graphics.setColor(this.ribbonBand.getForeground());
 		graphics.drawString(titleToPaint, x, y);
 		graphics.dispose();
 	}
@@ -838,6 +846,8 @@ public class BasicRibbonBandUI extends RibbonBandUI {
 	 */
 	protected void paintBandTitleBackground(Graphics g,
 			Rectangle titleRectangle, String title) {
+		if (FlatRibbonStyle.isActive())
+			return;
 
 		Graphics2D g2d = (Graphics2D) g.create();
 		g2d.setComposite(AlphaComposite.SrcOver
@@ -862,6 +872,15 @@ public class BasicRibbonBandUI extends RibbonBandUI {
 	 *            Rectangle for the background.
 	 */
 	protected void paintBandBackground(Graphics graphics, Rectangle toFill) {
+		if (FlatRibbonStyle.isActive()) {
+			graphics.setColor(FlatRibbonStyle.background());
+			graphics.fillRect(toFill.x, toFill.y, toFill.width, toFill.height);
+			// hairline separator on the trailing edge
+			graphics.setColor(FlatRibbonStyle.hairline());
+			int x = ribbonBand.getComponentOrientation().isLeftToRight() ? toFill.x + toFill.width - 1 : toFill.x;
+			graphics.fillRect(x, toFill.y + 8, 1, toFill.height - 16);
+			return;
+		}
 		graphics.setColor(ribbonBand.getBackground());
 		graphics.fillRect(toFill.x, toFill.y, toFill.width, toFill.height);
 	}

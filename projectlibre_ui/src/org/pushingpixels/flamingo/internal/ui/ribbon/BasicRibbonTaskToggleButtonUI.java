@@ -44,6 +44,8 @@ import org.pushingpixels.flamingo.api.ribbon.RibbonContextualTaskGroup;
 import org.pushingpixels.flamingo.internal.ui.common.BasicCommandToggleButtonUI;
 import org.pushingpixels.flamingo.internal.utils.*;
 
+import com.projectlibre1.pm.graphic.laf.ModernLaf;
+
 /**
  * Basic UI for toggle button of ribbon tasks {@link JRibbonTaskToggleButton}.
  * 
@@ -75,8 +77,8 @@ public class BasicRibbonTaskToggleButtonUI extends BasicCommandToggleButtonUI {
 			Border toInstall = UIManager
 					.getBorder("RibbonTaskToggleButton.border");
 			if (toInstall == null)
-				toInstall = new BorderUIResource.EmptyBorderUIResource(1, 12,
-						1, 12);
+				toInstall = new BorderUIResource.EmptyBorderUIResource(1, 14,
+						1, 14);
 			this.commandButton.setBorder(toInstall);
 		}
 
@@ -139,10 +141,37 @@ public class BasicRibbonTaskToggleButtonUI extends BasicCommandToggleButtonUI {
 		RenderingUtils.installDesktopHints(g2d);
 		this.layoutInfo = this.layoutManager.getLayoutInfo(this.commandButton,
 				g);
+		if (FlatRibbonStyle.isActive()) {
+			paintFlat(g2d, c);
+			g2d.dispose();
+			return;
+		}
 		this.paintButtonBackground(g2d, new Rectangle(0, 0, c.getWidth(), c
 				.getHeight() + 10));
 		this.paintText(g2d);
 		g2d.dispose();
+	}
+
+	/**
+	 * Flat tab: plain text, a soft rounded fill on hover and an accent underline when selected.
+	 */
+	protected void paintFlat(Graphics2D g2d, JComponent c) {
+		boolean selected = this.commandButton.getActionModel().isSelected();
+		boolean rollover = this.commandButton.getActionModel().isRollover();
+		int w = c.getWidth();
+		int h = c.getHeight();
+		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		if (rollover && !selected) {
+			g2d.setColor(ModernLaf.HOVER);
+			g2d.fillRoundRect(2, 7, w - 4, h - 14, 2 * FlatRibbonStyle.ARC, 2 * FlatRibbonStyle.ARC);
+		}
+		if (selected) {
+			g2d.setColor(ModernLaf.ACCENT);
+			g2d.fillRoundRect(8, h - 3, w - 16, 3, 3, 3);
+		}
+		g2d.setColor(selected ? ModernLaf.TEXT_PRIMARY : ModernLaf.TEXT_SECONDARY);
+		g2d.setFont(c.getFont());
+		this.paintText(g2d);
 	}
 
 	protected void paintText(Graphics g) {

@@ -184,7 +184,8 @@ abstract class AbstractBandControlPanelUI extends BandControlPanelUI {
 	 *            Rectangle for the background.
 	 */
 	protected void paintBandBackground(Graphics graphics, Rectangle toFill) {
-		graphics.setColor(controlPanel.getBackground());
+		graphics.setColor(org.pushingpixels.flamingo.internal.utils.FlatRibbonStyle.isActive()
+				? org.pushingpixels.flamingo.internal.utils.FlatRibbonStyle.background() : controlPanel.getBackground());
 		graphics.fillRect(toFill.x, toFill.y, toFill.width, toFill.height);
 	}
 

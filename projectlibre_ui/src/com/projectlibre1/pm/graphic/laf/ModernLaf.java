@@ -22,6 +22,11 @@ public class ModernLaf {
 	/** App chrome background (ribbon, headers). */
 	public static final Color CHROME = new Color(0xF6F7F9);
 	public static final Color TEXT_SECONDARY = new Color(0x6B7280);
+	public static final Color TEXT_PRIMARY = new Color(0x1F2328);
+	/** Translucent fills for flat buttons and tabs (hover, pressed, selected). */
+	public static final Color HOVER = new Color(0, 0, 0, 13);
+	public static final Color PRESSED = new Color(0, 0, 0, 26);
+	public static final Color SELECTED = new Color(0x2F, 0x6F, 0xEB, 36);
 
 	private static boolean installed = false;
 
