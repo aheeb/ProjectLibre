@@ -2059,7 +2059,7 @@ protected boolean loadLocalDocument(String fileName,boolean merge){ //uses serve
 
 	void doCalendarOptionsDialog() {
 		finishAnyOperations();
-		CalendarDialogBox.getInstance(getFrame(), null).doModal();
+		CalendarDialogBox.editProjectOptions(getFrame(), getCurrentFrame() == null ? null : getCurrentFrame().getProject());
 	}
 
 

@@ -743,16 +743,7 @@ public class ChangeWorkingTimeDialogBox extends AbstractDialog{
 	    options = new JButton(Messages.getString("ChangeWorkingTimeDialogBox.Options")); //$NON-NLS-1$
 	    options.addActionListener(new ActionListener(){
 			    public void actionPerformed(ActionEvent e){
-			    	CalendarOption option = project.getCalendarOption();
-			    	if (option == null)
-			    		option = CalendarOption.getInstance();
-			    	CalendarDialogBox dialog = CalendarDialogBox.getInstance((Frame) ChangeWorkingTimeDialogBox.this.getOwner(),option);
-			    	if (dialog.doModal()) {
-			    		option = CalendarOption.getNewInstance();
-			    		dialog.getForm().copyToOption(option);
-			    		CalendarOption.setInstance(option);
-			    		project.setCalendarOption(option);
-			    	}
+			    	CalendarDialogBox.editProjectOptions((Frame) ChangeWorkingTimeDialogBox.this.getOwner(), project);
 			    }
 			 });
 
