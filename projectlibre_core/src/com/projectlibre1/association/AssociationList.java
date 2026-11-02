@@ -211,14 +211,6 @@ public class AssociationList implements List {
         	}
         }
         
-        // Remove ones that were eliminated
-        for (i = removed.iterator(); i.hasNext();) {
-        	((Association)i.next()).doRemoveService(this); // will remove from real list
-        }
-        
-        
-
-        
         // Get a list of added elements
         LinkedList added = new LinkedList();
         for (i = newList.iterator(); i.hasNext();) {
@@ -232,10 +224,16 @@ public class AssociationList implements List {
         	}
         }		
         
-        // Add new ones
+        // Remove ones that were eliminated, and add new ones
+        if (!associationFormat.addsBeforeRemoving())
+        	for (i = removed.iterator(); i.hasNext();)
+        		((Association)i.next()).doRemoveService(this); // will remove from real list
         for (i = added.iterator(); i.hasNext();) {
         	((Association)i.next()).doAddService(this); // will remove from real list
         }
+        if (associationFormat.addsBeforeRemoving())
+        	for (i = removed.iterator(); i.hasNext();)
+        		((Association)i.next()).doRemoveService(this);
         
         // Signal update of modified ones
         for (i = modified.iterator(); i.hasNext();) {

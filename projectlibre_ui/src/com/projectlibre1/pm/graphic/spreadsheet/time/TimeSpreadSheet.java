@@ -67,6 +67,7 @@ import javax.swing.table.TableModel;
 
 import com.projectlibre1.pm.graphic.model.cache.NodeModelCache;
 import com.projectlibre1.pm.graphic.model.event.CompositeCacheEvent;
+import com.projectlibre1.pm.graphic.spreadsheet.SpreadSheetUtils;
 import com.projectlibre1.pm.graphic.spreadsheet.common.CommonSpreadSheet;
 import com.projectlibre1.pm.graphic.spreadsheet.common.CommonSpreadSheetModel;
 import com.projectlibre1.pm.graphic.spreadsheet.selection.SpreadSheetListSelectionModel;
@@ -79,7 +80,12 @@ import com.projectlibre1.graphic.configuration.CellStyle;
 import com.projectlibre1.graphic.configuration.GraphicConfiguration;
 import com.projectlibre1.graphic.configuration.shape.Colors;
 import com.projectlibre1.pm.graphic.laf.ModernLaf;
+import com.projectlibre1.configuration.Configuration;
+import com.projectlibre1.pm.assignment.Assignment;
+import com.projectlibre1.pm.resource.Resource;
 import com.projectlibre1.pm.task.Project;
+import com.projectlibre1.pm.time.HasStartAndEnd;
+import com.projectlibre1.workflow.Workload;
 import com.projectlibre1.timescale.TimeScaleListener;
 
 /**
@@ -221,7 +227,26 @@ public class TimeSpreadSheet extends CommonSpreadSheet implements ScaledComponen
 		Component component =  super.prepareRenderer(renderer, row, column);
 		if (!getModel().isCellEditable(row, column+1)&&!isCellSelected(row, column))
 			component.setBackground(ModernLaf.CHROME); // read-only (summary) rows						
+		markOverallocation(component, row, column);
 		return component;
+	}
+
+	/**
+	 * Workload view: a person's work turns red in the periods where they have more work than they are
+	 * available for on some day, and so do the hours of the tasks they work on then.
+	 */
+	private void markOverallocation(Component component, int row, int column) {
+		if (project == null || !(getModel() instanceof TimeSpreadSheetModel)) return;
+		TimeSpreadSheetModel model = (TimeSpreadSheetModel) getModel();
+		if (model.getFieldInRow(row) != Configuration.getFieldFromId("Field.work") || column >= model.timeIntervals.size()) return;
+		Object impl = SpreadSheetUtils.getNodeInRow(row, model.getRowMultiple(), model.getCache()).getImpl();
+		boolean person = impl instanceof Resource;
+		Resource resource = person ? (Resource) impl : impl instanceof Assignment ? ((Assignment) impl).getResource() : null;
+		if (resource == null) return;
+		HasStartAndEnd interval = (HasStartAndEnd) model.timeIntervals.get(column);
+		if (!Workload.of(project).isOverallocated(resource, interval.getStart(), interval.getEnd())) return;
+		component.setForeground(ModernLaf.DANGER);
+		if (person && !isCellSelected(row, column)) component.setBackground(ModernLaf.DANGER_SOFT);
 	}
 	          
      

@@ -73,6 +73,14 @@ public abstract class AssociationFormat extends java.text.Format{
 		return parameters;
 	}
 	
+	/**
+	 * When the text replaces some associations by others, add the new ones before removing the old
+	 * ones (e.g. a task should never be left without people for a moment, see AssignmentFormat).
+	 */
+	public boolean addsBeforeRemoving() {
+		return false;
+	}
+
 	protected abstract Collection getContainer(boolean left);
 	protected abstract Object createNewObject(boolean left);
 }

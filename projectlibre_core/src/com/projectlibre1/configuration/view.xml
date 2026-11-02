@@ -573,20 +573,11 @@
 			<column>Field.id</column>
 			<column>Field.indicators</column>
 			<column>Field.name</column>
-			<column>Field.userRole</column>
-			<column>Field.rbsCode</column>
-			<column>Field.resourceType</column>
-			<column>Field.emailAddress</column>
-			<column>Field.materialLabel</column>
-			<column>Field.initials</column>
-			<column>Field.userAccount</column>
 			<column>Field.group</column>
 			<column>Field.maximumUnits</column>
+			<column>Field.work</column>
 			<column>Field.standardRate</column>
-			<column>Field.overtimeRate</column>
-			<column>Field.costPerUse</column>
-			<column>Field.accrueAt</column>
-			<column>Field.baseCalendar</column>
+			<column>Field.emailAddress</column>
 		</columns>
 	</spreadsheet>
 
@@ -617,12 +608,10 @@
 	<spreadsheet id="Spreadsheet.Assignment.resourceUsage" category="resourceAssignmentSpreadsheet" cellStyleId="CellStyle.assignments" actionListId="ActionList.resource">
 		<columns>
 			<column>Field.id</column>
+			<column>Field.indicators</column>
 			<column>Field.name</column>
 			<column>Field.work</column>
-			<column>Field.workContour</column>
-			<column>Field.delay</column>
-			<column>Field.levelingDelay</column>
-			<column>Field.costRateTable</column>
+			<column>Field.assignmentUnits</column>
 		</columns>
 	</spreadsheet>
 

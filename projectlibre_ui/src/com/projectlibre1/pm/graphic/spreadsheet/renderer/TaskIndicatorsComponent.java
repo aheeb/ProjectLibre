@@ -57,6 +57,9 @@ package com.projectlibre1.pm.graphic.spreadsheet.renderer;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 
+import com.projectlibre1.workflow.Workload;
+import com.projectlibre1.pm.assignment.Assignment;
+import com.projectlibre1.pm.resource.Resource;
 import com.projectlibre1.pm.graphic.IconManager;
 import com.projectlibre1.configuration.Configuration;
 import com.projectlibre1.field.Field;
@@ -95,7 +98,11 @@ public class TaskIndicatorsComponent extends IndicatorsComponent{
 	}
 
 	
+	protected JLabel overallocated;
+
 	public void init() {
+		overallocated = new JLabel(" ", StatusGlyphIcon.WARNING, JLabel.RIGHT); //$NON-NLS-1$
+		overallocated.setOpaque(false);
 		//empty = new JLabel("");
 		calendar = new JLabel(" ",IconManager.getIcon("indicator.calendar"),  JLabel.RIGHT); //$NON-NLS-1$ //$NON-NLS-2$
 		calendar.setOpaque(false);
@@ -123,6 +130,24 @@ public class TaskIndicatorsComponent extends IndicatorsComponent{
 	
 	
 	
+	/** A red "!" when someone on the task has more work than they are available for while it runs. */
+	private void setOverallocationIndicator(NormalTask task, JComponent label, StringBuffer text, boolean isSelected, boolean hasFocus) {
+		if (task.getProject() == null || task.getAssignments().isEmpty())
+			return;
+		Workload workload = Workload.of(task.getProject());
+		StringBuffer names = new StringBuffer();
+		for (Object o : task.getAssignments()) {
+			Resource resource = ((Assignment) o).getResource();
+			if (resource != null && workload.isOverallocated(resource, task.getStart(), task.getEnd()))
+				names.append(names.length() > 0 ? ", " : "").append(resource.getName()); //$NON-NLS-1$ //$NON-NLS-2$
+		}
+		if (names.length() == 0)
+			return;
+		setLook(overallocated, isSelected, hasFocus);
+		label.add(overallocated);
+		text.append(Messages.getStringWithParam("Workload.taskOverallocated", names.toString()) + "<br>"); //$NON-NLS-1$ //$NON-NLS-2$
+	}
+
 	public void setIndicators(Object value,JComponent label,StringBuffer text,boolean isSelected, boolean hasFocus){
 		HasTaskIndicators indicators = (HasTaskIndicators)value;
 
@@ -160,6 +185,9 @@ public class TaskIndicatorsComponent extends IndicatorsComponent{
 			text.append(Messages.getString("TaskIndicatorsComponent.ThisParentTaskHasResources") + ((NormalTask)indicators).getResourceNames()+"<br>"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		
+		if (indicators instanceof NormalTask && !((NormalTask)indicators).isWbsParent())
+			setOverallocationIndicator((NormalTask)indicators, label, text, isSelected, hasFocus);
+
 		if (indicators instanceof Task) {
 			Task t = (Task)indicators;
 			if (t.isSubproject()) {

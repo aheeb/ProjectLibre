@@ -260,6 +260,13 @@ public class ChartModel implements TimeDistributedConstants, Serializable {
 			}
 		}
 		
+		GroupedCalculatedValues overallocatedCalculatedValues = markOverallocation(availabilityCalculatedValues, new GroupedCalculatedValues[] {
+				otherProjectsCalculatedValues, thisProjectCalculatedValues, selectedCalculatedValues});
+		toShareOfFullTime(project, new Object[] {AVAILABILITY, OVERALLOCATED, OTHER_PROJECTS, THIS_PROJECT, SELECTED},
+				new GroupedCalculatedValues[] {availabilityCalculatedValues, overallocatedCalculatedValues,
+				otherProjectsCalculatedValues, thisProjectCalculatedValues, selectedCalculatedValues});
+
+		XYSeries overallocatedSeries = buildHistogramSeries(OVERALLOCATED,overallocatedCalculatedValues);
 		XYSeries availabilitySeries = buildHistogramSeries(AVAILABILITY,availabilityCalculatedValues);
 		XYSeries otherProjectsSeries = null;
 		if (otherProjectsCalculatedValues!=null) otherProjectsSeries=buildHistogramSeries(OTHER_PROJECTS,otherProjectsCalculatedValues);
@@ -268,6 +275,7 @@ public class ChartModel implements TimeDistributedConstants, Serializable {
 		
 		
 		seriesCollection = new XYSeriesCollection();
+		seriesCollection.addSeries(overallocatedSeries); // drawn first: only the part above the availability line stays visible
 		if (stackCurrentOnTop) {
 			seriesCollection.addSeries(selectedSeries);
 			seriesCollection.addSeries(thisProjectSeries);
@@ -282,6 +290,57 @@ public class ChartModel implements TimeDistributedConstants, Serializable {
 		secondSeriesCollection.addSeries(availabilitySeries);
 	}
 	
+	/**
+	 * Splits the bars at the availability line: returns the total work of the periods where it is
+	 * above (to be drawn in red underneath) and cuts the other bars at the line.
+	 */
+	private GroupedCalculatedValues markOverallocation(GroupedCalculatedValues availability, GroupedCalculatedValues[] bars) {
+		if (availability == null || availability.size() == 0)
+			return null;
+		GroupedCalculatedValues over = null;
+		for (int i = 0; i < availability.size(); i++) {
+			double available = availability.getUnscaledValue(i);
+			double total = 0;
+			for (int b = 0; b < bars.length; b++)
+				if (bars[b] != null && i < bars[b].size())
+					total = Math.max(total, bars[b].getUnscaledValue(i)); // bars are stacked: the tallest is the total
+			if (total <= available + 60 * 1000L) // a minute: ignore rounding
+				continue;
+			if (over == null) {
+				over = new GroupedCalculatedValues();
+				for (int k = 0; k < availability.size(); k++) {
+					Long date = availability.getDate(k);
+					over.set(k, date == null ? 1L : date.longValue(), 0, 0D, null); // set() skips date 0
+				}
+			}
+			over.setValue(i, total);
+			for (int b = 0; b < bars.length; b++)
+				if (bars[b] != null && i < bars[b].size() && bars[b].getUnscaledValue(i) > available)
+					bars[b].setValue(i, available);
+		}
+		return over;
+	}
+
+	/**
+	 * Shows work as a share of a full-time person: each period is divided by the project's working
+	 * time in it, so an availability of 100% is drawn at 100% and a 40-hour week reaches it.
+	 * (Dividing by the length of the period counted weekends, which put full time at 71%.)
+	 */
+	private void toShareOfFullTime(Project project, Object[] traces, GroupedCalculatedValues[] values) {
+		if (project == null || project.getEffectiveWorkCalendar() == null)
+			return;
+		TimeIterator timeIterator = coord.getProjectTimeIterator();
+		for (int k = 0; timeIterator.hasNext(); k++) {
+			TimeInterval interval = timeIterator.next();
+			long fullTime = project.getEffectiveWorkCalendar().compare(interval.getEnd(), interval.getStart(), false);
+			for (int v = 0; v < values.length; v++) {
+				if (values[v] == null || k >= values[v].size())
+					continue;
+				values[v].setValue(k, fullTime > 0 ? values[v].getUnscaledValue(k) * getScaleFactor(traces[v]) / fullTime : 0D);
+			}
+		}
+	}
+
 	private XYSeries buildHistogramSeries(Object trace, CalculatedValues values) {
 		if (values == null)
 			return dummySeries(trace);

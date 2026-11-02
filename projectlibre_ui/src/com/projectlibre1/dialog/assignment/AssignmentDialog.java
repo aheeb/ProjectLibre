@@ -193,8 +193,16 @@ public final class AssignmentDialog extends AbstractDialog implements DocumentSe
 	void assign() {
 	    SpreadSheet sp=spreadSheetPane.getSpreadSheet();
 		if (sp.isEditing()) sp.getCellEditor().stopCellEditing();
-		assign(getSelectedResources(),1.0D);
+		assignAtAvailability(getSelectedResources());
 		spreadSheetPane.updateTable();
+	}
+
+	/** Each person gets the share of their time they are available for (see AssignmentService.defaultUnits). */
+	void assignAtAvailability(List resourceList) {
+		for (Iterator i = resourceList.iterator(); i.hasNext();) {
+			Resource resource = (Resource) i.next();
+			assign(resource, AssignmentService.defaultUnits(resource));
+		}
 	}
 	
 	void assign(List resourceList, double units) {
@@ -270,11 +278,14 @@ public final class AssignmentDialog extends AbstractDialog implements DocumentSe
 		List replacementList = ReplaceAssignmentDialog.getReplacementFromDialog(documentFrame,resource);
 		if (replacementList == null || replacementList.isEmpty()) // cancelled or nothing chosen
 			return;
-		if (!replacementList.contains(resource)) // if resource was replaced, remove it
+		boolean replaced = !replacementList.contains(resource);
+		replacementList.remove(resource); // if the resource is in the new list too, don't touch it
+		// add the new people before removing the old one: a task left without anyone for a moment
+		// would keep its duration instead of its work
+		assignAtAvailability(replacementList);
+		if (replaced)
 			remove(resource);
-		else // resource is in new list too, so don't touch it
-			replacementList.remove(resource);
-		assign(replacementList,1.0); //TODO assign what the old one was assigned
+		spreadSheetPane.updateTable();
 	}
 
 	

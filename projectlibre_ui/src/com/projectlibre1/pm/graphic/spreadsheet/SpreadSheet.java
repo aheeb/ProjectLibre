@@ -98,6 +98,7 @@ import com.projectlibre1.pm.graphic.spreadsheet.common.CommonSpreadSheetAction;
 import com.projectlibre1.pm.graphic.spreadsheet.common.CommonSpreadSheetModel;
 import com.projectlibre1.pm.graphic.spreadsheet.common.transfer.NodeListTransferHandler;
 import com.projectlibre1.pm.graphic.spreadsheet.editor.SimpleComboBoxEditor;
+import com.projectlibre1.workflow.PeopleMenu;
 import com.projectlibre1.workflow.TaskMenu;
 import com.projectlibre1.pm.graphic.spreadsheet.renderer.NameCellComponent;
 import com.projectlibre1.pm.graphic.spreadsheet.selection.SpreadSheetListSelectionModel;
@@ -144,16 +145,20 @@ public class SpreadSheet extends CommonSpreadSheet implements Cloneable {
 	}
 
 	/**
-	 * The first blank row after the last task: where the next task goes (-1 if there is none).
+	 * The first blank row after the last task (or person): where the next one goes (-1 if there is none).
 	 * Clicks and Enter further down land here, so a plan never gets accidental gaps of blank rows.
 	 */
 	public int getNextTaskRow() {
-		if (!(getModel() instanceof SpreadSheetModel) || !TaskMenu.isTaskSheet(this)) return -1;
+		if (!(getModel() instanceof SpreadSheetModel) || !(TaskMenu.isTaskSheet(this) || isPeopleList())) return -1;
 		SpreadSheetModel model = (SpreadSheetModel) getModel();
 		int n = getRowCount();
 		int r = n;
 		while (r > 0 && model.getNode(r - 1).isVoid()) r--;
 		return r < n ? r : -1;
+	}
+	/** The people list of the Resources view (not the Workload view, whose rows include assignments). */
+	private boolean isPeopleList() {
+		return com.projectlibre1.pm.graphic.views.ResourceView.spreadsheetCategory.equals(getSpreadSheetCategory()) && PeopleMenu.isPeopleSheet(this);
 	}
 	private int toNextTaskRow(int row) {
 		int next = getNextTaskRow();
@@ -172,7 +177,7 @@ public class SpreadSheet extends CommonSpreadSheet implements Cloneable {
 		super.paintComponent(g);
 		paintAddTaskHint(g);
 	}
-	/** "+ Add a task" in the name cell of the row where the next task goes. */
+	/** "+ Add a task" (or person) in the name cell of the row where the next one goes. */
 	private void paintAddTaskHint(java.awt.Graphics g) {
 		int row = getNextTaskRow();
 		if (row <= 0 || isReadOnly() || (isEditing() && getEditingRow() == row) || isEmptySheet()) return;
@@ -189,7 +194,7 @@ public class SpreadSheet extends CommonSpreadSheet implements Cloneable {
 		g2.setColor(com.projectlibre1.pm.graphic.laf.ModernLaf.TEXT_SECONDARY);
 		java.awt.FontMetrics fm = g2.getFontMetrics();
 		int x = cell.x + 6 + com.projectlibre1.pm.graphic.spreadsheet.renderer.NameCellComponent.ICON_WIDTH;
-		g2.drawString(Messages.getString("Text.addTaskHint"), x, cell.y + (cell.height + fm.getAscent() - fm.getDescent()) / 2);
+		g2.drawString(Messages.getString(isPeopleList() ? "Text.addPersonHint" : "Text.addTaskHint"), x, cell.y + (cell.height + fm.getAscent() - fm.getDescent()) / 2);
 		g2.dispose();
 	}
 
@@ -428,6 +433,10 @@ public class SpreadSheet extends CommonSpreadSheet implements Cloneable {
 					finishCurrentOperations();
 					if (row >= 0 && !isRowSelected(row)) changeSelection(row, Math.max(col, 0), false, false); // act on the row clicked
 					new TaskMenu(SpreadSheet.this).build().show(SpreadSheet.this, e.getX(), e.getY());
+				} else if (SwingUtilities.isRightMouseButton(e) && PeopleMenu.isPeopleSheet(SpreadSheet.this)) {
+					finishCurrentOperations();
+					if (row >= 0 && !isRowSelected(row)) changeSelection(row, Math.max(col, 0), false, false); // act on the row clicked
+					new PeopleMenu(SpreadSheet.this).build().show(SpreadSheet.this, e.getX(), e.getY());
 				} else if (popup != null && SwingUtilities.isRightMouseButton(e)) { // e.isPopupTrigger() can be used too
 //					selection.getRowSelection().clearSelection();
 //					selection.getRowSelection().addSelectionInterval(row, row);

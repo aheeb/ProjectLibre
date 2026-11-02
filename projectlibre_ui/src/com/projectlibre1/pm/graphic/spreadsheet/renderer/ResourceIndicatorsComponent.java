@@ -54,6 +54,9 @@
  * logo it must direct them back to http://www.projectlibre.com. 
  *******************************************************************************/
 package com.projectlibre1.pm.graphic.spreadsheet.renderer;
+import java.text.DateFormat;
+import java.util.List;
+
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 
@@ -61,7 +64,12 @@ import com.projectlibre1.pm.graphic.IconManager;
 import com.projectlibre1.company.ApplicationUser;
 import com.projectlibre1.company.UserUtil;
 import com.projectlibre1.graphic.configuration.HasResourceIndicators;
+import com.projectlibre1.pm.assignment.Assignment;
+import com.projectlibre1.pm.resource.Resource;
+import com.projectlibre1.pm.task.Project;
 import com.projectlibre1.strings.Messages;
+import com.projectlibre1.util.Environment;
+import com.projectlibre1.workflow.Workload;
 /**
  *  
  */
@@ -70,7 +78,13 @@ public class ResourceIndicatorsComponent extends IndicatorsComponent{
 	protected JLabel team;
 	protected JLabel userPowerUser,userLiteUser,userPowerUserExternal,userLiteUserExternal,userAdmin,userInactive;
 
+	protected JLabel overallocated, unassigned;
+
 	public void init() {
+		overallocated = new JLabel(" ", StatusGlyphIcon.WARNING, JLabel.RIGHT); //$NON-NLS-1$
+		overallocated.setOpaque(false);
+		unassigned = new JLabel(" ", StatusGlyphIcon.EMPTY, JLabel.RIGHT); //$NON-NLS-1$
+		unassigned.setOpaque(false);
 		team = new JLabel(" ",IconManager.getIcon("indicator.team"),  JLabel.RIGHT); //$NON-NLS-1$ //$NON-NLS-2$
 		team.setOpaque(false);
 		userAdmin = new JLabel(" ", IconManager.getIcon("indicator.user.admin"),  JLabel.RIGHT); //$NON-NLS-1$ //$NON-NLS-2$
@@ -95,8 +109,35 @@ public class ResourceIndicatorsComponent extends IndicatorsComponent{
 	}
 	
 	
+	/** A red "!" for someone over their availability on some day, a hollow dot for someone with no task yet. */
+	private void setWorkloadIndicators(Resource resource, JComponent label, StringBuffer text, boolean isSelected, boolean hasFocus) {
+		if (!resource.isLabor())
+			return;
+		List assignments = resource.getAssignments();
+		if (assignments == null || assignments.isEmpty()) {
+			label.add(unassigned);
+			setLook(unassigned, isSelected, hasFocus);
+			text.append(Messages.getString("Workload.unassigned")); //$NON-NLS-1$
+			return;
+		}
+		Project project = ((Assignment) assignments.get(0)).getTask().getProject();
+		Workload workload = Workload.of(project);
+		int days = workload.overloadedDayCount(resource);
+		if (days > 0) {
+			label.add(overallocated);
+			setLook(overallocated, isSelected, hasFocus);
+			text.append(Messages.getStringWithParam("Workload.overallocated", new Object[] {Integer.valueOf(days), //$NON-NLS-1$
+					DateFormat.getDateInstance(DateFormat.MEDIUM).format(new java.util.Date(workload.firstOverloadedDay(resource)))}));
+		}
+	}
+
 	public void setIndicators(Object value,JComponent label,StringBuffer text,boolean isSelected, boolean hasFocus){
 		HasResourceIndicators indicators = (HasResourceIndicators)value;
+		if (Environment.getStandAlone() && value instanceof Resource) {
+			// on your own, "on the team" just means assigned: say instead what needs attention
+			setWorkloadIndicators((Resource) value, label, text, isSelected, hasFocus);
+			return;
+		}
 		if (indicators.isInTeam()) {
 			label.add(team);
 			setLook(team,isSelected,hasFocus);
