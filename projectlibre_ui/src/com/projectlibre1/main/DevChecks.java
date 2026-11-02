@@ -75,13 +75,18 @@ public class DevChecks {
 				super.dispatchEvent(event);
 			} finally {
 				long ms = (System.nanoTime() - start) / 1000000;
-				if (ms > STALL_MS && !nested) System.err.println("[EDT-STALL] " + ms + " ms in " + dispatchEvent);
+				if (ms > STALL_MS && !nested && !isDevScript(event)) System.err.println("[EDT-STALL] " + ms + " ms in " + dispatchEvent);
 				depth--;
 				nested = outerNested || depth > 0;
 				dispatchEvent = outerEvent;
 				dispatchStart = 0;
 			}
 		}
+	}
+
+	/** dev/eval.sh scripts run on the EDT and include Groovy compilation; they are the test harness, not the app. */
+	static boolean isDevScript(AWTEvent e) {
+		return e.toString().contains("DevControl");
 	}
 
 	static String describe(AWTEvent e) {
@@ -101,7 +106,7 @@ public class DevChecks {
 			}
 			long start = dispatchStart, id = dispatchId;
 			Thread t = edt;
-			if (start == 0 || t == null || id == reportedId) continue;
+			if (start == 0 || t == null || id == reportedId || dispatchEvent.contains("DevControl")) continue;
 			long ms = (System.nanoTime() - start) / 1000000;
 			if (ms < STALL_MS) continue;
 			StackTraceElement[] stack = t.getStackTrace();
