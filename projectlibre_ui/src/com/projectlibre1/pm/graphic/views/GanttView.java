@@ -218,7 +218,10 @@ public class GanttView extends SplittedView implements BaseView, ScheduleEventLi
 	public void setBarStyles(String styleName) {
 		if (gantt == null)
 			return;
-		gantt.setBarStyles((BarStyles) Dictionary.get(BarStyles.category,styleName));
+		BarStyles styles = (BarStyles) Dictionary.get(BarStyles.category,styleName);
+		if (styles == null) // there is no "Tracking" set in view.xml; null styles made every paint throw
+			styles = (BarStyles) Dictionary.get(BarStyles.category,"standard");
+		gantt.setBarStyles(styles);
 	}
 
     protected JScrollPane createLeftScrollPane() {
