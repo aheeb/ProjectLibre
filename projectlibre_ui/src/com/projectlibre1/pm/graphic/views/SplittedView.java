@@ -82,7 +82,7 @@ public abstract class SplittedView extends JSplitPane {
 	public SplittedView(Synchronizer synchronizer) {
 		super(JSplitPane.HORIZONTAL_SPLIT);
 		this.synchronizer = synchronizer;
-		setOneTouchExpandable(true);
+		setOneTouchExpandable(false); // the divider can simply be dragged; the arrow buttons only added clutter
 	}
 	public void cleanUp() {
 		leftScrollPane = null;

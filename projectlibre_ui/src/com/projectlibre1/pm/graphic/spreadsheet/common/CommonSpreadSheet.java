@@ -103,6 +103,7 @@ import com.projectlibre1.field.FieldParseException;
 import com.projectlibre1.graphic.configuration.GraphicConfiguration;
 import com.projectlibre1.graphic.configuration.SpreadSheetFieldArray;
 import com.projectlibre1.graphic.configuration.shape.Colors;
+import com.projectlibre1.pm.graphic.laf.ModernLaf;
 import com.projectlibre1.grouping.core.Node;
 import com.projectlibre1.grouping.core.NodeFactory;
 import com.projectlibre1.grouping.core.model.NodeModel;
@@ -132,7 +133,7 @@ public class CommonSpreadSheet extends CommonTable implements CacheListener, Sav
 
 	public CommonSpreadSheet() {
 		super();
-		setGridColor(Colors.GRAY);
+		setGridColor(ModernLaf.HAIRLINE);
 		putClientProperty("JTable.autoStartsEdit",Boolean.TRUE);
 		//setSurrendersFocusOnKeystroke(true); //has the side effect of selecting the first character of cell after ENTER keystroke
 		setAutoCreateColumnsFromModel(false);

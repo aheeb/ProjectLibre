@@ -60,10 +60,12 @@ import java.awt.Color;
 import javax.swing.JComponent;
 import javax.swing.JTable;
 import javax.swing.UIManager;
+import javax.swing.border.Border;
+import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 
-import com.projectlibre1.pm.graphic.frames.GraphicManager;
+import com.projectlibre1.pm.graphic.laf.ModernLaf;
 import com.projectlibre1.pm.graphic.model.cache.GraphicNode;
 import com.projectlibre1.pm.graphic.spreadsheet.common.CommonSpreadSheetModel;
 import com.projectlibre1.graphic.configuration.CellFormat;
@@ -75,13 +77,18 @@ import com.projectlibre1.util.Environment;
  *
  */
 public class CellUtility {
+	/** Horizontal padding inside grid cells; the focus ring keeps the text where it was. */
+	public static final Border CELL_BORDER=new EmptyBorder(1, 6, 1, 6);
+	public static final Border FOCUS_BORDER=new CompoundBorder(new LineBorder(ModernLaf.ACCENT, 1), new EmptyBorder(0, 5, 0, 5));
+
 	public static void setAppearance(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column, JComponent component){
 		CommonSpreadSheetModel model = (CommonSpreadSheetModel) table.getModel();
 		GraphicNode node = model.getNode(row);
 		CellFormat cellFormat=model.getCellProperties(node);
 		if (isSelected){
-			component.setForeground(/*table.getSelectionForeground()*/Color.WHITE);
-			component.setBackground(/*Color.BLACK*/GraphicManager.getInstance().getLafManager().getSelectedBackgroundColor());
+			Color foreground=cellFormat.getForegroundObject();
+			component.setForeground((foreground==null)?ModernLaf.TEXT_PRIMARY:foreground);
+			component.setBackground(ModernLaf.SELECTION);
 		}else{
 
 			Color foreground=cellFormat.getForegroundObject();
@@ -91,19 +98,19 @@ public class CellUtility {
 		}
 		//component.setFont(table.getFont());
 		if (hasFocus){
-			component.setBorder( /*UIManager.getBorder("Table.focusCellHighlightBorder")*/new LineBorder(Color.BLACK) );
+			component.setBorder(FOCUS_BORDER);
 			if (table.isCellEditable(row, column)) {
 				Color foreground=cellFormat.getForegroundObject();
-				component.setForeground((foreground==null)?UIManager.getColor("Table.focusCellForeground"):foreground );
+				component.setForeground((foreground==null)?ModernLaf.TEXT_PRIMARY:foreground );
 				Color background=cellFormat.getBackgroundObject();
-				component.setBackground((background==null)?(Environment.isMac()?Colors.NOT_TOO_DARK_GRAY:UIManager.getColor("Table.focusCellBackground")):background );
+				component.setBackground((background==null)?table.getBackground():background );
 			}
 		}else{
-			component.setBorder(new EmptyBorder(1, 1, 1, 1));
+			component.setBorder(CELL_BORDER);
 //			if (!model.isRowEditable(row))
 //				component.setForeground(Color.GRAY);
 			if (!model.isCellEditable(row,column+1)){
-				component.setForeground(Color.GRAY);
+				component.setForeground(ModernLaf.TEXT_SECONDARY);
 			}
 		}
 	}

@@ -59,7 +59,7 @@ import java.awt.Graphics;
 
 import javax.swing.JComponent;
 
-import com.projectlibre1.pm.graphic.frames.GraphicManager;
+import com.projectlibre1.pm.graphic.laf.ModernLaf;
 
 /**
  *
@@ -72,8 +72,11 @@ public class GradientCorner extends JComponent {
 	
 	protected void paintComponent(Graphics g) {
 		super.paintComponent(g);
-		
-		GraphicManager.getInstance().getLafManager().paintComponent(g, this, selected);
+		g.setColor(selected ? ModernLaf.SELECTION_CHROME : ModernLaf.CHROME);
+		g.fillRect(0, 0, getWidth(), getHeight());
+		g.setColor(ModernLaf.HAIRLINE);
+		g.drawLine(0, getHeight() - 1, getWidth(), getHeight() - 1);
+		g.drawLine(getWidth() - 1, 0, getWidth() - 1, getHeight());
 	}
 
 	public boolean isSelected() {

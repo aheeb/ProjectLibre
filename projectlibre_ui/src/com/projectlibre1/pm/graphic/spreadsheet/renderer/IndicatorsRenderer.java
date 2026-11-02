@@ -67,6 +67,7 @@ import javax.swing.table.DefaultTableCellRenderer;
 import com.projectlibre1.pm.graphic.IconManager;
 import com.projectlibre1.pm.graphic.model.cache.GraphicNode;
 import com.projectlibre1.pm.graphic.spreadsheet.SpreadSheetParams;
+import com.projectlibre1.configuration.Configuration;
 import com.projectlibre1.field.Field;
 
 public class IndicatorsRenderer extends DefaultTableCellRenderer implements OfflineRenderer{
@@ -119,8 +120,11 @@ public class IndicatorsRenderer extends DefaultTableCellRenderer implements Offl
 	}
 	
 	public static JLabel getCellHeader() {
-		if (cellHeader == null)
-			cellHeader = new JLabel(IconManager.getIcon("infomation.icon"));
+		if (cellHeader == null) {
+			cellHeader = new JLabel(new InfoGlyphIcon());
+			Field field = Configuration.getFieldFromId("Field.indicators");
+			if (field != null) cellHeader.setToolTipText(field.getName());
+		}
 		return cellHeader;
 			
 	}
