@@ -56,6 +56,7 @@
 package com.projectlibre1.pm.graphic.views;
 
 import java.awt.Dimension;
+import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -63,6 +64,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import javax.swing.JScrollPane;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -202,6 +204,15 @@ public class GanttView extends SplittedView implements BaseView, ScheduleEventLi
 			public void componentResized(java.awt.event.ComponentEvent e) {
 				if (getWidth() < 600) return;
 				removeComponentListener(this);
+				// a cell scrolled into view while the grid was still narrow left it scrolled sideways
+				// (the first columns cut off); start at the left edge now that it has its real width
+				SwingUtilities.invokeLater(new Runnable() {
+					public void run() {
+						if (leftScrollPane == null) return;
+						Point p = leftScrollPane.getViewport().getViewPosition();
+						if (p.x != 0) leftScrollPane.getViewport().setViewPosition(new Point(0, p.y));
+					}
+				});
 				if (dividerRestored || leftScrollPane == null) return;
 				int wanted = Math.min(leftScrollPane.getPreferredSize().width + 2, getWidth() * 3 / 5);
 				if (wanted > getDividerLocation()) setDividerLocation(wanted);
