@@ -38,6 +38,7 @@ import javax.swing.text.JTextComponent;
 
 import com.projectlibre.ui.toolbar.MainToolBar;
 import com.projectlibre1.pm.graphic.IconManager;
+import com.projectlibre1.pm.graphic.laf.ModernLaf;
 import com.projectlibre1.toolbar.FilterToolBarManager;
 import com.projectlibre1.util.BrowserControl;
 import com.projectlibre1.util.Environment;
@@ -78,8 +79,12 @@ public class AppMenuBar implements MenuActionConstants {
 
 	private JMenuBar createMenuBar(final JFrame frame, Action settingsAction, FilterToolBarManager filters) {
 		JMenuBar bar = new JMenuBar();
-		if (!mac)
+		if (!mac) {
+			// one band with the toolbar below (and with the title bar, which FlatLaf merges on Windows)
+			bar.setBackground(ModernLaf.CHROME);
+			bar.setBorder(BorderFactory.createEmptyBorder());
 			bar.add(createLogo());
+		}
 
 		JMenu file = menu("MacMenu.File");
 		item(file, ACTION_NEW_PROJECT, "RibbonNewProject", false);
@@ -257,9 +262,14 @@ public class AppMenuBar implements MenuActionConstants {
 		return s == null ? key : s;
 	}
 
-	/** Menu label from the ribbon label: title case in English, with an ellipsis when it opens a dialog. */
+	/**
+	 * Menu label from the ribbon label (or AppMenu.<ribbon key>.text when the menu needs a longer one): title
+	 * case in English, with an ellipsis when it opens a dialog.
+	 */
 	private String label(String ribbonKey, boolean opensDialog) {
-		String s = MenuManager.getMenuStringOrNull(ribbonKey + ".text");
+		String s = MenuManager.getMenuStringOrNull("AppMenu." + ribbonKey + ".text");
+		if (s == null)
+			s = MenuManager.getMenuStringOrNull(ribbonKey + ".text");
 		if (s == null)
 			s = ribbonKey;
 		if ("en".equals(Locale.getDefault().getLanguage()))
