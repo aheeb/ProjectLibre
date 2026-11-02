@@ -212,6 +212,22 @@ public class AssignmentFormat extends AssociationFormat {
 		return true;
 	}
 
+	/**
+	 * Removing a person who already did work on the task first keeps that actual work on the task;
+	 * adding first would drop it together with the person. So only add first while nobody being
+	 * replaced has progress.
+	 */
+	public boolean addsBeforeRemoving(Collection removed) {
+		for (Object o : removed) {
+			if (o instanceof Assignment) {
+				Assignment assignment = (Assignment)o;
+				if (assignment.getPercentComplete() > 0.0D || assignment.getActualWork(null) > 0L)
+					return false;
+			}
+		}
+		return true;
+	}
+
 	protected Collection getContainer(boolean left) {
 		if (left)
 			return ((Task) parameters.getThisObject()).getProject().getResourcePool().getResourceList();

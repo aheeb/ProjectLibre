@@ -225,13 +225,14 @@ public class AssociationList implements List {
         }		
         
         // Remove ones that were eliminated, and add new ones
-        if (!associationFormat.addsBeforeRemoving())
+        boolean addFirst = associationFormat.addsBeforeRemoving(removed);
+        if (!addFirst)
         	for (i = removed.iterator(); i.hasNext();)
         		((Association)i.next()).doRemoveService(this); // will remove from real list
         for (i = added.iterator(); i.hasNext();) {
         	((Association)i.next()).doAddService(this); // will remove from real list
         }
-        if (associationFormat.addsBeforeRemoving())
+        if (addFirst)
         	for (i = removed.iterator(); i.hasNext();)
         		((Association)i.next()).doRemoveService(this);
         

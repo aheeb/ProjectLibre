@@ -81,6 +81,11 @@ public abstract class AssociationFormat extends java.text.Format{
 		return false;
 	}
 
+	/** Same as {@link #addsBeforeRemoving()}, but may depend on the associations about to be removed. */
+	public boolean addsBeforeRemoving(Collection removed) {
+		return addsBeforeRemoving();
+	}
+
 	protected abstract Collection getContainer(boolean left);
 	protected abstract Object createNewObject(boolean left);
 }

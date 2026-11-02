@@ -266,6 +266,16 @@ public final class AssignmentDialog extends AbstractDialog implements DocumentSe
 		}
 	}	
 	
+	/** True if the resource already did work on any of the selected tasks. */
+	boolean hasProgress(Resource resource) {
+		for (Iterator t = selectedTasks.iterator(); t.hasNext();) {
+			Assignment assignment = ((NormalTask)t.next()).findAssignment(resource);
+			if (assignment != null && (assignment.getPercentComplete() > 0.0D || assignment.getActualWork(null) > 0L))
+				return true;
+		}
+		return false;
+	}
+
 	void replace() {
 		List list = spreadSheetPane.getSelectedResources(true);
 		if (list.size() > 1) {
@@ -280,10 +290,14 @@ public final class AssignmentDialog extends AbstractDialog implements DocumentSe
 			return;
 		boolean replaced = !replacementList.contains(resource);
 		replacementList.remove(resource); // if the resource is in the new list too, don't touch it
-		// add the new people before removing the old one: a task left without anyone for a moment
-		// would keep its duration instead of its work
+		// Add the new people before removing the old one: a task left without anyone for a moment
+		// would keep its duration instead of its work. But if the old person already did work,
+		// remove them first, otherwise their actual work would go with them.
+		boolean removeFirst = replaced && hasProgress(resource);
+		if (removeFirst)
+			remove(resource);
 		assignAtAvailability(replacementList);
-		if (replaced)
+		if (replaced && !removeFirst)
 			remove(resource);
 		spreadSheetPane.updateTable();
 	}
