@@ -55,6 +55,8 @@
  *******************************************************************************/
 package com.projectlibre1.dialog;
 
+import com.projectlibre1.dialog.util.FieldComponentMap;
+
 import java.awt.Component;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -128,15 +130,19 @@ public final class ColumnDialog extends AbstractDialog {
 		// from the layout code makes both parts easier to read.
 		initControls();
 		//TODO set minimum size
-		FormLayout layout = new FormLayout("default, 3dlu, 120dlu:grow", // cols //$NON-NLS-1$
-				"p"); // rows //$NON-NLS-1$
+		FormLayout layout = new FormLayout("default, 4dlu, 140dlu:grow", // cols //$NON-NLS-1$
+				"p, 4dlu, p"); // rows //$NON-NLS-1$
 
-		// Create a builder that assists in adding components to the container.
-		// Wrap the panel with a standardized border.
 		DefaultFormBuilder builder = new DefaultFormBuilder(layout);
-		builder.setDefaultDialogBorder();
-		builder.append(Messages.getString("Text.Field"), combo); //$NON-NLS-1$
+		builder.append(Messages.getString("ColumnDialog.Show"), combo); //$NON-NLS-1$
+		builder.nextLine(2);
+		builder.nextColumn(2);
+		builder.append(FieldComponentMap.createHintLabelText(Messages.getString("ColumnDialog.Hint"), 140)); //$NON-NLS-1$
 		return builder.getPanel();
+	}
+
+	protected String getOkButtonText() {
+		return Messages.getString("ColumnDialog.Insert"); //$NON-NLS-1$
 	}
 	public final Field getField() {
 		return field;
