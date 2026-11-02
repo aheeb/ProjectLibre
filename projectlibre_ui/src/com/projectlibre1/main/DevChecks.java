@@ -111,11 +111,18 @@ public class DevChecks {
 			if (ms < STALL_MS) continue;
 			StackTraceElement[] stack = t.getStackTrace();
 			if (id != dispatchId) continue; // finished meanwhile
+			if (isWaitingForEvents(stack)) continue; // idle inside a modal dialog's nested event loop
 			reportedId = id;
 			StringBuilder sb = new StringBuilder("[EDT-STALL] EDT busy > ").append(ms).append(" ms in ").append(dispatchEvent).append('\n');
 			appendStack(sb, stack, 40);
 			System.err.print(sb);
 		}
+	}
+
+	static boolean isWaitingForEvents(StackTraceElement[] stack) {
+		for (int i = 0; i < Math.min(stack.length, 12); i++)
+			if (stack[i].getClassName().equals("java.awt.EventQueue") && stack[i].getMethodName().equals("getNextEvent")) return true;
+		return false;
 	}
 
 	static void appendStack(StringBuilder sb, StackTraceElement[] stack, int max) {
