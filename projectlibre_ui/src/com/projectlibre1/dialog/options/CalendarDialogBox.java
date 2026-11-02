@@ -55,6 +55,9 @@
  *******************************************************************************/
 package com.projectlibre1.dialog.options;
 
+import com.projectlibre1.dialog.util.FieldComponentMap;
+import com.projectlibre1.pm.task.Project;
+
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -177,7 +180,20 @@ public class CalendarDialogBox extends AbstractDialog{
 
         
     	public static CalendarDialogBox getInstance(Frame owner, CalendarOption option) {
-    		return new CalendarDialogBox(owner, option);
+    		return new CalendarDialogBox(owner, option == null ? CalendarOption.getInstance() : option);
+    	}
+
+    	/** Shows the dialog for the project's duration settings and stores them in the project if confirmed. */
+    	public static void editProjectOptions(Frame owner, Project project) {
+    		CalendarOption option = project == null ? null : project.getCalendarOption();
+    		CalendarDialogBox dialog = getInstance(owner, option);
+    		if (dialog.doModal()) {
+    			option = CalendarOption.getNewInstance();
+    			dialog.getForm().copyToOption(option);
+    			CalendarOption.setInstance(option);
+    			if (project != null)
+    				project.setCalendarOption(option);
+    		}
     	}
 
     	private CalendarDialogBox(Frame owner, CalendarOption option) {
@@ -271,13 +287,13 @@ public class CalendarDialogBox extends AbstractDialog{
     		initControls();
     		
     		FormLayout layout = new FormLayout(
-    		        "p,3dlu,p,p:grow", //$NON-NLS-1$
-    	    		  "p,3dlu,p,3dlu,p,3dlu,p"); //$NON-NLS-1$
+    		        "p,4dlu,50dlu,p:grow", //$NON-NLS-1$
+    	    		  "p,12dlu,p,4dlu,p,4dlu,p"); //$NON-NLS-1$
 
     		DefaultFormBuilder builder = new DefaultFormBuilder(layout);
     		builder.setDefaultDialogBorder();
     		CellConstraints cc = new CellConstraints();
-			builder.add(new JLabel(Messages.getString("CalendarDialogBox.TheseSettingsOnlyApplyToDuration")),cc.xyw(builder.getColumn(), builder //$NON-NLS-1$
+			builder.add(FieldComponentMap.createHintLabelText(Messages.getString("CalendarDialogBox.TheseSettingsOnlyApplyToDuration"), 190),cc.xyw(builder.getColumn(), builder //$NON-NLS-1$
 					.getRow(), 4));
     		builder.nextLine(2);
     		builder.append(Messages.getString("CalendarDialogBox.HoursPerday"),hoursPerDay); //$NON-NLS-1$

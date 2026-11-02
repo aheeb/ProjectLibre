@@ -56,6 +56,7 @@
 package com.projectlibre1.print;
 
 import java.awt.BorderLayout;
+import java.awt.FlowLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
@@ -79,6 +80,8 @@ import java.awt.print.PrinterException;
 import java.util.ArrayList;
 
 import javax.swing.Action;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
@@ -97,6 +100,7 @@ import com.projectlibre1.menu.MenuActionConstants;
 import com.projectlibre1.menu.MenuActionsMap;
 import com.projectlibre1.menu.MenuManager;
 import com.projectlibre1.pm.graphic.IconManager;
+import com.projectlibre1.pm.graphic.laf.ModernLaf;
 import com.projectlibre1.strings.Messages;
 import com.projectlibre1.util.Alert;
 
@@ -145,6 +149,7 @@ public class PrintPreviewFrame extends JFrame implements  ActionMap, MenuActionC
 
 		menuManager = MenuManager.getInstance(this);
 		JToolBar toolBar = menuManager.getToolBar(MenuManager.PRINT_PREVIEW_TOOL_BAR);
+		addPrimaryButtons(toolBar);
         getContentPane().add(toolBar, BorderLayout.BEFORE_FIRST_LINE);
          actionsMap.setEnabledDocumentMenuActions(true);
 
@@ -222,6 +227,25 @@ public class PrintPreviewFrame extends JFrame implements  ActionMap, MenuActionC
 		}
 	}
 
+	/** The icon toolbar is hard to read for the two things people come here for, so add labelled Save as PDF and Print buttons on the right. */
+	private void addPrimaryButtons(JToolBar toolBar) {
+		toolBar.setFloatable(false);
+		toolBar.setBorder(BorderFactory.createCompoundBorder(
+				BorderFactory.createMatteBorder(0, 0, 1, 0, ModernLaf.HAIRLINE), BorderFactory.createEmptyBorder(6, 8, 6, 12)));
+		toolBar.add(Box.createHorizontalGlue());
+		// in a panel so FlatLaf draws them as normal buttons, not borderless toolbar buttons
+		JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+		actions.setOpaque(false);
+		JButton pdf = new JButton(Messages.getString("PrintPreviewFrame.SavePDF")); //$NON-NLS-1$
+		pdf.addActionListener(new PDFAction());
+		actions.add(pdf);
+		JButton print = new JButton(Messages.getString("PrintPreviewFrame.Print")); //$NON-NLS-1$
+		print.addActionListener(new PrintAction());
+		actions.add(print);
+		toolBar.add(actions);
+		getRootPane().setDefaultButton(print);
+	}
+
 	protected PageSetup pageSetup;
 	protected JComponent pageSetupComponent;
 	public void toggleFormatPanel(){
@@ -238,6 +262,7 @@ public class PrintPreviewFrame extends JFrame implements  ActionMap, MenuActionC
 		if (pageSetup==null){
 			pageSetup=PageSetup.getInstance((GraphPageable)document);
 			pageSetupComponent=new JScrollPane(pageSetup.createContentPanel(true));
+			pageSetupComponent.setBorder(BorderFactory.createMatteBorder(0, 1, 0, 0, ModernLaf.HAIRLINE));
 			pageSetupComponent.setFont(pageSetupComponent.getFont().deriveFont(8));
 			getContentPane().add(pageSetupComponent,BorderLayout.EAST);
 		}

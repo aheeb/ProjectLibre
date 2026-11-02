@@ -55,6 +55,12 @@
  *******************************************************************************/
 package com.projectlibre1.dialog;
 
+import java.awt.Component;
+import javax.swing.DefaultListCellRenderer;
+import javax.swing.JList;
+
+import com.projectlibre1.dialog.util.FieldComponentMap;
+
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.text.ParseException;
@@ -140,12 +146,21 @@ public class DependencyDialog extends AbstractDialog {
 		sucLabel = new JLabel();
 		Object[] options = dependencyTypeField.getOptions(null);
 		typeCombo = new JComboBox(options);
+		typeCombo.setRenderer(new DefaultListCellRenderer() {
+			// show "Finish To Start (FS)" rather than just "FS"; options are in configuration.xml order
+			private final String[] keys = {"FF", "FS", "SF", "SS"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+			public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+				int i = index >= 0 ? index : typeCombo.getSelectedIndex();
+				if (value != null && i >= 0 && i < keys.length && typeCombo.getItemCount() == keys.length)
+					value = Messages.getString("DependencyType.long" + keys[i]) + " (" + value + ")"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				return super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+			}});
 		lagTextField = new JTextField();
 		bind(true);
 	}
 	
 	public ButtonPanel createButtonPanel() {
-		AbstractAction action = new AbstractAction(Messages.getString("Text.Remove")) {
+		AbstractAction action = new AbstractAction(Messages.getString("DependencyDialog.DeleteLink")) { //$NON-NLS-1$
 			public void actionPerformed(ActionEvent e) {
 				delete();
 			}
@@ -162,34 +177,26 @@ public class DependencyDialog extends AbstractDialog {
 	}   	
 
 	public JComponent createContentPanel() {
-		// Separating the component initialization and configuration
-		// from the layout code makes both parts easier to read.
 		initControls();
-		//TODO set minimum size
 		FormLayout layout = new FormLayout(
-				"50dlu,3dlu,50dlu,3dlu,50dlu,3dlu,50dlu", // cols
-				"p,3dlu,p,3dlu,p,3dlu,p,3dlu"); // rows
+				"max(40dlu;pref), 4dlu, 140dlu", // cols //$NON-NLS-1$
+				"p, 4dlu, p, 12dlu, p, 2dlu, p, 8dlu, p, 2dlu, p"); // rows //$NON-NLS-1$
 
-		// Create a builder that assists in adding components to the container.
-		// Wrap the panel with a standardized border.
 		DefaultFormBuilder builder = new DefaultFormBuilder(layout);
-		builder.setDefaultDialogBorder();
 		CellConstraints cc = new CellConstraints();
-		builder.append(Messages.getString("Text.From") + ":");
-		builder.add(preLabel,cc.xyw(builder.getColumn(), builder
-				.getRow(), 5)); 
-		builder.nextLine(2);
-		builder.append(Messages.getString("Text.To") + ":");
-		builder.add(sucLabel,cc.xyw(builder.getColumn(), builder
-				.getRow(), 5)); 
-		
-		builder.nextLine(2);
-		builder.append(Messages.getString("Text.Type") + ":", typeCombo);
-
-		builder.addLabel(Messages.getString("Text.Lag") + ":");
-		builder.nextColumn(2);
-		builder.add(lagTextField);
-
+		builder.addLabel(Messages.getString("Text.From") + ":", cc.xy(1, 1)); //$NON-NLS-1$ //$NON-NLS-2$
+		builder.add(preLabel, cc.xy(3, 1));
+		builder.addLabel(Messages.getString("Text.To") + ":", cc.xy(1, 3)); //$NON-NLS-1$ //$NON-NLS-2$
+		builder.add(sucLabel, cc.xy(3, 3));
+		JLabel typeLabel = builder.addLabel(Messages.getString("Text.Type") + ":", cc.xy(1, 5)); //$NON-NLS-1$ //$NON-NLS-2$
+		builder.add(typeCombo, cc.xy(3, 5));
+		FieldComponentMap.applyHint("Field.dependencyType", typeLabel, typeCombo); //$NON-NLS-1$
+		builder.add(FieldComponentMap.createHintLabel("Field.dependencyType", 140), cc.xy(3, 7)); //$NON-NLS-1$
+		JLabel lagLabel = builder.addLabel(Messages.getString("Text.Lag") + ":", cc.xy(1, 9)); //$NON-NLS-1$ //$NON-NLS-2$
+		lagTextField.setColumns(8);
+		builder.add(lagTextField, cc.xy(3, 9, "left, default")); //$NON-NLS-1$
+		FieldComponentMap.applyHint("Field.lag", lagLabel, lagTextField); //$NON-NLS-1$
+		builder.add(FieldComponentMap.createHintLabel("Field.lag", 140), cc.xy(3, 11)); //$NON-NLS-1$
 		return builder.getPanel();
 	}
 

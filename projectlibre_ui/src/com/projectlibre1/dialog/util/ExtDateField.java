@@ -55,39 +55,81 @@
  *******************************************************************************/
 package com.projectlibre1.dialog.util;
 
+import java.awt.BasicStroke;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.RenderingHints;
+import java.awt.Window;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.lang.reflect.Method;
 import java.text.DateFormat;
 import java.text.ParseException;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
+import javax.swing.BorderFactory;
+import javax.swing.Icon;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.RootPaneContainer;
+import javax.swing.SwingConstants;
+import javax.swing.UIManager;
 import javax.swing.text.DateFormatter;
 
+import com.formdev.flatlaf.ui.FlatArrowButton;
+import com.projectlibre1.pm.graphic.laf.ModernLaf;
+import com.projectlibre1.strings.Messages;
+
+import net.sf.nachocalendar.components.ArrowButton;
 import net.sf.nachocalendar.components.DateField;
+import net.sf.nachocalendar.components.DayPanel;
+import net.sf.nachocalendar.components.DayRenderer;
+import net.sf.nachocalendar.components.HeaderPanel;
+import net.sf.nachocalendar.components.HeaderRenderer;
+import net.sf.nachocalendar.components.MonthScroller;
+import net.sf.nachocalendar.components.YearScroller;
 
 public class ExtDateField extends DateField {
+	private JButton pickButton;
+	private boolean popupStyled = false;
 
 	public ExtDateField(boolean showWeekNumbers) {
 		super(showWeekNumbers);
-		// TODO Auto-generated constructor stub
+		initRenderers();
 	}
 
 	public ExtDateField() {
-		// TODO Auto-generated constructor stub
+		initRenderers();
 	}
 
 	public ExtDateField(DateFormatter formatter) {
 		super(formatter);
-		// TODO Auto-generated constructor stub
+		initRenderers();
 	}
 
 	public ExtDateField(DateFormat dateFormat) {
 		super(dateFormat);
-		// TODO Auto-generated constructor stub
+		initRenderers();
 	}
 
 	public ExtDateField(Locale locale) {
 		super(locale);
-		// TODO Auto-generated constructor stub
+		initRenderers();
 	}
 
 	public Date getDateValue() {
@@ -101,6 +143,229 @@ public class ExtDateField extends DateField {
 		}
 		return (Date)value;
 
+	}
+
+	private void initRenderers() {
+		setRenderer(new ModernDayRenderer());
+		setHeaderRenderer(new ModernHeaderRenderer());
+	}
+
+	/**
+	 * Makes the field look like a FlatLaf combo box for use in forms: padded text and a
+	 * calendar button instead of nachocalendar's small painted arrow.
+	 */
+	public void useFormStyle() {
+		if (pickButton != null)
+			return;
+		for (Component c : getComponents())
+			if (c instanceof ArrowButton)
+				remove(c);
+		getFormattedTextField().setBorder(BorderFactory.createEmptyBorder(0, 6, 0, 2));
+		pickButton = new JButton(new CalendarIcon());
+		pickButton.putClientProperty("JButton.buttonType", "toolBarButton"); //$NON-NLS-1$ //$NON-NLS-2$
+		pickButton.setFocusable(false);
+		pickButton.setMargin(new Insets(1, 4, 1, 4));
+		pickButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+		pickButton.setToolTipText(Messages.getString("DateField.pickDate")); //$NON-NLS-1$
+		pickButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				ExtDateField.this.actionPerformed(e);
+			}});
+		pickButton.setEnabled(isEnabled());
+		pickButton.setOpaque(false);
+		add(pickButton, BorderLayout.EAST);
+		setBackground(UIManager.getColor("TextField.background")); //$NON-NLS-1$
+		revalidate();
+	}
+
+	/** In form style, as tall as a text field so it lines up with its neighbours. */
+	public Dimension getPreferredSize() {
+		Dimension d = super.getPreferredSize();
+		if (pickButton != null)
+			d.height = Math.max(d.height, new JTextField().getPreferredSize().height);
+		return d;
+	}
+
+	public void actionPerformed(ActionEvent e) {
+		if (!popupStyled) {
+			popupStyled = true;
+			stylePopup();
+		}
+		super.actionPerformed(e);
+	}
+
+	/**
+	 * Creates nachocalendar's popup early and restyles it before it is first shown: white
+	 * surface with a hairline frame, roomier day cells, FlatLaf arrow buttons.
+	 */
+	private void stylePopup() {
+		try {
+			Method create = DateField.class.getDeclaredMethod("createWindow"); //$NON-NLS-1$
+			create.setAccessible(true);
+			create.invoke(this);
+			java.lang.reflect.Field f = DateField.class.getDeclaredField("windowpanel"); //$NON-NLS-1$
+			f.setAccessible(true);
+			Window popup = (Window) f.get(this);
+			if (!(popup instanceof RootPaneContainer))
+				return;
+			Container content = ((RootPaneContainer) popup).getContentPane();
+			Color surface = UIManager.getColor("TextField.background"); //$NON-NLS-1$
+			stylePopupComponent(content, surface);
+			if (content.getComponentCount() > 0 && content.getComponent(0) instanceof JComponent)
+				((JComponent) content.getComponent(0)).setBorder(BorderFactory.createCompoundBorder(
+						BorderFactory.createLineBorder(ModernLaf.HAIRLINE.darker()), BorderFactory.createEmptyBorder(6, 6, 6, 6)));
+			popup.pack();
+		} catch (Exception ex) {
+			// keep nachocalendar's own look
+		}
+	}
+
+	private static void stylePopupComponent(Component c, Color surface) {
+		if (c instanceof DayPanel || c instanceof HeaderPanel) {
+			c.setPreferredSize(new Dimension(30, c instanceof DayPanel ? 24 : 20));
+			return;
+		}
+		if (c instanceof MonthScroller || c instanceof YearScroller)
+			((JComponent) c).setBorder(BorderFactory.createEmptyBorder(0, 0, 4, 0));
+		if (c instanceof JPanel)
+			c.setBackground(surface);
+		if (c instanceof Container && !(c instanceof JComboBox)) {
+			Container parent = (Container) c;
+			Component[] children = parent.getComponents();
+			for (int i = 0; i < children.length; i++) {
+				if (children[i] instanceof ArrowButton)
+					replaceArrow(parent, (ArrowButton) children[i]);
+				else
+					stylePopupComponent(children[i], surface);
+			}
+		}
+		if (c instanceof MonthScroller || c instanceof YearScroller)
+			c.setBackground(surface);
+	}
+
+	/** Swaps a painted nachocalendar arrow for a FlatLaf-styled one that forwards its clicks. */
+	private static void replaceArrow(Container parent, final ArrowButton arrow) {
+		int direction = arrow.getDirection();
+		JButton b = new FlatArrowButton(direction, "chevron", //$NON-NLS-1$
+				ModernLaf.TEXT_SECONDARY, UIManager.getColor("Label.disabledForeground"), //$NON-NLS-1$
+				null, UIManager.getColor("Button.toolbar.hoverBackground"), //$NON-NLS-1$
+				null, UIManager.getColor("Button.toolbar.pressedBackground")); //$NON-NLS-1$
+		b.setFocusable(false);
+		b.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				arrow.doClick(0);
+			}});
+		Object constraints = null;
+		if (parent.getLayout() instanceof GridBagLayout)
+			constraints = ((GridBagLayout) parent.getLayout()).getConstraints(arrow);
+		int index = indexOf(parent, arrow);
+		parent.remove(arrow);
+		b.setPreferredSize(new Dimension(22, arrow.getPreferredSize().height));
+		parent.add(b, constraints, index);
+	}
+
+	private static int indexOf(Container parent, Component c) {
+		Component[] children = parent.getComponents();
+		for (int i = 0; i < children.length; i++)
+			if (children[i] == c)
+				return i;
+		return -1;
+	}
+
+	public void setEnabled(boolean enabled) {
+		super.setEnabled(enabled);
+		if (pickButton != null)
+			pickButton.setEnabled(enabled);
+	}
+
+	/** Small outline calendar glyph drawn in the secondary text colour. */
+	private static class CalendarIcon implements Icon {
+		public int getIconWidth() {
+			return 14;
+		}
+		public int getIconHeight() {
+			return 14;
+		}
+		public void paintIcon(Component c, Graphics g, int x, int y) {
+			Graphics2D g2 = (Graphics2D) g.create();
+			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+			g2.setColor(c.isEnabled() ? ModernLaf.TEXT_SECONDARY : UIManager.getColor("Label.disabledForeground")); //$NON-NLS-1$
+			g2.setStroke(new BasicStroke(1.2f));
+			g2.drawRoundRect(x + 1, y + 2, 12, 11, 3, 3);
+			g2.drawLine(x + 1, y + 6, x + 13, y + 6);
+			g2.drawLine(x + 4, y + 1, x + 4, y + 3);
+			g2.drawLine(x + 10, y + 1, x + 10, y + 3);
+			g2.dispose();
+		}
+	}
+
+	/** Day cell: plain number, accent pill when selected, accent text for today. */
+	static class ModernDayRenderer extends JLabel implements DayRenderer {
+		private static final long serialVersionUID = 1L;
+		private final Calendar cal = Calendar.getInstance();
+		private boolean selected;
+
+		ModernDayRenderer() {
+			setHorizontalAlignment(SwingConstants.CENTER);
+			setVerticalAlignment(SwingConstants.CENTER);
+			setOpaque(false);
+		}
+
+		public Component getDayRenderer(DayPanel panel, Date day, Object data, boolean selected, boolean working, boolean enabled) {
+			this.selected = selected && enabled;
+			cal.setTime(day);
+			int dayOfMonth = cal.get(Calendar.DAY_OF_MONTH);
+			setText(Integer.toString(dayOfMonth));
+			Color fg = UIManager.getColor("Label.foreground"); //$NON-NLS-1$
+			if (!enabled)
+				fg = ModernLaf.HAIRLINE.darker();
+			else if (this.selected)
+				fg = Color.WHITE;
+			else if (isToday(cal))
+				fg = ModernLaf.ACCENT;
+			else if (!working)
+				fg = ModernLaf.TEXT_SECONDARY;
+			setForeground(fg);
+			setFont(UIManager.getFont("Label.font")); //$NON-NLS-1$
+			return this;
+		}
+
+		private static boolean isToday(Calendar c) {
+			Calendar now = Calendar.getInstance();
+			return now.get(Calendar.YEAR) == c.get(Calendar.YEAR) && now.get(Calendar.DAY_OF_YEAR) == c.get(Calendar.DAY_OF_YEAR);
+		}
+
+		protected void paintComponent(Graphics g) {
+			if (selected) {
+				Graphics2D g2 = (Graphics2D) g.create();
+				g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+				g2.setColor(ModernLaf.ACCENT);
+				int d = Math.min(getWidth(), getHeight()) - 2;
+				int w = Math.min(getWidth() - 2, d + 6);
+				g2.fillRoundRect((getWidth() - w) / 2, (getHeight() - d) / 2, w, d, d, d);
+				g2.dispose();
+			}
+			super.paintComponent(g);
+		}
+	}
+
+	/** Weekday header: small secondary text on the popup background, no dark bar. */
+	static class ModernHeaderRenderer extends JLabel implements HeaderRenderer {
+		private static final long serialVersionUID = 1L;
+
+		ModernHeaderRenderer() {
+			setHorizontalAlignment(SwingConstants.CENTER);
+			setVerticalAlignment(SwingConstants.CENTER);
+			setOpaque(false);
+		}
+
+		public Component getHeaderRenderer(HeaderPanel panel, Object value, boolean isHeader, boolean isWorking) {
+			setText(value == null ? "" : value.toString()); //$NON-NLS-1$
+			Font f = UIManager.getFont("Label.font"); //$NON-NLS-1$
+			setFont(f.deriveFont(f.getSize2D() - 1f));
+			setForeground(ModernLaf.TEXT_SECONDARY);
+			return this;
+		}
 	}
 
 }

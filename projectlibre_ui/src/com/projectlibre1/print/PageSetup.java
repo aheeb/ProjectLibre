@@ -449,6 +449,7 @@ public class PageSetup{
 		initFont(scaleToWidthLabel);
 		scaleToWidth=new JSpinner(new SpinnerNumberModel(document.getScaleToSettings().getWidth(),0.1,10.0,0.05));
 		scaleToWidth.setEditor(new JSpinner.NumberEditor(scaleToWidth,"#%"));
+		((JSpinner.DefaultEditor)scaleToWidth.getEditor()).getTextField().setColumns(4);
 		scaleToWidth.addChangeListener(new ChangeListener(){
 			public void stateChanged(ChangeEvent e) {
 				double ratio=((Number)scaleToWidth.getValue()).doubleValue();
@@ -473,6 +474,7 @@ public class PageSetup{
 		initFont(scaleToHeightLabel);
 		scaleToHeight=new JSpinner(new SpinnerNumberModel(document.getScaleToSettings().getHeight(),0.1,10.0,0.05));
 		scaleToHeight.setEditor(new JSpinner.NumberEditor(scaleToHeight,"#%"));
+		((JSpinner.DefaultEditor)scaleToHeight.getEditor()).getTextField().setColumns(4);
 		scaleToHeight.addChangeListener(new ChangeListener(){
 			public void stateChanged(ChangeEvent e) {
 				if (isUpdaping()) return;
@@ -512,6 +514,7 @@ public class PageSetup{
 		fitToWidth=new JSpinner(new SpinnerNumberModel(document.getFitToSettings().getColumns(),1,99999,1));
 		fitToWidth.setEnabled(!document.isScaleToSelected());
 		fitToWidth.setEditor(new JSpinner.NumberEditor(fitToWidth,"#"));
+		((JSpinner.DefaultEditor)fitToWidth.getEditor()).getTextField().setColumns(4);
 		fitToWidth.addChangeListener(new ChangeListener(){
 			public void stateChanged(ChangeEvent e) {
 				if (isUpdaping()) return;
@@ -527,6 +530,7 @@ public class PageSetup{
 		fitToHeight=new JSpinner(new SpinnerNumberModel(document.getFitToSettings().getRows(),1,99999,1));
 		fitToHeight.setEnabled(!document.isScaleToSelected());
 		fitToHeight.setEditor(new JSpinner.NumberEditor(fitToHeight,"#"));
+		((JSpinner.DefaultEditor)fitToHeight.getEditor()).getTextField().setColumns(4);
 		fitToHeight.addChangeListener(new ChangeListener(){
 			public void stateChanged(ChangeEvent e) {
 				if (isUpdaping()) return;
@@ -1179,7 +1183,7 @@ public class PageSetup{
 	}
 	private JComponent createFlowScalingPanel(){
 		FormLayout layout = new FormLayout(
-		        "1dlu, 5dlu,p,22dlu,3dlu,p,1dlu",
+		        "1dlu, 5dlu,p,36dlu,3dlu,p,1dlu",
 		        "p, 3dlu,p,3dlu,p,3dlu,p,p,10dlu,p,3dlu,p,3dlu,p,3dlu");
 
 		DefaultFormBuilder builder = new DefaultFormBuilder(layout);

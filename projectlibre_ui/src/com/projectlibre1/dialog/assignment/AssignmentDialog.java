@@ -60,6 +60,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import java.awt.Font;
+
 import javax.swing.AbstractAction;
 import javax.swing.JButton;
 import javax.swing.JComponent;
@@ -70,7 +72,7 @@ import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.layout.CellConstraints;
 import com.jgoodies.forms.layout.FormLayout;
 import com.projectlibre1.dialog.AbstractDialog;
-import com.projectlibre1.dialog.ButtonPanel;
+import com.projectlibre1.dialog.util.FieldComponentMap;
 import com.projectlibre1.help.HelpUtil;
 import com.projectlibre1.pm.graphic.IconManager;
 import com.projectlibre1.pm.graphic.frames.DocumentFrame;
@@ -301,64 +303,56 @@ public final class AssignmentDialog extends AbstractDialog implements DocumentSe
 		return showingTeamAll;
 	}
 	public JComponent createContentPanel() {
-        
 		// Separating the component initialization and configuration
 		// from the layout code makes both parts easier to read.
 		initControls();
-		FormLayout layout = new FormLayout("p, 1dlu, default ,3dlu, default", // cols //$NON-NLS-1$
-		"p, 3dlu,"+(Environment.getStandAlone()?"":"p, 3dlu,")+"fill:200dlu:grow"); // rows //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-
-		// Create a builder that assists in adding components to the container.
-		// Wrap the panel with a standardized border.
+		boolean teamLabel = !Environment.getStandAlone() && !Environment.isExternal();
+		FormLayout layout = new FormLayout("fill:200dlu:grow, 8dlu, p", // cols //$NON-NLS-1$
+		"p, 4dlu, p, 8dlu,"+(teamLabel?"p, 4dlu,":"")+"fill:200dlu:grow"); // rows //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		DefaultFormBuilder builder = new DefaultFormBuilder(layout);
-		builder.setDefaultDialogBorder();
 		CellConstraints cc = new CellConstraints();
-		// task names span whole dialog
-		builder.add(taskNames,cc.xyw(builder.getColumn(), builder.getRow(), builder.getColumnCount()));
+		taskNames.setFont(taskNames.getFont().deriveFont(Font.BOLD));
+		builder.add(taskNames,cc.xyw(1, builder.getRow(), 3));
 		builder.nextLine(2);
-		
-		if (!Environment.getStandAlone()){
-			if (!Environment.isExternal())
-				builder.add(getTeamOrAllLabel(),cc.xyw(builder.getColumn(), builder.getRow(), builder.getColumnCount()));
+		builder.add(FieldComponentMap.createHintLabelText(Messages.getString("AssignmentDialog.Hint"), 300),cc.xyw(1, builder.getRow(), 3)); //$NON-NLS-1$
+		builder.nextLine(2);
+		if (teamLabel) {
+			builder.add(getTeamOrAllLabel(),cc.xyw(1, builder.getRow(), 3));
 			builder.nextLine(2);
 		}
-
-//		builder.append(projectName);
-//		builder.nextLine(2);
-
-		builder.append(spreadSheetPane, createEditorsButtons(), createButtons());
+		builder.add(spreadSheetPane, cc.xy(1, builder.getRow()));
+		builder.add(createButtons(), cc.xy(3, builder.getRow(), "fill, top")); //$NON-NLS-1$
 		return builder.getPanel();
 	}
-	
-	public JComponent createEditorsButtons() {
-		FormLayout layout = new FormLayout("20px", // cols //$NON-NLS-1$
-		"20dlu,20px, 3dlu, 20px"); // rows //$NON-NLS-1$
-		DefaultFormBuilder builder = new DefaultFormBuilder(layout);
-		builder.nextLine(1);
-		builder.append(stopEditorButton);
-		builder.nextLine(2);
-		builder.append(cancelEditorButton);
-		editorsButtons=builder.getPanel();
-		return editorsButtons;
-	}
+
 	public JComponent createButtons() {
-		FormLayout layout = new FormLayout("default", // cols //$NON-NLS-1$
-		"50dlu,p,3dlu,p, 3dlu, p, 3dlu, p"); // rows //$NON-NLS-1$
+		FormLayout layout = new FormLayout("fill:max(70dlu;pref)", // cols //$NON-NLS-1$
+		"p, 4dlu, p, 4dlu, p"); // rows //$NON-NLS-1$
 		DefaultFormBuilder builder = new DefaultFormBuilder(layout);
-		builder.nextLine(1);
 		builder.append(assignButton);
 		builder.nextLine(2);
 		builder.append(removeButton);
 		builder.nextLine(2);		
 		builder.append(replaceButton);
-		builder.nextLine(2);		
-		builder.add(getHelpButton());
-
 		return builder.getPanel();
 	}
-	
-	public ButtonPanel createButtonPanel() {
-		return null;
+
+	protected boolean hasCloseButton() {
+		return true;
+	}
+
+	protected boolean hasHelpButton() {
+		return true;
+	}
+
+	/** Enter assigns the selected resources rather than closing the window. */
+	protected boolean enterConfirms() {
+		return false;
+	}
+
+	protected void initComponents() {
+		super.initComponents();
+		getRootPane().setDefaultButton(assignButton);
 	}
 
 	/**
@@ -404,13 +398,26 @@ public final class AssignmentDialog extends AbstractDialog implements DocumentSe
 		if (selectedTasks.size() ==0 || !(selectedTasks.get(0) instanceof Task))
 			names = Messages.getString("AssignmentDialog.none"); //$NON-NLS-1$
 		else
-			names = DataUtils.stringListWithMaxAndMessage(selectedTasks,Settings.STRING_LIST_LIMIT,Messages.getString("Message.tooManyTasksSelectedToList")); //$NON-NLS-1$
-
-		taskNames.setText(Messages.getString("Text.Tasks") + ": " + names); //$NON-NLS-1$ //$NON-NLS-2$
+			names = taskNameList(selectedTasks);
+		taskNames.setText(Messages.getStringWithParam("AssignmentDialog.AssignTo", names)); //$NON-NLS-1$
 		spreadSheetPane.setSelectedTasks(selectedTasks);
 //		setEnabled(!selectedTasks.isEmpty());
 	}
 	
+	/** Up to three task names, then "and N more". */
+	private static String taskNameList(List tasks) {
+		StringBuffer b = new StringBuffer();
+		int shown = Math.min(3, tasks.size());
+		for (int i = 0; i < shown; i++) {
+			if (i > 0)
+				b.append(", "); //$NON-NLS-1$
+			b.append(tasks.get(i));
+		}
+		if (tasks.size() > shown)
+			b.append(' ').append(Messages.getStringWithParam("AssignmentDialog.AndMore", Integer.toString(tasks.size() - shown))); //$NON-NLS-1$
+		return b.toString();
+	}
+
 	public List getSelectedResources(){
  		return spreadSheetPane.getSelectedResources(false);
  	}

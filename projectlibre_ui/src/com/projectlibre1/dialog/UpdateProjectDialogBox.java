@@ -55,6 +55,11 @@
  *******************************************************************************/
 package com.projectlibre1.dialog;
 
+import com.projectlibre1.dialog.util.FieldComponentMap;
+
+
+import javax.swing.BorderFactory;
+
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -228,40 +233,30 @@ public class UpdateProjectDialogBox extends AbstractDialog {
 	public JComponent createContentPanel() {
 	
 		initControls();
+		update.setText(Messages.getString("UpdateProjectDialogBox.UpdateWorkAsCompleteThrough").trim()); //$NON-NLS-1$
+		reschedule.setText(Messages.getString("UpdateProjectDialogBox.RescheduleCompletedWorkToStartAfter").trim()); //$NON-NLS-1$
+		selectedTask.setText(selectedTask.getText().trim());
 		
 		FormLayout layout = new FormLayout(
-		        "20dlu,3dlu,p, 3dlu,75dlu,3dlu,30dlu ", //$NON-NLS-1$
-	    		  "p,1dlu,p,1dlu,p,10dlu,p,3dlu,p,3dlu,p,3dlu,p,3dlu,p,3dlu,p,3dlu,p,3dlu,p"); //$NON-NLS-1$
+		        "p, 8dlu, 100dlu, 0dlu:grow", //$NON-NLS-1$
+	    		  "p,12dlu,p,2dlu,p,2dlu,p,8dlu,p,16dlu,p,2dlu,p"); //$NON-NLS-1$
 
 		DefaultFormBuilder builder = new DefaultFormBuilder(layout);
-		builder.setDefaultDialogBorder();
 		CellConstraints cc = new CellConstraints();
 
-		builder.append(update);
-		builder.append(Messages.getString("UpdateProjectDialogBox.UpdateWorkAsCompleteThrough")); //$NON-NLS-1$
-		builder.append(updateDateChooser);
-		builder.nextLine(2);
-		builder.nextColumn(2);
-		builder.add(progress,cc.xyw(builder.getColumn(), builder
-				.getRow(), 5));
-		builder.nextLine(2);
-		builder.nextColumn(2);
-		builder.add(completeOrNotOnly,cc.xyw(builder.getColumn(), builder
-				.getRow(), 5));
-		builder.nextLine(2);
-		builder.append(reschedule);
-		builder.append(Messages.getString("UpdateProjectDialogBox.RescheduleCompletedWorkToStartAfter")); //$NON-NLS-1$
-		builder.append(rescheduleDateChooser);
-		builder.nextLine(8);
-		builder.addSeparator(""); //$NON-NLS-1$
-		builder.nextLine(2);
-		builder.append(Messages.getString("UpdateProjectDialogBox.For")); //$NON-NLS-1$
-		builder.nextLine(2);
-		builder.nextColumn(2);
-		builder.append(entireProject);
-		builder.nextLine(2);
-		builder.nextColumn(2);
-		builder.append(selectedTask);
+		builder.add(FieldComponentMap.createHintLabelText(Messages.getString("UpdateProjectDialogBox.Hint"), 250), cc.xyw(1, 1, 4)); //$NON-NLS-1$
+		builder.add(update, cc.xy(1, 3));
+		builder.add(updateDateChooser, cc.xy(3, 3));
+		// the two ways of updating belong to the first choice, so indent them under it
+		progress.setBorder(BorderFactory.createEmptyBorder(0, 24, 0, 0));
+		completeOrNotOnly.setBorder(BorderFactory.createEmptyBorder(0, 24, 0, 0));
+		builder.add(progress, cc.xyw(1, 5, 4));
+		builder.add(completeOrNotOnly, cc.xyw(1, 7, 4));
+		builder.add(reschedule, cc.xy(1, 9));
+		builder.add(rescheduleDateChooser, cc.xy(3, 9));
+		builder.addLabel(Messages.getString("UpdateProjectDialogBox.For"), cc.xy(1, 11)); //$NON-NLS-1$
+		builder.add(entireProject, cc.xy(3, 11));
+		builder.add(selectedTask, cc.xyw(3, 13, 2));
 
 		return builder.getPanel();
 	}

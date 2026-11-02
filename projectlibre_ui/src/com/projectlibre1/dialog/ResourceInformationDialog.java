@@ -110,7 +110,7 @@ public class ResourceInformationDialog extends InformationDialog {
 	private JButton changeWorkingTimeButton;
 
 	public JComponent createContentPanel() {	
-		FormLayout layout = new FormLayout("400dlu:grow","fill:275dlu:grow"); //$NON-NLS-1$ //$NON-NLS-2$
+		FormLayout layout = new FormLayout("max(400dlu;pref):grow","fill:max(275dlu;pref):grow"); //$NON-NLS-1$ //$NON-NLS-2$
 		DefaultFormBuilder builder = new DefaultFormBuilder(layout);
 		builder.setDefaultDialogBorder();
 		resourceTabbedPane= new JTabbedPane();
@@ -141,9 +141,8 @@ public class ResourceInformationDialog extends InformationDialog {
 	public JComponent createGeneralPanel(){
 		FieldComponentMap map = createMap();
 
-		FormLayout layout = new FormLayout(
-        "p, 3dlu, 160dlu, 3dlu, p, 3dlu, p:grow", //$NON-NLS-1$
-		  "p,3dlu,p,3dlu,p,3dlu,p,3dlu,p,0dlu,p"); //$NON-NLS-1$
+		FormLayout layout = new FormLayout(FORM_COLUMNS,
+		  "p,4dlu,p,4dlu,p,12dlu,p,2dlu,p,8dlu,p,0dlu:grow"); //$NON-NLS-1$
 	
 		DefaultFormBuilder builder = new DefaultFormBuilder(layout);
 		builder.setDefaultDialogBorder();
@@ -161,6 +160,8 @@ public class ResourceInformationDialog extends InformationDialog {
 		map.append(builder,"Field.resourceType"); //$NON-NLS-1$
 		map.appendSometimesReadOnly(builder,"Field.materialLabel"); //$NON-NLS-1$
 		builder.nextLine(2);
+		addHint(builder, "Field.resourceType"); //$NON-NLS-1$
+		builder.nextLine(2);
 		builder.addLabel(map.getLabel("Field.baseCalendar")+":"); //$NON-NLS-1$ //$NON-NLS-2$
 		builder.nextColumn(2);
 		changeWorkingTimeButton=getChangeWorkingTimeButton();
@@ -172,13 +173,15 @@ public class ResourceInformationDialog extends InformationDialog {
 	public JComponent createAvailabilityPanel() {
 		FieldComponentMap map = createMap();
 		
-		FormLayout layout = new FormLayout("p:grow","p,3dlu,p,3dlu,fill:150dlu:grow"); //$NON-NLS-1$ //$NON-NLS-2$
+		FormLayout layout = new FormLayout("p:grow","p,8dlu,p,4dlu,fill:150dlu:grow"); //$NON-NLS-1$ //$NON-NLS-2$
 
 		DefaultFormBuilder builder = new DefaultFormBuilder(layout);
 		builder.setDefaultDialogBorder();
 		CellConstraints cc = new CellConstraints();
 		builder.add(createHeaderFieldsPanel(map),cc.xyw(builder.getColumn(), builder
 				.getRow(), 1));
+		builder.nextLine(2);
+		builder.add(FieldComponentMap.createHintLabelText(Messages.getString("ResourceInformationDialog.AvailabilityHint"), 380), cc.xy(1, builder.getRow())); //$NON-NLS-1$
 		builder.nextLine(2);
 		builder.add(createAvailabilitySpreadsheet(),cc.xyw(builder.getColumn(), builder
 				.getRow(), 1));
@@ -345,8 +348,8 @@ public class ResourceInformationDialog extends InformationDialog {
 	public JComponent createCostsPanel(){
 		FieldComponentMap map = createMap();
 		FormLayout layout = new FormLayout(
-		        "50dlu,3dlu,50dlu,3dlu,p:grow", //$NON-NLS-1$
-	    		  "p,3dlu,p,3dlu,fill:p:grow,3dlu,p,3dlu,p"); //$NON-NLS-1$
+		        "max(75dlu;pref),4dlu,max(100dlu;pref),3dlu,p:grow", //$NON-NLS-1$
+	    		  "p,12dlu,p,2dlu,p,4dlu,fill:100dlu:grow,8dlu,p,2dlu,p"); //$NON-NLS-1$
 	
 	
 		DefaultFormBuilder builder = new DefaultFormBuilder(layout);
@@ -368,10 +371,14 @@ public class ResourceInformationDialog extends InformationDialog {
 		builder.nextLine(2);
 		builder.addSeparator(Messages.getString("Text.CostRateTables")); //$NON-NLS-1$
 		builder.nextLine(2);
+		builder.add(FieldComponentMap.createHintLabelText(Messages.getString("ResourceInformationDialog.CostRateTablesHint"), 380), cc.xyw(1, builder.getRow(), 5)); //$NON-NLS-1$
+		builder.nextLine(2);
 		builder.add(costTabbedPane,cc.xyw(builder.getColumn(), builder
 				.getRow(), 5));
 		builder.nextLine(2);
 		map.append(builder,"Field.accrueAt"); //$NON-NLS-1$
+		builder.nextLine(2);
+		builder.add(FieldComponentMap.createHintLabel("Field.accrueAt", 270), cc.xyw(3, builder.getRow(), 3)); //$NON-NLS-1$
 	   	return builder.getPanel();
 		  
 	}
@@ -382,7 +389,7 @@ public class ResourceInformationDialog extends InformationDialog {
 	 */
 	protected JComponent createHeaderFieldsPanel(FieldComponentMap map) {
 		FormLayout layout = new FormLayout(
-        "p, 3dlu, 160dlu", //$NON-NLS-1$
+        "max(75dlu;pref), 4dlu, 160dlu", //$NON-NLS-1$
 		  "p"); //$NON-NLS-1$
 		DefaultFormBuilder builder = new DefaultFormBuilder(layout);
 		map.append(builder,"Field.name"); //$NON-NLS-1$

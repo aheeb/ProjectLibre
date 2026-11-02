@@ -55,15 +55,19 @@
  *******************************************************************************/
 package com.projectlibre1.dialog;
 
+import java.awt.Font;
 import java.awt.Frame;
 import java.util.Collection;
 
 import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JSeparator;
 import javax.swing.JTabbedPane;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.layout.CellConstraints;
 import com.jgoodies.forms.layout.FormLayout;
+import com.projectlibre1.dialog.util.ComponentFactory;
 import com.projectlibre1.dialog.util.FieldComponentMap;
 import com.projectlibre1.pm.graphic.frames.DocumentSelectedEvent;
 import com.projectlibre1.pm.graphic.spreadsheet.selection.event.SelectionNodeEvent;
@@ -96,7 +100,7 @@ public class ProjectInformationDialog extends InformationDialog {
 	
 	public JComponent createContentPanel() {	
 	    	
-		FormLayout layout = new FormLayout("350dlu:grow","fill:250dlu:grow"); //$NON-NLS-1$ //$NON-NLS-2$
+		FormLayout layout = new FormLayout("max(350dlu;pref):grow","fill:max(250dlu;pref):grow"); //$NON-NLS-1$ //$NON-NLS-2$
 		DefaultFormBuilder builder = new DefaultFormBuilder(layout);
 		builder.setDefaultDialogBorder();
 		CellConstraints cc = new CellConstraints();
@@ -112,32 +116,37 @@ public class ProjectInformationDialog extends InformationDialog {
 
 	private JComponent createGeneralPanel(){
 		FieldComponentMap map = createMap();
-		FormLayout layout = new FormLayout(
-		        "max(50dlu;pref), 3dlu, 90dlu, 10dlu, p, 3dlu,max(90dlu;pref),60dlu", // extra padding on right is for estimated field //$NON-NLS-1$
-				"p,3dlu,p, 3dlu,p, 3dlu, p, 3dlu, p, 3dlu,p, 3dlu,p,3dlu,p,3dlu,p, 3dlu,p,3dlu,p, 6dlu, fill:50dlu:grow"); //$NON-NLS-1$
+		boolean accessControl = !Environment.getStandAlone();
+		Collection extraFields = FieldDictionary.extractExtraFields(FieldDictionary.getInstance().getProjectFields(),false);
+		FormLayout layout = new FormLayout(FORM_COLUMNS,
+				"p, 4dlu, p, 12dlu, p, 4dlu, p, 4dlu, p, 4dlu, p, 12dlu, p, 4dlu, p, 4dlu, p, 4dlu, p, 4dlu, p, 4dlu, p" //$NON-NLS-1$
+				+ (accessControl ? ", 4dlu, p" : "") + ", 4dlu, p, 0dlu:grow"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
 		DefaultFormBuilder builder = new DefaultFormBuilder(layout);
 		CellConstraints cc = new CellConstraints();
 		builder.setDefaultDialogBorder();
-		builder.add(createHeaderFieldsPanel(map),cc.xyw(builder.getColumn(), builder
-				.getRow(), 8));
+		map.append(builder,"Field.name",FORM_SPAN - 3); //$NON-NLS-1$
 		builder.nextLine(2);
 		map.append(builder,"Field.manager"); //$NON-NLS-1$
 		builder.nextLine(2);
-		
+
+		addSection(builder, Messages.getString("ProjectInformationDialog.Schedule")); //$NON-NLS-1$
+		builder.nextLine(2);
 		map.appendSometimesReadOnly(builder,"Field.startDate"); //$NON-NLS-1$
-		map.append(builder,"Field.currentDate"); //$NON-NLS-1$
-		builder.nextLine(2);
 		map.appendSometimesReadOnly(builder,"Field.finishDate"); //$NON-NLS-1$
-		map.append(builder,"Field.statusDate"); //$NON-NLS-1$
-		
 		builder.nextLine(2);
-		map.append(builder,"Field.forward"); //$NON-NLS-1$
-		builder.nextColumn(2);
+		map.append(builder,"Field.forward",3); //$NON-NLS-1$
+		builder.nextColumn(4);
 		map.append(builder,"Field.baseCalendar"); //$NON-NLS-1$
 		builder.nextLine(2);
-		map.append(builder,"Field.priority"); //$NON-NLS-1$
+		map.append(builder,"Field.currentDate"); //$NON-NLS-1$
+		map.append(builder,"Field.statusDate"); //$NON-NLS-1$
+		builder.nextLine(2);
+
+		addSection(builder, Messages.getString("ProjectInformationDialog.Details")); //$NON-NLS-1$
+		builder.nextLine(2);
 		map.append(builder,"Field.projectStatus"); //$NON-NLS-1$
+		map.append(builder,"Field.priority"); //$NON-NLS-1$
 		builder.nextLine(2);
 		map.append(builder,"Field.projectType"); //$NON-NLS-1$
 		map.append(builder,"Field.expenseType"); //$NON-NLS-1$
@@ -151,61 +160,56 @@ public class ProjectInformationDialog extends InformationDialog {
 		map.append(builder,"Field.risk"); //$NON-NLS-1$
 		builder.nextLine(2);
 
-		if (!Environment.getStandAlone()){
+		if (accessControl){
 			map.append(builder,"Field.accessControlPolicy",3); //$NON-NLS-1$
 			builder.nextLine(2);
 		}
-		Collection extraFields = FieldDictionary.extractExtraFields(FieldDictionary.getInstance().getProjectFields(),false);
 		JComponent extra = createFieldsPanel(map, extraFields);
 		if (extra != null) {
-			builder.add(extra,cc.xyw(builder.getColumn(), builder
-					.getRow(), 7));
+			builder.add(extra,cc.xyw(1, builder.getRow(), FORM_SPAN - 1));
 		}
 		return builder.getPanel();
 	}
-	
+
+	/** Current, baseline, actual and remaining values side by side, one row per measure. */
 	private JComponent createStatisticsPanel(){
 		FieldComponentMap map = createMap();
-		FormLayout layout = new FormLayout(
-		        "p, 3dlu, 50dlu, 20dlu, p, 3dlu, 50dlu:grow", //$NON-NLS-1$
-		"p, 3dlu, p, 3dlu,p, 3dlu, p, 10dlu, p,3dlu,p, 10dlu, p, 3dlu, p, 10dlu, p, 3dlu, p"); //$NON-NLS-1$
+		String[][] rows = {
+				{"Field.startDate", "Field.baselineStart", "Field.actualStart", null}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				{"Field.finishDate", "Field.baselineFinish", "Field.actualFinish", null}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				{"Field.duration", "Field.baselineDuration", "Field.actualDuration", "Field.remainingDuration"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+				{"Field.work", "Field.baselineWork", "Field.actualWork", "Field.remainingWork"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+				{"Field.cost", "Field.baselineCost", "Field.actualCost", "Field.remainingCost"}}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+		String[] headers = {"ProjectInformationDialog.Current", "ProjectInformationDialog.Baseline", //$NON-NLS-1$ //$NON-NLS-2$
+				"ProjectInformationDialog.Actual", "ProjectInformationDialog.Remaining"}; //$NON-NLS-1$ //$NON-NLS-2$
 
+		StringBuffer rowSpec = new StringBuffer("p, 8dlu, p, 4dlu, p, 6dlu, p"); //$NON-NLS-1$
+		for (int i = 0; i < rows.length; i++)
+			rowSpec.append(", 6dlu, p"); //$NON-NLS-1$
+		FormLayout layout = new FormLayout("max(75dlu;pref), 4dlu, 70dlu, 8dlu, 70dlu, 8dlu, 70dlu, 8dlu, 70dlu, 0dlu:grow", //$NON-NLS-1$
+				rowSpec.toString());
 		DefaultFormBuilder builder = new DefaultFormBuilder(layout);
 		builder.setDefaultDialogBorder();
 		CellConstraints cc = new CellConstraints();
-		builder.setDefaultDialogBorder();
-		builder.add(createHeaderFieldsPanel(map),cc.xyw(builder.getColumn(), builder
-				.getRow(), 7));
-		builder.nextLine(2);
-		map.appendReadOnly(builder,"Field.startDate"); //$NON-NLS-1$
-		map.appendReadOnly(builder,"Field.finishDate"); //$NON-NLS-1$
-		builder.nextLine(2);
-		map.appendReadOnly(builder,"Field.baselineStart"); //$NON-NLS-1$
-		map.appendReadOnly(builder,"Field.baselineFinish"); //$NON-NLS-1$
-		builder.nextLine(2);
-		map.appendReadOnly(builder,"Field.actualStart"); //$NON-NLS-1$
-		map.appendReadOnly(builder,"Field.actualFinish"); //$NON-NLS-1$
-		
-		builder.nextLine(2);
-		map.appendReadOnly(builder,"Field.duration"); //$NON-NLS-1$
-		map.appendReadOnly(builder,"Field.baselineDuration"); //$NON-NLS-1$
-		builder.nextLine(2);
-		map.appendReadOnly(builder,"Field.actualDuration"); //$NON-NLS-1$
-		map.appendReadOnly(builder,"Field.remainingDuration"); //$NON-NLS-1$
-		
-		builder.nextLine(2);
-		map.appendReadOnly(builder,"Field.work"); //$NON-NLS-1$
-		map.appendReadOnly(builder,"Field.baselineWork"); //$NON-NLS-1$
-		builder.nextLine(2);
-		map.appendReadOnly(builder,"Field.actualWork"); //$NON-NLS-1$
-		map.appendReadOnly(builder,"Field.remainingWork"); //$NON-NLS-1$
-		
-		builder.nextLine(2);
-		map.appendReadOnly(builder,"Field.cost"); //$NON-NLS-1$
-		map.appendReadOnly(builder,"Field.baselineCost"); //$NON-NLS-1$
-		builder.nextLine(2);
-		map.appendReadOnly(builder,"Field.actualCost"); //$NON-NLS-1$
-		map.appendReadOnly(builder,"Field.remainingCost"); //$NON-NLS-1$
+		builder.add(createHeaderFieldsPanel(map),cc.xyw(1, 1, 10));
+		builder.add(FieldComponentMap.createHintLabelText(Messages.getString("ProjectInformationDialog.StatisticsHint"), 370), cc.xyw(1, 3, 10)); //$NON-NLS-1$
+		int row = 5;
+		for (int c = 0; c < headers.length; c++) {
+			JLabel header = new JLabel(Messages.getString(headers[c]));
+			header.setFont(header.getFont().deriveFont(Font.BOLD));
+			builder.add(header, cc.xy(3 + 2 * c, row));
+		}
+		row += 2;
+		JSeparator line = new JSeparator();
+		builder.add(line, cc.xyw(1, row, 9));
+		for (int r = 0; r < rows.length; r++) {
+			row += 2;
+			builder.addLabel(map.getLabel(rows[r][0]) + ":", cc.xy(1, row)); //$NON-NLS-1$
+			for (int c = 0; c < rows[r].length; c++) {
+				if (rows[r][c] != null)
+					builder.add(map.getComponent(rows[r][c], ComponentFactory.READ_ONLY), cc.xy(3 + 2 * c, row));
+			}
+		}
 		return builder.getPanel();
 	}
 
@@ -213,9 +217,7 @@ public class ProjectInformationDialog extends InformationDialog {
 	 * @see com.projectlibre1.dialog.InformationDialog#createHeaderFieldsPanel(com.projectlibre1.dialog.util.FieldComponentMap)
 	 */
 	protected JComponent createHeaderFieldsPanel(FieldComponentMap map) {
-		FormLayout layout = new FormLayout(
-        "p, 3dlu, 300dlu", //$NON-NLS-1$
-		  "p"); //$NON-NLS-1$
+		FormLayout layout = new FormLayout(NAME_COLUMNS, "p"); //$NON-NLS-1$
 		DefaultFormBuilder builder = new DefaultFormBuilder(layout);
 		map.append(builder,"Field.name"); //$NON-NLS-1$
 		return builder.getPanel();

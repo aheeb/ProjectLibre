@@ -57,6 +57,7 @@ package com.projectlibre1.dialog.calendar;
 
 import com.projectlibre1.contrib.calendar.ContribIntervals;
 import com.projectlibre1.contrib.calendar.JXXMonthView;
+import com.projectlibre1.pm.graphic.laf.ModernLaf;
 
 
 /**
@@ -78,6 +79,7 @@ public class CalendarView extends JXXMonthView {
 		super(initialTime);
 		setPreferredCols(1);
 		setPreferredRows(1);
+		setSelectedBackground(ModernLaf.SELECTION_SOFT);
 	}
 
 	public Intervals getSelectedFixedIntervals(){

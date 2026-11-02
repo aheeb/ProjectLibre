@@ -55,6 +55,12 @@
  *******************************************************************************/
 package com.projectlibre1.dialog;
 
+import com.projectlibre1.dialog.util.FieldComponentMap;
+
+import javax.swing.Box;
+
+import java.awt.FlowLayout;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Frame;
@@ -414,11 +420,10 @@ public final class LocaleDialog extends AbstractDialog {
 	
 	public static LocaleDialog getInstance(GraphicManager graphicManager) {
 		LocaleDialog instance =null;
-		if (instance == null) {
+		if (instance == null)
 			instance = new LocaleDialog(graphicManager.getFrame());
-		} else
-			instance.setTitle(Messages.getString("Text.LocaleDialog"));
-			instance.addDocHelp("Locale_Dialog");
+		instance.setTitle(Messages.getString("Text.LocaleDialog"));
+		instance.addDocHelp("Locale_Dialog");
 		
 		return instance;
 	}
@@ -890,44 +895,33 @@ public final class LocaleDialog extends AbstractDialog {
 
 	public JComponent createContentPanel() {
 		initControls();
-		FormLayout dLayout = new FormLayout("default, 3dlu, fill:80dlu:grow, 3dlu, default", "p"); 
-		DefaultFormBuilder dbuilder = new DefaultFormBuilder(dLayout);
-		dbuilder.setDefaultDialogBorder();
-		dbuilder.append(Messages.getString("Text.ExternalLocaleDirectory"));
-		dbuilder.append(directoryField);
-		dbuilder.append(directorySetButton);
-		JComponent directoryPanel=dbuilder.getPanel();
-
-		FormLayout layout = new FormLayout("default, 3dlu, default, 3dlu, default, 3dlu, fill:80dlu:grow", 
-				"p, 3dlu, p, 3dlu, p, 3dlu, p, 3dlu, p, 3dlu, p, 3dlu, 100dlu, 20dlu, p"); 
+		FormLayout layout = new FormLayout("max(50dlu;pref), 4dlu, 140dlu, 0dlu:grow", 
+				"p, 4dlu, p, 4dlu, p, 16dlu, p, 4dlu, p, 4dlu, p, 6dlu, fill:80dlu:grow, 4dlu, p, 6dlu, p"); 
 
 		DefaultFormBuilder builder = new DefaultFormBuilder(layout);
-		builder.setDefaultDialogBorder();
 		CellConstraints cc = new CellConstraints();
-		builder.append(Messages.getString("Text.Language"));
-		builder.append(languageCombo);
-		builder.nextLine(2);
-		builder.append(Messages.getString("Text.Country"));
-		builder.append(countryCombo);
-		builder.nextLine(2);
-		builder.addSeparator(Messages.getString("Text.ExternalLocale")); 
-		builder.nextLine(2);
+		builder.addLabel(Messages.getString("Text.Language"), cc.xy(1, 1));
+		builder.add(languageCombo, cc.xy(3, 1));
+		builder.addLabel(Messages.getString("Text.Country"), cc.xy(1, 3));
+		builder.add(countryCombo, cc.xy(3, 3));
+		builder.add(FieldComponentMap.createHintLabelText(Messages.getString("LocaleDialog.Hint"), 180), cc.xyw(3, 5, 2));
+		builder.addSeparator(Messages.getString("Text.ExternalLocale"), cc.xyw(1, 7, 4)); 
+		builder.add(externalCheckbox, cc.xyw(1, 9, 4)); 
 
-		builder.add(externalCheckbox,cc.xyw(builder.getColumn(), builder
-				.getRow(), 7)); 
-		builder.nextLine(2);
-		builder.add(directoryPanel,cc.xyw(builder.getColumn(), builder
-				.getRow(), 7));
-		builder.nextLine(2);
-		builder.append(Messages.getString("Text.Locales"));
-		builder.append(directoryUpdateButton);
-		builder.append(directoryExportButton);
-		builder.nextLine(2);
-		builder.add(new JScrollPane(externalList),cc.xyw(builder.getColumn(), builder
-				.getRow(), 7));
-		builder.nextLine(2);
-		builder.add(messageArea,cc.xyw(builder.getColumn(), builder
-				.getRow(), 7)); 
+		FormLayout dLayout = new FormLayout("fill:80dlu:grow, 4dlu, p", "p"); 
+		DefaultFormBuilder dbuilder = new DefaultFormBuilder(dLayout);
+		dbuilder.append(directoryField);
+		dbuilder.append(directorySetButton);
+		builder.addLabel(Messages.getString("Text.ExternalLocaleDirectory"), cc.xy(1, 11));
+		builder.add(dbuilder.getPanel(), cc.xyw(3, 11, 2));
+
+		builder.add(new JScrollPane(externalList), cc.xyw(1, 13, 4));
+		JPanel transfer = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+		transfer.add(directoryUpdateButton);
+		transfer.add(Box.createHorizontalStrut(8));
+		transfer.add(directoryExportButton);
+		builder.add(transfer, cc.xyw(1, 15, 4));
+		builder.add(messageArea, cc.xyw(1, 17, 4)); 
 		return builder.getPanel();
 	}
 }

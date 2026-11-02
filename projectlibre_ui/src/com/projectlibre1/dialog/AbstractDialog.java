@@ -66,6 +66,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
+import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ComboBoxModel;
 import javax.swing.DefaultComboBoxModel;
@@ -80,9 +81,12 @@ import javax.swing.JRootPane;
 import javax.swing.JToolTip;
 import javax.swing.KeyStroke;
 import javax.swing.plaf.ButtonUI;
+import javax.swing.border.Border;
 import javax.swing.plaf.basic.BasicButtonUI;
 
 import org.apache.commons.collections.Closure;
+
+import com.jgoodies.forms.factories.Borders;
 
 import com.projectlibre1.help.HelpUtil;
 import com.projectlibre1.menu.HyperLinkToolTip;
@@ -101,6 +105,9 @@ import com.projectlibre1.util.BrowserControl;
  *
  */
 public abstract class AbstractDialog extends JDialog {
+	public static final int DIALOG_INSET_TOP = 16;
+	public static final int DIALOG_INSET_SIDE = 20;
+	public static final int DIALOG_INSET_BOTTOM = 16;
 	protected JButton ok;
 
 	protected JButton cancel;
@@ -153,10 +160,16 @@ public abstract class AbstractDialog extends JDialog {
 		KeyStroke escapeStroke = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0);
 		rootPane.registerKeyboardAction(escapeListener, escapeStroke, JComponent.WHEN_IN_FOCUSED_WINDOW);
 		KeyStroke enterStroke = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0);
-		rootPane.registerKeyboardAction(enterListener, enterStroke, JComponent.WHEN_IN_FOCUSED_WINDOW);
+		if (enterConfirms())
+			rootPane.registerKeyboardAction(enterListener, enterStroke, JComponent.WHEN_IN_FOCUSED_WINDOW);
 		KeyStroke f1Stroke = KeyStroke.getKeyStroke(KeyEvent.VK_F1, 0);
 		rootPane.registerKeyboardAction(helpListener, f1Stroke, JComponent.WHEN_IN_FOCUSED_WINDOW);
 		return rootPane;
+	}
+
+	/** Whether Enter anywhere in the dialog runs onOk. Return false to let the root pane's default button handle Enter. */
+	protected boolean enterConfirms() {
+		return true;
 	}
 
 	protected boolean hasHelp() {
@@ -222,10 +235,21 @@ public abstract class AbstractDialog extends JDialog {
 		contentPanel = createContentPanel();
 		buttonPanel = createButtonPanel();
         getContentPane().setLayout(new BorderLayout());
-		if (contentPanel != null)
+		if (getContentPane() instanceof JComponent)
+			((JComponent) getContentPane()).setBorder(BorderFactory.createEmptyBorder(DIALOG_INSET_TOP, DIALOG_INSET_SIDE, DIALOG_INSET_BOTTOM, DIALOG_INSET_SIDE));
+		if (contentPanel != null) {
+			// the content pane now carries the dialog margins, so drop the forms builder's own
+			Border border = contentPanel.getBorder();
+			if (border == Borders.DIALOG_BORDER || border == Borders.TABBED_DIALOG_BORDER)
+				contentPanel.setBorder(null);
 			getContentPane().add(contentPanel, BorderLayout.CENTER);
-		if (buttonPanel != null)
+		}
+		if (buttonPanel != null) {
+			buttonPanel.setActionButtons(ok, hasOkAndCancelButtons() ? cancel : null);
+			if (ok != null && ok.getParent() == buttonPanel)
+				getRootPane().setDefaultButton(ok);
 			getContentPane().add(buttonPanel, BorderLayout.AFTER_LAST_LINE);
+		}
 
 	}
 	protected void clearComponents() {
@@ -238,6 +262,8 @@ public abstract class AbstractDialog extends JDialog {
     public void pack() {
        	initComponents();
         super.pack();
+        if (isResizable())
+        	setMinimumSize(getPreferredSize());
     }
 
     protected void createOkCancelButtons(String okText,String cancelText) {
@@ -258,19 +284,26 @@ public abstract class AbstractDialog extends JDialog {
     
     protected JComponent getHelpButton() {
     	if (help  == null) {
-		//	help= new JLabel(IconManager.getIcon("menu24.help"));
-			help= new JButton(MenuManager.getMenuString("Help.text"));//,IconManager.getIcon("menu24.help"));
-
-			//			help.setToolTipText(Messages.getString("Text.Help")); //$NON-NLS-1$
-			help.addMouseListener(new MouseAdapter() {
-			public void mouseClicked(MouseEvent arg0) {
-				AbstractDialog.this.onHelp();
-			}});
+			JButton button = new JButton();
+			// FlatLaf draws this as the standard round "?" button
+			button.putClientProperty("JButton.buttonType", "help"); //$NON-NLS-1$ //$NON-NLS-2$
+			button.putClientProperty(ButtonPanel.HELP_BUTTON, Boolean.TRUE);
+			button.setToolTipText(MenuManager.getMenuString("Help.text")); //$NON-NLS-1$
+			button.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					AbstractDialog.this.onHelp();
+				}});
+			help = button;
     	}
     	return help;
     }
     protected void createOkCancelButtons() {
-    	createOkCancelButtons(Messages.getString("ButtonText.OK"), Messages.getString("ButtonText.Cancel"));
+    	createOkCancelButtons(getOkButtonText(), Messages.getString("ButtonText.Cancel"));
+    }
+
+    /** Label of the confirm button. Override with a verb ("Save", "Assign") where that reads better than OK. */
+    protected String getOkButtonText() {
+    	return Messages.getString("ButtonText.OK"); //$NON-NLS-1$
     }
 
 	protected void createCloseButton() {

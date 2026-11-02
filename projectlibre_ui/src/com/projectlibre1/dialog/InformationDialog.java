@@ -63,6 +63,7 @@ import java.awt.event.ActionListener;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComponent;
+import javax.swing.JLabel;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.layout.CellConstraints;
@@ -81,6 +82,23 @@ import com.projectlibre1.strings.Messages;
  *
  */
 public abstract class InformationDialog extends FieldDialog {
+	// label, field, gap, label, field, filler: fields are sized for dates and durations, not stretched
+	protected static final String FORM_COLUMNS = "max(75dlu;pref), 4dlu, 100dlu, 16dlu, max(60dlu;pref), 4dlu, 100dlu, 0dlu:grow"; //$NON-NLS-1$
+	protected static final int FORM_SPAN = 8;
+	protected static final String NAME_COLUMNS = "max(75dlu;pref),4dlu,fill:200dlu:grow"; //$NON-NLS-1$
+
+	/** Adds a section header across the whole form row. */
+	protected static void addSection(DefaultFormBuilder builder, String title) {
+		builder.addSeparator(title, new CellConstraints().xyw(1, builder.getRow(), FORM_SPAN));
+	}
+
+	/** Puts the field's plain-language hint under the field column of the current row. */
+	protected static void addHint(DefaultFormBuilder builder, String fieldId) {
+		JLabel hint = FieldComponentMap.createHintLabel(fieldId, 270);
+		if (hint != null)
+			builder.add(hint, new CellConstraints().xyw(3, builder.getRow(), 5));
+	}
+
 	private JButton changeWorkingTimeButton = null;
 	private JButton assignResourceButton = null;
   	protected InformationDialog(final Frame owner, String title) {
@@ -155,6 +173,12 @@ public abstract class InformationDialog extends FieldDialog {
 	
 	protected boolean hasCloseButton() {
 		return true;
+	}
+
+	/** Escape closes the window, like the Close button. */
+	protected void onCancel() {
+		super.onCancel();
+		setVisible(false);
 	}
 	
 }

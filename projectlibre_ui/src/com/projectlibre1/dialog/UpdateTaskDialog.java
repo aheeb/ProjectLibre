@@ -55,6 +55,8 @@
  *******************************************************************************/
 package com.projectlibre1.dialog;
 
+import java.awt.Font;
+
 import java.awt.Frame;
 import java.util.List;
 
@@ -97,26 +99,25 @@ public final class UpdateTaskDialog extends FieldDialog {
 	
 	public JComponent createContentPanel() {
 		taskNames = new JLabel();
-		String names = DataUtils.stringListWithMaxAndMessage(getCollection(),Settings.STRING_LIST_LIMIT,Messages.getString("Message.tooManyTasksSelectedToList.mf")); //$NON-NLS-1$
-		taskNames.setText(Messages.getString("Text.Tasks") + ": " + names); //$NON-NLS-1$ //$NON-NLS-2$
+		taskNames.setText(Messages.getStringWithParam("UpdateTaskDialog.Heading", taskNameList(getCollection()))); //$NON-NLS-1$
+		taskNames.setFont(taskNames.getFont().deriveFont(Font.BOLD));
 
-		
 		FieldComponentMap map = createMap();
 		
-		FormLayout layout = new FormLayout(
-		        "p, 3dlu, p, 3dlu, p, 3dlu, p, 3dlu, p, 3dlu, p" //$NON-NLS-1$
-	    		 ,"p,3dlu,p,3dlu,p,3dlu,p,3dlu,p,3dlu,p,3dlu,p,3dlu,p,3dlu,p,3dlu,p"); //$NON-NLS-1$
+		FormLayout layout = new FormLayout(InformationDialog.FORM_COLUMNS
+	    		 ,"p,2dlu,p,8dlu,p,12dlu,p,4dlu,p,4dlu,p,12dlu,p,4dlu,p,4dlu,p,12dlu,p"); //$NON-NLS-1$
 
 		DefaultFormBuilder builder = new DefaultFormBuilder(layout);
-		builder.setDefaultDialogBorder();
 		CellConstraints cc = new CellConstraints();
+		int span = InformationDialog.FORM_SPAN;
 
-		// task names span whole dialog
-		builder.add(taskNames,cc.xyw(builder.getColumn(), builder.getRow(), builder.getColumnCount()));
+		builder.add(taskNames,cc.xyw(1, builder.getRow(), span));
 		builder.nextLine(2);
-		builder.addSeparator(""); //$NON-NLS-1$
+		builder.add(FieldComponentMap.createHintLabelText(Messages.getString("UpdateTaskDialog.Hint"), 270), cc.xyw(1, builder.getRow(), span)); //$NON-NLS-1$
 		builder.nextLine(2);
-		map.append(builder,"Field.name",5); //$NON-NLS-1$
+		map.append(builder,"Field.name",span - 3); //$NON-NLS-1$
+		builder.nextLine(2);
+		builder.addSeparator(Messages.getString("UpdateTaskDialog.Current"), cc.xyw(1, builder.getRow(), span)); //$NON-NLS-1$
 		builder.nextLine(2);
 		map.append(builder,"Field.percentComplete"); //$NON-NLS-1$
 		map.append(builder,"Field.duration"); //$NON-NLS-1$
@@ -124,7 +125,7 @@ public final class UpdateTaskDialog extends FieldDialog {
 		map.append(builder,"Field.start"); //$NON-NLS-1$
 		map.append(builder,"Field.finish"); //$NON-NLS-1$
 		builder.nextLine(2);
-		builder.addSeparator(""); //$NON-NLS-1$
+		builder.addSeparator(Messages.getString("UpdateTaskDialog.Actual"), cc.xyw(1, builder.getRow(), span)); //$NON-NLS-1$
 		builder.nextLine(2);
 		map.append(builder,"Field.actualDuration"); //$NON-NLS-1$
 		map.append(builder,"Field.remainingDuration"); //$NON-NLS-1$
@@ -132,10 +133,23 @@ public final class UpdateTaskDialog extends FieldDialog {
 		map.append(builder,"Field.actualStart"); //$NON-NLS-1$
 		map.append(builder,"Field.actualFinish"); //$NON-NLS-1$
 		builder.nextLine(2);
-		builder.addSeparator(""); //$NON-NLS-1$
-		builder.nextLine(2);
-		map.append(builder,"Field.taskType");
+		map.append(builder,"Field.taskType"); //$NON-NLS-1$
 		return builder.getPanel();
+	}
+
+	/** Up to three task names, then "and N more". */
+	private static String taskNameList(java.util.Collection tasks) {
+		StringBuffer b = new StringBuffer();
+		java.util.Iterator i = tasks.iterator();
+		int shown = 0;
+		while (i.hasNext() && shown < 3) {
+			if (shown++ > 0)
+				b.append(", "); //$NON-NLS-1$
+			b.append(i.next());
+		}
+		if (tasks.size() > shown)
+			b.append(' ').append(Messages.getStringWithParam("AssignmentDialog.AndMore", Integer.toString(tasks.size() - shown))); //$NON-NLS-1$
+		return b.toString();
 	}
 	
 	
