@@ -319,6 +319,11 @@ public abstract class GraphInteractor implements MouseListener, MouseMotionListe
     	int scrollingDistance=100;
     	getGraph().scrollRectToVisible(new Rectangle(x-scrollingDistance,y-scrollingDistance,scrollingDistance*2,scrollingDistance*2));
     }
+    /** The node a link being dragged would end on if dropped at x,y. */
+    protected GraphicNode getLinkTargetAt(double x,double y){
+    	GraphZone zone=ui.getNodeAt(x,y);
+    	return zone==null?null:(GraphicNode)zone.getObject();
+    }
     protected boolean allowLinkSelectionToMove(){
     	return false;
     }
@@ -351,8 +356,7 @@ public abstract class GraphInteractor implements MouseListener, MouseMotionListe
     		}
     	}
     	if (state==LINK_CREATION){
-    		GraphZone zone=ui.getNodeAt(e.getX(),e.getY());
-			GraphicNode newDestinationNode=zone==null?null:(GraphicNode)zone.getObject();
+			GraphicNode newDestinationNode=getLinkTargetAt(e.getX(),e.getY());
 			drawLinkSelectionBarShadow(destinationNode);
     		drawLinkShadow(lastLinkShadowX,lastLinkShadowY,true);
     		scrollToVisible(e.getX(),e.getY());
