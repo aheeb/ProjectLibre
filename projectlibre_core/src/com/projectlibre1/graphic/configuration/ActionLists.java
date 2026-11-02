@@ -116,7 +116,7 @@ public class ActionLists implements NamedItem {
 		return id;
 	}
 
-	public ActionList getActionList(String id) {
+	public synchronized ActionList getActionList(String id) { // also called from Init's warm-up thread
 		ActionList actionList=(ActionList)actionListMap.get(id);
 	    if (actionList==null){
             ActionListFactory factory=getFactory(id);
