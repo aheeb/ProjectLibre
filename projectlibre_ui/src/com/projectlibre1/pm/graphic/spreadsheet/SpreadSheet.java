@@ -193,6 +193,18 @@ public class SpreadSheet extends CommonSpreadSheet implements Cloneable {
 		g2.dispose();
 	}
 
+	/** Explains the "?" of estimated durations, which newcomers otherwise can't decode. */
+	public String getToolTipText(MouseEvent e) {
+		int row = rowAtPoint(e.getPoint());
+		int col = columnAtPoint(e.getPoint());
+		if (row >= 0 && col >= 0 && getColumnModel().getColumn(col).getIdentifier() == com.projectlibre1.configuration.Configuration.getFieldFromId("Field.duration")) {
+			Object value = getValueAt(row, col);
+			if (value instanceof com.projectlibre1.datatype.Duration && com.projectlibre1.datatype.Duration.isEstimated(((com.projectlibre1.datatype.Duration) value).getEncodedMillis()))
+				return Messages.getString("Text.estimatedDurationHint");
+		}
+		return super.getToolTipText(e);
+	}
+
 	/** Wide enough to show every column at first, but never more than half of the screen. */
 	public Dimension getPreferredScrollableViewportSize() {
 		Dimension d = super.getPreferredScrollableViewportSize();
