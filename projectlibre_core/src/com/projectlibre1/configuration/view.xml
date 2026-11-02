@@ -286,7 +286,7 @@
 		</format>
 
 		<format id="Grid.showRows">
-			<middle shapeName="FULL_HEIGHT" colorName="#EEF0F3" paintName="SOLID" strokeName="SOLID"/>
+			<middle shapeName="FULL_HEIGHT" colorName="#F0F1F4" paintName="SOLID" strokeName="SOLID"/>
 		</format>
 
 
@@ -316,7 +316,7 @@
 			<style id="Styles.Annotation.normal" formatId="Annotation.normal" formulaClass="com.projectlibre1.scripting.formulas.NormalTaskFormula" annotation="true" />
 			<style id="Styles.Annotation.milestone" formatId="Annotation.milestone" formulaClass="com.projectlibre1.scripting.formulas.MilestoneTaskFormula" annotation="true" />
 			<style id="Styles.Calendar.nonWorking" formatId="Calendar.nonWorking" calendar="true" />
-			<style id="Styles.Gantt.showRows" formatId="Grid.showRows" horizontalGrid="true" active="false" />
+			<style id="Styles.Gantt.showRows" formatId="Grid.showRows" horizontalGrid="true" />
 
 
 		</styles>
