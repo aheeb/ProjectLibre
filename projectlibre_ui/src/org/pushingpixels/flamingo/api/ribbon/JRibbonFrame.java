@@ -346,6 +346,12 @@ public class JRibbonFrame extends JFrame {
 	 */
 	@Override
 	public void setJMenuBar(JMenuBar menubar) {
+		// projectlibre: allowed when it lives in the macOS screen menu bar, outside the window
+		if (Boolean.getBoolean("apple.laf.useScreenMenuBar")
+				&& System.getProperty("os.name").startsWith("Mac")) {
+			super.setJMenuBar(menubar);
+			return;
+		}
 		throw new IllegalArgumentException(
 				"Can't set a menu bar on JRibbonFrame");
 	}
