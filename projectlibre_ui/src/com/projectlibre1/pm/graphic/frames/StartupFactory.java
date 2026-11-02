@@ -181,6 +181,7 @@ public abstract class StartupFactory {
 		graphicManager.setConnected(false);
 
 		if (!doLogin(graphicManager)) return null;
+		if (Environment.getStandAlone()) graphicManager.setConnected(true); // no server: New and Open are always available
 		//if (Environment.isNewLook())
 			graphicManager.initLookAndFeel();
 
