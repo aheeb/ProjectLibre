@@ -77,7 +77,7 @@ public class MainToolBar extends JPanel implements MenuManager.ViewSelectionList
 	private static final int SEARCH_WIDTH = 160;
 	/** Room for the project name when there is enough space, and when space is short. */
 	private static final int TITLE_WIDE = 380;
-	private static final int TITLE_WIDTH = 200;
+	private static final int TITLE_WIDTH = 180;
 	private static final int SEARCH_NARROW_WIDTH = 130;
 
 	private static final Set<String> TASK_VIEWS = new HashSet<String>(Arrays.asList(MenuActionConstants.ACTION_GANTT,
