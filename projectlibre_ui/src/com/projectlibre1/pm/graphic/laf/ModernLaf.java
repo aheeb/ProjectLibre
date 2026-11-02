@@ -1,6 +1,7 @@
 package com.projectlibre1.pm.graphic.laf;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Insets;
 
 import javax.swing.UIManager;
@@ -22,6 +23,13 @@ public class ModernLaf {
 	/** App chrome background (ribbon, headers). */
 	public static final Color CHROME = new Color(0xF6F7F9);
 	public static final Color TEXT_SECONDARY = new Color(0x6B7280);
+	public static final Color TEXT_PRIMARY = new Color(0x1F2329);
+	/** Light accent tint behind selected rows and cells. */
+	public static final Color SELECTION = new Color(0xDCE7FC);
+	/** Selection tint in the row-number gutter and headers. */
+	public static final Color SELECTION_CHROME = new Color(0xC9DAFA);
+	/** "Today" marker in the timeline charts. */
+	public static final Color TODAY = new Color(0xE8590C);
 
 	private static boolean installed = false;
 
@@ -62,6 +70,12 @@ public class ModernLaf {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+		}
+		// Gantt labels and network boxes use the UI font instead of the old serif default
+		Font uiFont = UIManager.getFont("Label.font");
+		if (uiFont != null) {
+			Environment.setFont(uiFont.getFamily() + " PLAIN 11", Environment.GANTT_ANNOTATIONS_FONT);
+			Environment.setFont(uiFont.getFamily() + " PLAIN 12", Environment.NETWORK_FONT);
 		}
 	}
 

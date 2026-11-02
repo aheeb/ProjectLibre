@@ -59,18 +59,17 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
 
+import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JTable;
-import javax.swing.border.LineBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 
-import com.projectlibre1.pm.graphic.frames.GraphicManager;
+import com.projectlibre1.pm.graphic.laf.ModernLaf;
 import com.projectlibre1.pm.graphic.model.cache.GraphicNode;
 import com.projectlibre1.pm.graphic.spreadsheet.SpreadSheetParams;
 import com.projectlibre1.pm.graphic.spreadsheet.common.CommonSpreadSheet;
 import com.projectlibre1.field.Field;
-import com.projectlibre1.util.Environment;
 /**
  *
  */
@@ -98,32 +97,33 @@ public class SpreadSheetColumnHeaderRenderer extends DefaultTableCellRenderer im
 			component=this;
 		} else component =(JLabel)super.getTableCellRendererComponent(table,value,isSelected,hasFocus,row,column);
 
-
+		Field field=null;
 		if (table!=null){
-			//CommonSpreadSheet sp=(CommonSpreadSheet)table;
-			//isSelected|=sp.getSelection().getColumnSelection().isSelectedIndex(column)&&table.getSelectedRowCount()==table.getRowCount();
-			component.setOpaque(Environment.isMac());
-			if (Environment.isNewLaf()) {
-				component.setForeground (/*table.getTableHeader().getForeground()*/Color.BLACK);
-				component.setBackground(isSelected ? GraphicManager.getInstance().getLafManager().getSelectedBackgroundColor() : GraphicManager.getInstance().getLafManager().getUnselectedBackgroundColor());
-			} if (Environment.isMac()){
-				component.setForeground (isSelected ? Color.BLACK : table.getTableHeader().getForeground());
-				component.setBackground(isSelected ? GraphicManager.getInstance().getLafManager().getSelectedBackgroundColor() : GraphicManager.getInstance().getLafManager().getUnselectedBackgroundColor());
-			} else {
-				component.setForeground (isSelected ? Color.BLACK : table.getTableHeader().getForeground());
-				component.setBackground(isSelected ? GraphicManager.getInstance().getLafManager().getSelectedBackgroundColor() : table.getTableHeader ().getBackground());
+			// flat header: the table header paints the background, selected columns get the accent tint
+			component.setOpaque(isSelected);
+			component.setForeground(isSelected ? ModernLaf.ACCENT : ModernLaf.TEXT_SECONDARY);
+			component.setBackground(ModernLaf.SELECTION_CHROME);
+			if (column>=0&&column<table.getColumnModel().getColumnCount()){
+				Object id=table.getColumnModel().getColumn(column).getIdentifier();
+				if (id instanceof Field) field=(Field)id;
 			}
 		}
 
-		component.setHorizontalAlignment (CENTER);
-		if (!Environment.isNewLaf()) {
-			component.setBorder(new LineBorder(Color.LIGHT_GRAY));
-		}
+		component.setHorizontalAlignment (alignment(field));
+		component.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
 		if (override == null) {
-			if (table!=null) component.setFont (table.getTableHeader ().getFont().deriveFont(Font.BOLD ));
+			if (table!=null) component.setFont (table.getTableHeader ().getFont().deriveFont(Font.BOLD, table.getTableHeader().getFont().getSize2D()-1f));
 			component.setText (value == null ? "" : value.toString ());
 		}
 		return component;
+	}
+
+	/** Header labels line up with the cell contents: numbers to the right, text to the left. */
+	protected static int alignment(Field field){
+		if (field==null) return CENTER;
+		if (field.isNameField()||field.hasOptions()||field.getLookupTypes()!=null) return LEADING;
+		if (field.isNumber()||field.isDurationOrWork()||field.isMoney()||field.isPercent()) return TRAILING;
+		return LEADING;
 	}
 
 

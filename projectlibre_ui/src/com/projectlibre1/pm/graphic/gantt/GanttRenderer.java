@@ -55,6 +55,7 @@
  *******************************************************************************/
 package com.projectlibre1.pm.graphic.gantt;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
@@ -62,10 +63,13 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Paint;
 import java.awt.Rectangle;
+import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.Stroke;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Area;
 import java.awt.geom.GeneralPath;
+import java.awt.geom.PathIterator;
 import java.awt.geom.Rectangle2D;
 import java.io.Serializable;
 import java.text.DateFormat;
@@ -85,6 +89,7 @@ import com.projectlibre1.pm.graphic.gantt.link_routing.GanttLinkRouting;
 import com.projectlibre1.pm.graphic.graph.GraphParams;
 import com.projectlibre1.pm.graphic.graph.GraphRenderer;
 import com.projectlibre1.pm.graphic.graph.LinkRouting;
+import com.projectlibre1.pm.graphic.laf.ModernLaf;
 import com.projectlibre1.pm.graphic.model.cache.GraphicDependency;
 import com.projectlibre1.pm.graphic.model.cache.GraphicNode;
 import com.projectlibre1.pm.graphic.model.cache.NodeModelCache;
@@ -105,6 +110,7 @@ import com.projectlibre1.pm.dependency.Dependency;
 import com.projectlibre1.pm.dependency.DependencyType;
 import com.projectlibre1.pm.scheduling.ScheduleInterval;
 import com.projectlibre1.pm.task.Project;
+import com.projectlibre1.strings.Messages;
 import com.projectlibre1.timescale.CalendarUtil;
 import com.projectlibre1.timescale.TimeInterval;
 import com.projectlibre1.timescale.TimeIterator;
@@ -124,6 +130,47 @@ public class GanttRenderer extends GraphRenderer implements Serializable {
 
 	protected GraphicConfiguration config;
 	protected JComponent container;
+
+	protected static final Stroke LINK_STROKE=new BasicStroke(1.2f,BasicStroke.CAP_ROUND,BasicStroke.JOIN_ROUND);
+	protected static final double LINK_CORNER_RADIUS=4;
+	protected static final Stroke TODAY_STROKE=new BasicStroke(1.5f);
+	protected static final Stroke PROJECT_START_STROKE=new BasicStroke(1f,BasicStroke.CAP_BUTT,BasicStroke.JOIN_MITER,10f,new float[]{4f,3f},0f);
+
+	/** Progress is shown as a darker shade of the bar colour. */
+	protected static Color progressColor(Color barColor){
+		if (barColor==null) return ModernLaf.TEXT_PRIMARY;
+		float f=0.72f;
+		return new Color((int)(barColor.getRed()*f),(int)(barColor.getGreen()*f),(int)(barColor.getBlue()*f));
+	}
+
+	/** Copy of a polyline with its corners replaced by small quadratic curves. */
+	protected static Shape roundCorners(GeneralPath path,double radius){
+		ArrayList<double[]> points=new ArrayList<double[]>();
+		double[] seg=new double[6];
+		for (PathIterator i=path.getPathIterator(null);!i.isDone();i.next()){
+			int type=i.currentSegment(seg);
+			if (type!=PathIterator.SEG_MOVETO&&type!=PathIterator.SEG_LINETO) return path;
+			points.add(new double[]{seg[0],seg[1]});
+		}
+		if (points.size()<3) return path;
+		GeneralPath rounded=new GeneralPath();
+		double[] p0=points.get(0);
+		rounded.moveTo(p0[0],p0[1]);
+		for (int k=1;k<points.size()-1;k++){
+			double[] a=points.get(k-1),b=points.get(k),c=points.get(k+1);
+			double d1=Math.hypot(b[0]-a[0],b[1]-a[1]),d2=Math.hypot(c[0]-b[0],c[1]-b[1]);
+			double r=Math.min(radius,Math.min(d1,d2)/2);
+			if (r<=0){
+				rounded.lineTo(b[0],b[1]);
+				continue;
+			}
+			rounded.lineTo(b[0]+(a[0]-b[0])*r/d1,b[1]+(a[1]-b[1])*r/d1);
+			rounded.quadTo(b[0],b[1],b[0]+(c[0]-b[0])*r/d2,b[1]+(c[1]-b[1])*r/d2);
+		}
+		double[] last=points.get(points.size()-1);
+		rounded.lineTo(last[0],last[1]);
+		return rounded;
+	}
 
 
 	public GanttRenderer(){
@@ -194,9 +241,34 @@ public class GanttRenderer extends GraphRenderer implements Serializable {
 				intervalGenerator=format.getScheduleIntervalGenerator();
 			}
 
-			intervalGenerator.consumeIntervals(node,this);
+			// collect first so segments that touch (e.g. split at the progress point) get flat joins
+			intervalCount=0;
+			intervalGenerator.consumeIntervals(node,collector);
+			CoordinatesConverter coord=((GanttParams)graphInfo).getCoord();
+			for (int k=0;k<intervalCount;k++){
+				joinLeft=k>0&&coord.toX(intervalBounds[2*k])-coord.toX(intervalBounds[2*k-1])<=1;
+				joinRight=k<intervalCount-1&&coord.toX(intervalBounds[2*k+2])-coord.toX(intervalBounds[2*k+1])<=1;
+				consumeInterval(new ScheduleInterval(intervalBounds[2*k],intervalBounds[2*k+1]));
+			}
+			joinLeft=joinRight=false;
 
 		}
+
+		protected long[] intervalBounds=new long[16];
+		protected int intervalCount;
+		protected boolean joinLeft,joinRight;
+		protected IntervalConsumer collector=new IntervalConsumer(){
+			public void consumeInterval(ScheduleInterval interval){
+				if (2*intervalCount+1>=intervalBounds.length){
+					long[] bigger=new long[intervalBounds.length*2];
+					System.arraycopy(intervalBounds,0,bigger,0,intervalBounds.length);
+					intervalBounds=bigger;
+				}
+				intervalBounds[2*intervalCount]=interval.getStart();
+				intervalBounds[2*intervalCount+1]=interval.getEnd();
+				intervalCount++;
+			}
+		};
 
 
 
@@ -226,6 +298,7 @@ public class GanttRenderer extends GraphRenderer implements Serializable {
 	    	y+=height/2;
 
 			double dw=height;
+			Shape barShape=null;
 
 			if (format.getMiddle()!=null){
 
@@ -240,12 +313,22 @@ public class GanttRenderer extends GraphRenderer implements Serializable {
 					node.setGanttShapeOffset(bounds.getY()-y+height/2);
 					node.setGanttShapeHeight(bounds.getHeight());
 				}else{
-					Shape shape=format.getMiddle().draw(g2,
+					barShape=format.getMiddle().draw(g2,
 							width,
 							height,
 							x,
 							y,
 							useTextures());
+					if ((joinLeft||joinRight)&&barShape!=null){
+						// square off the rounded ends where this segment touches its neighbour
+						Rectangle2D b=barShape.getBounds2D();
+						double r=Math.min(b.getHeight()/2,b.getWidth()/2);
+						Area joined=new Area(barShape);
+						if (joinLeft) joined.add(new Area(new Rectangle2D.Double(b.getX(),b.getY(),r,b.getHeight())));
+						if (joinRight) joined.add(new Area(new Rectangle2D.Double(b.getMaxX()-r,b.getY(),r+1,b.getHeight())));
+						format.getMiddle().paintShape(g2,joined,useTextures());
+						barShape=joined;
+					}
 
 				}
 				// draw middle before ends
@@ -273,9 +356,13 @@ public class GanttRenderer extends GraphRenderer implements Serializable {
 					if (completedW>width && !GanttOption.getInstance().isCompletionIsContiguous())
 						completedW=width;
 					completedW=CoordinatesConverter.adaptSmallBarEndX(x, x+completedW, node,config)-x;
-					Rectangle2D progressBar=new Rectangle2D.Double(x,y-config.getGanttProgressBarHeight()/2,completedW,config.getGanttProgressBarHeight());
-					g2.setColor(Color.BLACK);
+					// progress: darker fill inside the bar, clipped to its rounded outline
+					Rectangle2D progressBar=new Rectangle2D.Double(x,y-height/2,completedW,height);
+					Shape oldClip=g2.getClip();
+					if (barShape!=null) g2.clip(barShape);
+					g2.setColor(progressColor(format.getMiddle()==null?null:format.getMiddle().getColor()));
 					g2.fill(progressBar);
+					g2.setClip(oldClip);
 				}
 			}
 
@@ -351,7 +438,10 @@ public class GanttRenderer extends GraphRenderer implements Serializable {
 		    	component.print(g2);
 		    	g2.translate(-x,-y);
 			}
-			else rendererPane.paintComponent(g2,component,container,x,y,w,h,true);
+			else {
+				component.setForeground(format.getMiddle().getColor());
+				rendererPane.paintComponent(g2,component,container,x,y,w,h,true);
+			}
 
 
 
@@ -439,7 +529,8 @@ public class GanttRenderer extends GraphRenderer implements Serializable {
 				if (dep.isDisabled()) g2.setStroke(DISABLED_LINK_STROKE);
 				if (dep.isCrossProject()) g2.setColor(/*dep.isDirty()?Color.ORANGE:*/EXTERNAL_LINK_COLOR);
 				else g2.setColor(/*dep.isDirty()?Color.RED:*/format.getMiddle().getColor());
-				g2.draw(path);
+				if (!dep.isDisabled()) g2.setStroke(LINK_STROKE);
+				g2.draw(roundCorners(path,LINK_CORNER_RADIUS));
 
 			//}
 			if (format.getStart()==null&&format.getEnd()==null) return;
@@ -582,6 +673,24 @@ public class GanttRenderer extends GraphRenderer implements Serializable {
 					drawNonWorking(g2, startNonworking, endNonWorking, cal, coord, bounds,useScale2);
 					startNonworking=endNonWorking=-1L;
 				}
+			}else if (coord.toW(DAY_MILLIS)>=4){
+				// week scales: still shade weekends day by day while days are wide enough to see
+				PredefinedPaint paint=(PredefinedPaint)calFormat.getMiddle().getPaint();
+				paint.applyPaint(g2, useTextures());
+				long end=(long)coord.toTime(bounds.getMaxX());
+				long day=DateTime.dayFloor((long)coord.toTime(bounds.getX()));
+				long startNonworking=-1L;
+				while (day<=end){
+					long next=DateTime.nextDay(day);
+					if (CalendarService.getInstance().getDay(wc, day).isWorking()){
+						if (startNonworking!=-1L){
+							fillNonWorking(g2, startNonworking, day, coord, bounds);
+							startNonworking=-1L;
+						}
+					}else if (startNonworking==-1L) startNonworking=day;
+					day=next;
+				}
+				if (startNonworking!=-1L) fillNonWorking(g2, startNonworking, day, coord, bounds);
 			}
 
 		if (container!=null){
@@ -595,29 +704,49 @@ public class GanttRenderer extends GraphRenderer implements Serializable {
 //				int startX=(int)Math.round(coord.toX(interval.getStart()));
 //				g2.drawLine(startX,bounds.y,startX,bounds.y+bounds.height);
 //			}
+			Stroke oldStroke=g2.getStroke();
 
 			//project start
+			long now=DateTime.gmt(new Date());
 			int projectStartX=(int)Math.round(coord.toX(project.getStart()));
-			if (projectStartX>=bounds.getX()&&projectStartX<=bounds.getMaxX()){
-				g2.setPaint(new PredefinedPaint(PredefinedPaint.DASH_LINE,Color.GRAY,g2.getBackground()));
+			if (projectStartX>=bounds.getX()&&projectStartX<=bounds.getMaxX()&&Math.abs(projectStartX-coord.toX(now))>8){
+				g2.setColor(ModernLaf.TEXT_SECONDARY.brighter());
+				g2.setStroke(PROJECT_START_STROKE);
 				g2.drawLine(projectStartX,bounds.y,projectStartX,bounds.y+bounds.height);
 			}
 
-			//project start
+			//status date
 			long statusDate = project.getStatusDate();
-			if (statusDate != 0) {
+			if (statusDate != 0 && DateTime.dayFloor(statusDate)!=DateTime.dayFloor(now)) { // today has its own line
 				int statusDateX=(int)Math.round(coord.toX(statusDate));
 				if (statusDateX>=bounds.getX()&&statusDateX<=bounds.getMaxX()){
-					g2.setPaint(new PredefinedPaint(PredefinedPaint.DOT_LINE2,Color.GREEN,g2.getBackground()));
+					g2.setColor(new Color(0x2F9E6E));
+					g2.setStroke(PROJECT_START_STROKE);
 					g2.drawLine(statusDateX,bounds.y,statusDateX,bounds.y+bounds.height);
 				}
 			}
+
+			//today
+			double todayX=coord.toX(now);
+			if (todayX>=bounds.getX()&&todayX<=bounds.getMaxX()){
+				g2.setColor(ModernLaf.TODAY);
+				g2.setStroke(TODAY_STROKE);
+				g2.draw(new java.awt.geom.Line2D.Double(todayX,bounds.y,todayX,bounds.y+bounds.height));
+			}
+			g2.setStroke(oldStroke);
 
 
 			if (oldColor!=null) g2.setColor(oldColor);
 			if (oldPaint!=null) g2.setPaint(oldPaint);
 
 		}
+	}
+
+	protected static final long DAY_MILLIS=24L*60*60*1000;
+	private void fillNonWorking(Graphics2D g2,long start,long end,CoordinatesConverter coord, Rectangle bounds){
+		int x0=(int)Math.round(coord.toX(start));
+		int x1=(int)Math.round(coord.toX(end));
+		g2.fillRect(x0, bounds.y, x1-x0, bounds.height);
 	}
 
 	private void drawNonWorking(Graphics2D g2,long startNonworking,long endNonWorking, Calendar cal,CoordinatesConverter coord, Rectangle bounds,boolean userScale2){
@@ -650,6 +779,8 @@ public class GanttRenderer extends GraphRenderer implements Serializable {
 			}
 		}
 
+		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,RenderingHints.VALUE_ANTIALIAS_ON);
+		g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 		paintNonWorkingDays(g2,clipBounds);
 
 		//Modif for offline graphics
@@ -700,7 +831,27 @@ public class GanttRenderer extends GraphRenderer implements Serializable {
 		}
 
 		if (visibleBounds!=null) g2.setClip(svgClip);
+		else if (container!=null&&nodeList.isEmpty()&&isEmptyProject(cache)) paintEmptyHint(g2);
 
+	}
+
+	protected boolean isEmptyProject(NodeModelCache cache){
+		for (ListIterator i=cache.getIterator();i.hasNext();){
+			if (!((GraphicNode)i.next()).isVoid()) return false;
+		}
+		return true;
+	}
+
+	/** Centered hint in the chart of a project without tasks. */
+	protected void paintEmptyHint(Graphics2D g2){
+		Rectangle visible=container.getVisibleRect();
+		String text=Messages.getString("Text.emptyGanttHint");
+		Font font=container.getFont();
+		if (font==null) return;
+		g2.setFont(font.deriveFont(font.getSize2D()+1f));
+		FontMetrics fm=g2.getFontMetrics();
+		g2.setColor(ModernLaf.TEXT_SECONDARY);
+		g2.drawString(text,visible.x+(visible.width-fm.stringWidth(text))/2,visible.y+visible.height/3);
 	}
 
 

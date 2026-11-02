@@ -150,7 +150,7 @@ public class SpreadSheetColumnModel extends DefaultTableColumnModel {
 //				tc.setCellEditor(new SpreadSheetNameCellEditor(new SimpleEditor(String.class)));
 				tc.setCellEditor(new SpreadSheetCellEditorAdapter(new SimpleEditor(String.class)));
 			} else if (field == Configuration.getFieldFromId("Field.indicators")) {
-				tc.setPreferredWidth(50);
+				tc.setPreferredWidth(34);
 				tc.setCellRenderer(new SpreadSheetCellRendererAdapter(new IndicatorsRenderer()));
 				tc.setHeaderRenderer(new SpreadSheetColumnHeaderRenderer(IndicatorsRenderer.getCellHeader()));
 			} else if (field.getLookupTypes() != null) {

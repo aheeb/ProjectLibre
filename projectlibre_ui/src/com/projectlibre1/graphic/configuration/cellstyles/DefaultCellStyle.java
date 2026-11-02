@@ -72,10 +72,10 @@ public class DefaultCellStyle implements CellStyle {
 		format.setBold(node.isSummary());
 		format.setItalic(node.isAssignment());
 		format.setCompositeIcon(node.isSummary()||node.isValidLazyParent());
-		if (node.getSubprojectLevel()>0) format.setBackground(node.getSubprojectLevel()%2==0?"MULTIPROJET0":"MULTIPROJET1");
+		if (node.getSubprojectLevel()>0) format.setBackground(node.getSubprojectLevel()%2==0?"#EEF2F8":"#F7F8FA");
 		if (node.isGroup()){
-			if (node.getLevel()==1) format.setBackground("TAN");
-			else format.setBackground("LINEN");
+			if (node.getLevel()==1) format.setBackground("#E9EDF3");
+			else format.setBackground("#F3F5F8");
 		}
 		return format;
 	}

@@ -359,6 +359,13 @@ public class Colors {
 
 	public static Color findColor(String key) {
 		Color found = (Color) getColors().get(key);
+		if (found == null && key != null && key.startsWith("#")) { // hex color, e.g. #5B8DEF
+			try {
+				found = Color.decode(key);
+				getColors().put(key, found); // cell styles ask for the same colours on every paint
+			} catch (NumberFormatException e) {
+			}
+		}
 		if (found == null) // if not a standard color, then assume that it needs to be parsed by color
 			found = Color.getColor(key);
 		return found;

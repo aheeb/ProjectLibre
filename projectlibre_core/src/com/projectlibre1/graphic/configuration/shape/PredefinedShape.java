@@ -56,6 +56,7 @@
 package com.projectlibre1.graphic.configuration.shape;
 
 import java.awt.geom.GeneralPath;
+import java.awt.geom.RoundRectangle2D;
 import java.util.HashMap;
 
 import com.projectlibre1.util.ArrayUtils;
@@ -67,10 +68,24 @@ public class PredefinedShape {
 	private String name;
 	private double[][] points = null;
 	private double[][][] pointGrid = null; 
+	private double arc = 0; // corner radius as a fraction of the shape height, 0 for square corners
 
 	public GeneralPath toGeneralPath(double hScale, double vScale, double hShift, double vShift) {
 		GeneralPath path;
-		if (points != null) {
+		if (arc > 0 && points != null) {
+			double minX = Double.MAX_VALUE, maxX = -Double.MAX_VALUE, minY = Double.MAX_VALUE, maxY = -Double.MAX_VALUE;
+			for (int i = 0; i < points.length; i++) {
+				minX = Math.min(minX, points[i][0]);
+				maxX = Math.max(maxX, points[i][0]);
+				minY = Math.min(minY, points[i][1]);
+				maxY = Math.max(maxY, points[i][1]);
+			}
+			int x0 = r(hScale * minX + hShift), x1 = r(hScale * maxX + hShift);
+			int y0 = r(vScale * minY + vShift), y1 = r(vScale * maxY + vShift);
+			double w = x1 - x0, h = y1 - y0;
+			double d = Math.min(2 * arc * h, Math.min(w, h));
+			path = new GeneralPath(new RoundRectangle2D.Double(x0, y0, w, h, d, d));
+		} else if (points != null) {
 			path = new GeneralPath(GeneralPath.WIND_EVEN_ODD, points.length);
 			int x, y;
 			for (int i = 0; i < points.length; i++) {
@@ -111,6 +126,11 @@ public class PredefinedShape {
 		this(name, points, 1.0, 1.0, 0.0, 0.0);
 	}
 
+	protected PredefinedShape(String name, double[][] points, double hScale, double vScale, double hShift, double vShift, double arc) {
+		this(name, points, hScale, vScale, hShift, vShift);
+		this.arc = arc;
+	}
+
 	protected PredefinedShape(String name, double[][][] matrixPoints) {
 		this.name = name;
 		this.pointGrid = ArrayUtils.clone(matrixPoints);
@@ -148,6 +168,23 @@ public class PredefinedShape {
 	public static final PredefinedShape HALF_HEIGHT_CENTER = new PredefinedShape("HALF_HEIGHT_CENTER", rectPoints, 1, .5, 0, 0);
 
 	public static final PredefinedShape QUARTER_HEIGHT_CENTER = new PredefinedShape("QUARTER_HEIGHT_CENTER", rectPoints, 1, .25, 0, 0);
+
+	// rounded bars
+	public static final PredefinedShape ROUNDED = new PredefinedShape("ROUNDED", rectPoints, 1, 1, 0, 0, .3);
+
+	public static final PredefinedShape ROUNDED_HALF_HEIGHT_CENTER = new PredefinedShape("ROUNDED_HALF_HEIGHT_CENTER", rectPoints, 1, .5, 0, 0, .5);
+
+	public static final PredefinedShape ROUNDED_HALF_HEIGHT_BOTTOM = new PredefinedShape("ROUNDED_HALF_HEIGHT_BOTTOM", rectPoints, 1, .5, 0, .25, .5);
+
+	// cards in the network, WBS and RBS charts
+	public static final PredefinedShape ROUNDED_BOX = new PredefinedShape("ROUNDED_BOX", rectPoints, 1, 1, 0, 0, .12);
+
+	// slim summary bracket: a thin bar along the top with hooks at both ends
+	public static final PredefinedShape BRACKET = new PredefinedShape("BRACKET", rectPoints, 1, .4, 0, -.3);
+
+	public static final PredefinedShape BRACKET_START = new PredefinedShape("BRACKET_START", new double[][] { { 0, -.5 }, { 0, .4 }, { .6, -.1 }, { .6, -.5 } });
+
+	public static final PredefinedShape BRACKET_END = new PredefinedShape("BRACKET_END", new double[][] { { 0, -.5 }, { 0, .4 }, { -.6, -.1 }, { -.6, -.5 } });
 
 	public static final PredefinedShape SQUARE = new PredefinedShape("SQUARE", new double[][] { { .5, .5 }, { -.5, .5 }, { -.5, -.5 }, { .5, -.5 }
 
@@ -201,6 +238,13 @@ public class PredefinedShape {
 		add(HALF_HEIGHT_BOTTOM);
 		add(HALF_HEIGHT_CENTER);
 		add(QUARTER_HEIGHT_CENTER);
+		add(ROUNDED);
+		add(ROUNDED_HALF_HEIGHT_CENTER);
+		add(ROUNDED_HALF_HEIGHT_BOTTOM);
+		add(ROUNDED_BOX);
+		add(BRACKET);
+		add(BRACKET_START);
+		add(BRACKET_END);
 
 		add(SQUARE);
 		add(DIAMOND);

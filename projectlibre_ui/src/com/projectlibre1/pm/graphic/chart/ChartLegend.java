@@ -56,6 +56,7 @@
 package com.projectlibre1.pm.graphic.chart;
 
 import java.awt.Color;
+import com.projectlibre1.pm.graphic.laf.ModernLaf;
 import java.awt.Component;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
@@ -345,6 +346,32 @@ public class ChartLegend  implements SelectionNodeListener, Serializable , Savab
 		}
 	} 	
 	
+	static class SwatchIcon implements javax.swing.Icon {
+		private final Color color;
+		SwatchIcon(Color color) {
+			this.color = color;
+		}
+		public void paintIcon(Component c, java.awt.Graphics g, int x, int y) {
+			java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+			g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+			java.awt.geom.RoundRectangle2D r = new java.awt.geom.RoundRectangle2D.Double(x + 0.5, y + 0.5, 11, 11, 4, 4);
+			if (color != null) {
+				g2.setColor(color);
+				g2.fill(r);
+			} else {
+				g2.setColor(ModernLaf.HAIRLINE.darker());
+				g2.draw(r);
+			}
+			g2.dispose();
+		}
+		public int getIconWidth() {
+			return 12;
+		}
+		public int getIconHeight() {
+			return 12;
+		}
+	}
+
 	class ListRenderer extends JLabel implements ListCellRenderer {
 		private static final long serialVersionUID = 1L;
 	   public ListRenderer () {
@@ -358,27 +385,12 @@ public class ChartLegend  implements SelectionNodeListener, Serializable , Savab
 	         boolean iss,  // is selected
 	         boolean chf) { // cell has focus?
 	   		setText(value.toString());
-	   		if (iss) {
-	   			Color color = ChartHelper.getColorForField(value);
-	   			setBackground(color);
-	   			if (color.getRed() + color.getGreen() + color.getBlue() < 450) // draw dark with white foreground
-	   				setForeground(Color.white);
-	   			else
-		   			setForeground(list.getForeground());
-	   				
-	   		} else {
-	   			setBackground(list.getBackground());
-	   			setForeground(list.getForeground());
-	   		}
-	         // Set a border if the 
-	         //list item is selected
-	        if (iss) {
-	            setBorder(BorderFactory.createLineBorder(
-	              Color.black, 1));
-	        } else {
-	            setBorder(BorderFactory.createLineBorder(
-	             list.getBackground(), 1));
-	        }
+	   		// shown series get a filled swatch in their colour, hidden ones an empty outline
+	   		setIcon(new SwatchIcon(iss ? ChartHelper.getColorForField(value) : null));
+	   		setIconTextGap(8);
+	   		setBackground(list.getBackground());
+	   		setForeground(iss ? ModernLaf.TEXT_PRIMARY : ModernLaf.TEXT_SECONDARY);
+	   		setBorder(BorderFactory.createEmptyBorder(3, 6, 3, 6));
 
 	   		
 	   		return this;

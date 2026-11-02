@@ -70,6 +70,7 @@ import com.projectlibre1.menu.MenuActionConstants;
 import com.projectlibre1.pm.graphic.spreadsheet.SpreadSheet;
 import com.projectlibre1.pm.graphic.spreadsheet.SpreadSheetPopupMenu;
 import com.projectlibre1.graphic.configuration.shape.Colors;
+import com.projectlibre1.pm.graphic.laf.ModernLaf;
 
 /**
  *
@@ -79,7 +80,9 @@ public class SpreadSheetRowHeader extends JTable {
 	//protected SpreadSheetPopupMenu popup=null;
 	public SpreadSheetRowHeader(CommonSpreadSheet table) {
 		super();
-		setGridColor(Colors.GRAY);
+		setGridColor(ModernLaf.HAIRLINE);
+		setShowVerticalLines(false);
+		setIntercellSpacing(new java.awt.Dimension(0,1));
 		this.table=table;
 		if (table instanceof SpreadSheet){
 			final SpreadSheet spreadSheet=(SpreadSheet)table;

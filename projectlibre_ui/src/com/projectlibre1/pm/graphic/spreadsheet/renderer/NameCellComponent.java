@@ -60,6 +60,7 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.image.BufferedImage;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -98,6 +99,10 @@ public class NameCellComponent extends JPanel {
 	protected ImageIcon fetchedLazyExpandedIcon = null;
 	protected ImageIcon fetchedLazyCollapsedIcon = null;
 	protected boolean offline;
+	public static final int ICON_WIDTH = ChevronIcon.SIZE;
+	protected static final ImageIcon BLANK_ICON = new ImageIcon(new BufferedImage(ChevronIcon.SIZE, ChevronIcon.SIZE, BufferedImage.TYPE_INT_ARGB));
+	protected static final ImageIcon COLLAPSED_ICON = new ChevronIcon(false);
+	protected static final ImageIcon EXPANDED_ICON = new ChevronIcon(true);
 	/**
 	 *
 	 */
@@ -118,10 +123,10 @@ public class NameCellComponent extends JPanel {
 		setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
 		if (getComponentCount() != 0)
 			removeAll();
-		leafIcon = IconManager.getIcon("spreadsheet.leaf.icon");
-		emptyLeafIcon = IconManager.getIcon("spreadsheet.emptyleaf.icon");
-		collapsedIcon = IconManager.getIcon("spreadsheet.collapsed.icon");
-		expandedIcon = IconManager.getIcon("spreadsheet.expanded.icon");
+		leafIcon = BLANK_ICON;
+		emptyLeafIcon = BLANK_ICON;
+		collapsedIcon = COLLAPSED_ICON;
+		expandedIcon = EXPANDED_ICON;
 
 		unfetchedLazyIcon = IconManager.getIcon("spreadsheet.unfetchedLazy.icon");
 		fetchedLazyExpandedIcon = IconManager.getIcon("spreadsheet.fetchedLazyExpanded.icon");
@@ -135,6 +140,11 @@ public class NameCellComponent extends JPanel {
 		iconLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 		add(iconLabel);
 		add(textComponent);
+		if (textComponent instanceof JLabel) {
+			// let the label fill the row height so its text centers like the other cells
+			textComponent.setMaximumSize(new Dimension(Short.MAX_VALUE, Short.MAX_VALUE));
+			((JLabel) textComponent).setVerticalAlignment(JLabel.CENTER);
+		}
 	}
 
 

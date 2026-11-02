@@ -61,6 +61,7 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -76,6 +77,7 @@ import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.factories.Borders;
 import com.jgoodies.forms.layout.CellConstraints;
 import com.jgoodies.forms.layout.FormLayout;
+import com.projectlibre1.pm.graphic.laf.ModernLaf;
 import com.projectlibre1.pm.graphic.ChangeAwareComponent;
 import com.projectlibre1.pm.graphic.ChangeAwareTextField;
 import com.projectlibre1.configuration.Configuration;
@@ -112,7 +114,7 @@ public class FormComponent extends JPanel{
 		else format=(BarFormat)selectedFormats.get(0);
 		init(format);
 		setOpaque(false);
-		setForeground(Color.BLACK);
+		setForeground(ModernLaf.TEXT_PRIMARY);
 		setBackground(Color.WHITE);
 	}
 	
@@ -251,6 +253,8 @@ public class FormComponent extends JPanel{
 		if (cell.getNode().isVoid()) return;*/
 		
 		Graphics2D g2=(Graphics2D)g;
+		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,RenderingHints.VALUE_ANTIALIAS_ON);
+		g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 		Dimension d=getSize();
 		double w=d.getWidth();
 		double h=d.getHeight();

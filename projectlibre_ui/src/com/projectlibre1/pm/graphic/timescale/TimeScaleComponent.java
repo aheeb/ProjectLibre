@@ -61,6 +61,7 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
+import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.font.FontRenderContext;
 import java.awt.font.LineMetrics;
@@ -71,6 +72,7 @@ import javax.swing.UIManager;
 
 import com.projectlibre1.pm.graphic.frames.GraphicManager;
 import com.projectlibre1.pm.graphic.gantt.GanttParams;
+import com.projectlibre1.pm.graphic.laf.ModernLaf;
 import com.projectlibre1.graphic.configuration.GraphicConfiguration;
 import com.projectlibre1.timescale.TimeInterval;
 import com.projectlibre1.timescale.TimeIterator;
@@ -94,8 +96,8 @@ public class TimeScaleComponent extends JPanel {
 		int h=GraphicConfiguration.getInstance().getColumnHeaderHeight();
 
 
-		if (textColor==null) textColor=Color.BLACK;
-		if (lineColor==null) lineColor=Environment.isMac()?Color.LIGHT_GRAY:Color.BLACK;
+		if (textColor==null) textColor=ModernLaf.TEXT_PRIMARY;
+		if (lineColor==null) lineColor=ModernLaf.HAIRLINE;
 
 //		setBackground(UIManager.getColor("TableHeader.cellColor"));
 //		setBackground(UIManager.getColor("TableHeader.cellBackground"));
@@ -109,10 +111,7 @@ public class TimeScaleComponent extends JPanel {
 		setPreferredSize(new Dimension(0,h));
 
 
-		if (Environment.isMac()){
-			setBackground(GraphicManager.getInstance().getLafManager().getUnselectedBackgroundColor()); //Using ColorUIResource directly doesn't work
-		}
-		else setBorder(UIManager.getBorder ("TableHeader.cellBorder"));
+		setBackground(ModernLaf.CHROME);
 	}
 
 
@@ -145,52 +144,44 @@ public class TimeScaleComponent extends JPanel {
 			w=d.getWidth();
 		}
 
+		g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 		g2.setColor(lineColor);
-		if (Environment.isMac()){
-			g2.draw(new Line2D.Double(x0,h-1,x0+w,h-1));
-		}
+		g2.draw(new Line2D.Double(x0,h-1,x0+w,h-1));
 		g2.draw(new Line2D.Double(x0,h/2,x0+w,h/2));
 
+		// upper tier: primary text, lower tier: smaller secondary text
+		Font font2=font.deriveFont(Font.BOLD,font.getSize2D()-1f);
+		Font font1=font.deriveFont(Font.PLAIN,font.getSize2D()-1.5f);
+		FontRenderContext context = g2.getFontRenderContext();
+		double half=h/2;
 
 		TimeIterator i=coord.getTimeIterator(x0,x0+w);
-		//g2.getRenderingHints().put(RenderingHints.KEY_ANTIALIASING,RenderingHints.VALUE_ANTIALIAS_ON);
-		//g2.setFont(new Font("Courrier", Font.PLAIN, 12));
-		g2.setFont(/*UIManager.getFont("TableHeader.cellFont")*/font);
-		//Font[]  fonts=GraphicsEnvironment.getLocalGraphicsEnvironment().getAllFonts();
-		//for (int k=0;k<fonts.length;k++)
-		FontRenderContext context = g2.getFontRenderContext();
-
-		long start=-1;
-		long end=-1;
-
 		while(i.hasNext()){
 			TimeInterval interval=i.next();
-			if (start==-1) start=interval.getStart1();
-			end=interval.getEnd1();
 
 			double x1=coord.toX(interval.getStart1());
 			double x2=coord.toX(interval.getEnd1());
 			g2.setColor(lineColor);
-			if (clipping) g2.draw(new Line2D.Double(x1,h/2,x1,h)); //when scrolling pixel by pixel both lines are needed
-			g2.draw(new Line2D.Double(x2,h/2,x2,h));
+			if (clipping) g2.draw(new Line2D.Double(x1,half,x1,h)); //when scrolling pixel by pixel both lines are needed
+			g2.draw(new Line2D.Double(x2,half,x2,h));
 
 			String text=interval.getText1();
-			LineMetrics metrics=font.getLineMetrics(text,context);
-			g2.setColor(textColor);
-			g2.drawString(text,(int)x1+2,((int)h)-metrics.getDescent()-metrics.getLeading());
+			g2.setFont(font1);
+			g2.setColor(ModernLaf.TEXT_SECONDARY);
+			g2.drawString(text,(int)x1+5,(int)Math.round(half+baseline(font1,text,context,half)));
 
 			if (interval.getText2()!=null){
 				double X1=/*Math.round(*/coord.toX(interval.getStart2())/*)*/; //round for TimeSpreadSheet
 				double X2=coord.toX(interval.getEnd2());
 
 				g2.setColor(lineColor);
-				if (clipping) g2.draw(new Line2D.Double(X1,0,X1,h/2));//when scrolling pixel by pixel both lines are needed
-				g2.draw(new Line2D.Double(X2,0,X2,h/2));
+				if (clipping) g2.draw(new Line2D.Double(X1,0,X1,half));//when scrolling pixel by pixel both lines are needed
+				g2.draw(new Line2D.Double(X2,0,X2,half));
 				text=interval.getText2();
-				metrics=font.getLineMetrics(text,context);
 				if (clipping||((int)X1+2>=x0)){
+					g2.setFont(font2);
 					g2.setColor(textColor);
-					g2.drawString(text,(int)X1+2,((int)h)/2-metrics.getDescent()-metrics.getLeading());
+					g2.drawString(text,(int)X1+5,(int)Math.round(baseline(font2,text,context,half)));
 				}
 				//avoids svg clipping. Very slow with firefox or opera
 			}
@@ -198,5 +189,11 @@ public class TimeScaleComponent extends JPanel {
 
 		}
 
+	}
+
+	/** Baseline offset that centers the text vertically in a tier of the given height. */
+	private static double baseline(Font font,String text,FontRenderContext context,double tierHeight){
+		LineMetrics metrics=font.getLineMetrics(text,context);
+		return (tierHeight+metrics.getAscent()-metrics.getDescent())/2;
 	}
 }

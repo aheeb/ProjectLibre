@@ -207,7 +207,7 @@ public class TimeChartPanel extends ChartPanel implements Scrollable, ScaledComp
 
 			if (traces[i] == HasTimeDistributedData.AVAILABILITY) {
 				chart.getXYPlot().getRenderer(1).setSeriesPaint(0, color);
-				chart.getXYPlot().getRenderer(1).setSeriesStroke(0, PredefinedStroke.LARGE_FRAMED);
+				chart.getXYPlot().getRenderer(1).setSeriesStroke(0, new java.awt.BasicStroke(2f));
 				continue; // do not increment series
 			}
 

@@ -57,21 +57,21 @@
 <view>
 	<bar>
 		<format id="Bar.totalSlack" row="1" from="Field.earlyStart" to="Field.lateFinish">
-			<middle shapeName="FULL_HEIGHT" colorName="BLUE" paintName="DIAGONAL" strokeName="SOLID"/>
+			<middle shapeName="ROUNDED_HALF_HEIGHT_BOTTOM" colorName="#C9D7F8" paintName="SOLID" strokeName="SOLID"/>
 		</format>
 		<format id="Bar.task" row="1" layer="1" intervalGenerator="com.projectlibre1.pm.graphic.gantt.GanttBarIntervalGenerator" from="Field.start" to="Field.finish">
-			<middle shapeName="FULL_HEIGHT" colorName="BLUE" paintName="DEFAULT" strokeName="FRAMED"/>
+			<middle shapeName="ROUNDED" colorName="#6E9AF0" paintName="SOLID" strokeName="SOLID"/>
 		</format>
 		<format id="Bar.milestone" row="1" layer="1" intervalGenerator="com.projectlibre1.pm.graphic.gantt.GanttBarIntervalGenerator"  from="Field.finish" to="Field.finish">
-			<start shapeName="DIAMOND" colorName="BLACK" paintName="SOLID"/>
+			<start shapeName="DIAMOND" colorName="#3D4553" paintName="SOLID"/>
 		</format>
 		<format id="Bar.summary" row="1" layer="1" intervalGenerator="com.projectlibre1.pm.graphic.gantt.GanttBarIntervalGenerator"  from="Field.start" to="Field.finish">
-			<start shapeName="PENTAGON_DOWN" colorName="BLACK" paintName="SOLID" />
-			<middle shapeName="HALF_HEIGHT_TOP" colorName="BLACK" paintName="SOLID"/>
-			<end shapeName="PENTAGON_DOWN" colorName="BLACK" paintName="SOLID"/>
+			<start shapeName="BRACKET_START" colorName="#3D4553" paintName="SOLID" />
+			<middle shapeName="BRACKET" colorName="#3D4553" paintName="SOLID"/>
+			<end shapeName="BRACKET_END" colorName="#3D4553" paintName="SOLID"/>
 		</format>
 		<format id="Bar.critical" row="1" layer="1" intervalGenerator="com.projectlibre1.pm.graphic.gantt.GanttBarIntervalGenerator"  from="Field.start" to="Field.finish">
-			<middle shapeName="FULL_HEIGHT" colorName="RED" paintName="DEFAULT" strokeName="FRAMED"/>
+			<middle shapeName="ROUNDED" colorName="#E8686E" paintName="SOLID" strokeName="SOLID"/>
 		</format>
 <!--
 		<format id="Bar.late"  row="1" layer="1" intervalGenerator="com.projectlibre1.pm.graphic.gantt.GanttBarIntervalGenerator"  from="Field.start" to="Field.finish">
@@ -79,55 +79,55 @@
 		</format>
 -->		
 		<format id="Bar.assignment" row="1" layer="1" intervalGenerator="com.projectlibre1.pm.graphic.gantt.GanttBarIntervalGenerator"  from="Field.start" to="Field.finish">
-			<middle shapeName="HALF_HEIGHT_CENTER" colorName="ORANGE" paintName="DEFAULT" strokeName="FRAMED"/>
+			<middle shapeName="ROUNDED_HALF_HEIGHT_CENTER" colorName="#F0A45B" paintName="SOLID" strokeName="SOLID"/>
 		</format>
 
 		<format id="Bar.deadline" row="1" layer="1" from="Field.deadline" to="Field.deadline">
-				<start shapeName="DIAMOND" colorName="YELLOW" paintName="SOLID"/>
+				<start shapeName="TRIANGLE_DOWN" colorName="#E8A317" paintName="SOLID"/>
 		</format>
 
 		<format id="Bar.baseline" row="2" from="Field.baselineStart" to="Field.baselineFinish">
-			<middle shapeName="FULL_HEIGHT" colorName="DARK_SLATE_GRAY" paintName="DEFAULT" strokeName="SOLID"/>
+			<middle shapeName="ROUNDED" colorName="#B3BAC5" paintName="SOLID" strokeName="SOLID"/>
 		</format>
 		<format id="Bar.baseline1" row="3" from="Field.baseline1Start" to="Field.baseline1Finish">
-			<middle shapeName="FULL_HEIGHT" colorName="MAGENTA" paintName="DEFAULT" strokeName="SOLID"/>
+			<middle shapeName="ROUNDED" colorName="MAGENTA" paintName="SOLID" strokeName="SOLID"/>
 		</format>
 		<format id="Bar.baseline2" row="4" from="Field.baseline2Start" to="Field.baseline2Finish">
-			<middle shapeName="FULL_HEIGHT" colorName="KHAKI" paintName="DEFAULT" strokeName="SOLID"/>
+			<middle shapeName="ROUNDED" colorName="KHAKI" paintName="SOLID" strokeName="SOLID"/>
 		</format>
 		<format id="Bar.baseline3" row="5" from="Field.baseline3Start" to="Field.baseline3Finish">
-			<middle shapeName="FULL_HEIGHT" colorName="TAN" paintName="DEFAULT" strokeName="SOLID"/>
+			<middle shapeName="ROUNDED" colorName="TAN" paintName="SOLID" strokeName="SOLID"/>
 		</format>
 		<format id="Bar.baseline4" row="6" from="Field.baseline4Start" to="Field.baseline4Finish">
-			<middle shapeName="FULL_HEIGHT" colorName="NAVY" paintName="DEFAULT" strokeName="SOLID"/>
+			<middle shapeName="ROUNDED" colorName="NAVY" paintName="SOLID" strokeName="SOLID"/>
 		</format>
 		<format id="Bar.baseline5" row="7" from="Field.baseline5Start" to="Field.baseline5Finish">
-			<middle shapeName="FULL_HEIGHT" colorName="TURQUOISE" paintName="DEFAULT" strokeName="SOLID"/>
+			<middle shapeName="ROUNDED" colorName="TURQUOISE" paintName="SOLID" strokeName="SOLID"/>
 		</format>
 		<format id="Bar.baseline6" row="8" from="Field.baseline6Start" to="Field.baseline6Finish">
-			<middle shapeName="FULL_HEIGHT" colorName="VIOLET" paintName="DEFAULT" strokeName="SOLID"/>
+			<middle shapeName="ROUNDED" colorName="VIOLET" paintName="SOLID" strokeName="SOLID"/>
 		</format>
 		<format id="Bar.baseline7" row="9" from="Field.baseline7Start" to="Field.baseline7Finish">
-			<middle shapeName="FULL_HEIGHT" colorName="MAROON" paintName="DEFAULT" strokeName="SOLID"/>
+			<middle shapeName="ROUNDED" colorName="MAROON" paintName="SOLID" strokeName="SOLID"/>
 		</format>
 		<format id="Bar.baseline8" row="10" from="Field.baseline8Start" to="Field.baseline8Finish">
-			<middle shapeName="FULL_HEIGHT" colorName="SALMON" paintName="DEFAULT" strokeName="SOLID"/>
+			<middle shapeName="ROUNDED" colorName="SALMON" paintName="SOLID" strokeName="SOLID"/>
 		</format>
 		<format id="Bar.baseline9" row="11" from="Field.baseline9Start" to="Field.baseline9Finish">
-			<middle shapeName="FULL_HEIGHT" colorName="ORANGE" paintName="DEFAULT" strokeName="SOLID"/>
+			<middle shapeName="ROUNDED" colorName="ORANGE" paintName="SOLID" strokeName="SOLID"/>
 		</format>
 		<format id="Bar.baseline10" row="12" from="Field.baseline10Start" to="Field.baseline10Finish">
-			<middle shapeName="FULL_HEIGHT" colorName="CYAN" paintName="DEFAULT" strokeName="SOLID"/>
+			<middle shapeName="ROUNDED" colorName="CYAN" paintName="SOLID" strokeName="SOLID"/>
 		</format>
 		<format id="Pert.task" row="1" layer="1" main="true">
-			<middle shapeName="FULL_HEIGHT" colorName="BLUE" paintName="VERY_SPACED_DOTS" strokeName="LARGE_FRAMED"/>
+			<middle shapeName="ROUNDED_BOX" colorName="#6E9AF0" paintName="TRANSPARENT" strokeName="MEDIUM_FRAMED"/>
 			<form>
-				<layout columnGrid="21dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="9px,7px,9px,7px" titleFont="_Default_ BOLD 10" labelFont="_Default_ BOLD 9" valueFont="_Default_ PLAIN 9"/>
-				<layout columnGrid="21dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="8px,10px,8px,10px" titleFont="_Default_ BOLD 10" labelFont="_Default_ BOLD 9" valueFont="_Default_ PLAIN 9"/>
-				<layout columnGrid="21dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="3px,12px,3px,12px" titleFont="_Default_ BOLD 11" labelFont="_Default_ BOLD 9" valueFont="_Default_ PLAIN 9"/>
-				<layout defaultZoom="true" columnGrid="27dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="5px,16px,5px,16px" titleFont="_Default_ BOLD 12" labelFont="_Default_ BOLD 10" valueFont="TimesRoman PLAIN 10"/>
-				<layout  columnGrid="33dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="8px,21px,8px,21px" titleFont="_Default_ BOLD 15" labelFont="_Default_ BOLD 12" valueFont="_Default_ PLAIN 12"/>
-				<layout  columnGrid="39dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="12px,24px,12px,24px" titleFont="_Default_ BOLD 18" labelFont="_Default_ BOLD 15" valueFont="_Default_ PLAIN 15"/>
+				<layout columnGrid="21dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="9px,7px,9px,7px" titleFont="_Default_ BOLD 10" labelFont="_Default_ PLAIN 9" valueFont="_Default_ PLAIN 9"/>
+				<layout columnGrid="21dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="8px,10px,8px,10px" titleFont="_Default_ BOLD 10" labelFont="_Default_ PLAIN 9" valueFont="_Default_ PLAIN 9"/>
+				<layout columnGrid="21dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="3px,12px,3px,12px" titleFont="_Default_ BOLD 11" labelFont="_Default_ PLAIN 9" valueFont="_Default_ PLAIN 9"/>
+				<layout defaultZoom="true" columnGrid="27dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="5px,16px,5px,16px" titleFont="_Default_ BOLD 12" labelFont="_Default_ PLAIN 10" valueFont="_Default_ PLAIN 10"/>
+				<layout  columnGrid="33dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="8px,21px,8px,21px" titleFont="_Default_ BOLD 15" labelFont="_Default_ PLAIN 12" valueFont="_Default_ PLAIN 12"/>
+				<layout  columnGrid="39dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="12px,24px,12px,24px" titleFont="_Default_ BOLD 18" labelFont="_Default_ PLAIN 15" valueFont="_Default_ PLAIN 15"/>
 				<box id="nameField" fieldId="Field.name" column="1" row="1" columnSpan="3" rowSpan="1" font="title" />
 				<box id="durationLabel" textId="Field.duration" column="1" row="2" columnSpan="1" rowSpan="1" font="label" minZoom="-2"/>
 				<box id="durationField" fieldId="Field.duration" column="3" row="2" columnSpan="1" rowSpan="1" font="value" minZoom="-2"/>
@@ -138,14 +138,14 @@
 			</form>
 		</format>
 		<format id="Pert.milestone" row="1" layer="1" main="true">
-			<middle shapeName="HEXAGON" colorName="BLACK" paintName="TRANSPARENT" strokeName="LARGE_FRAMED"/>
+			<middle shapeName="HEXAGON" colorName="#3D4553" paintName="TRANSPARENT" strokeName="MEDIUM_FRAMED"/>
 			<form>
-				<layout columnGrid="21dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="9px,7px,9px,7px" titleFont="_Default_ BOLD 10" labelFont="_Default_ BOLD 9" valueFont="_Default_ PLAIN 9"/>
-				<layout columnGrid="21dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="8px,10px,8px,10px" titleFont="_Default_ BOLD 10" labelFont="_Default_ BOLD 9" valueFont="_Default_ PLAIN 9"/>
-				<layout columnGrid="21dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="3px,12px,3px,12px" titleFont="_Default_ BOLD 11" labelFont="_Default_ BOLD 9" valueFont="_Default_ PLAIN 9"/>
-				<layout defaultZoom="true" columnGrid="27dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="5px,16px,5px,16px" titleFont="_Default_ BOLD 12" labelFont="_Default_ BOLD 10" valueFont="_Default_ PLAIN 10"/>
-				<layout  columnGrid="33dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="8px,21px,8px,21px" titleFont="_Default_ BOLD 15" labelFont="_Default_ BOLD 12" valueFont="_Default_ PLAIN 12"/>
-				<layout  columnGrid="39dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="12px,24px,12px,24px" titleFont="_Default_ BOLD 18" labelFont="_Default_ BOLD 15" valueFont="_Default_ PLAIN 15"/>
+				<layout columnGrid="21dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="9px,7px,9px,7px" titleFont="_Default_ BOLD 10" labelFont="_Default_ PLAIN 9" valueFont="_Default_ PLAIN 9"/>
+				<layout columnGrid="21dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="8px,10px,8px,10px" titleFont="_Default_ BOLD 10" labelFont="_Default_ PLAIN 9" valueFont="_Default_ PLAIN 9"/>
+				<layout columnGrid="21dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="3px,12px,3px,12px" titleFont="_Default_ BOLD 11" labelFont="_Default_ PLAIN 9" valueFont="_Default_ PLAIN 9"/>
+				<layout defaultZoom="true" columnGrid="27dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="5px,16px,5px,16px" titleFont="_Default_ BOLD 12" labelFont="_Default_ PLAIN 10" valueFont="_Default_ PLAIN 10"/>
+				<layout  columnGrid="33dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="8px,21px,8px,21px" titleFont="_Default_ BOLD 15" labelFont="_Default_ PLAIN 12" valueFont="_Default_ PLAIN 12"/>
+				<layout  columnGrid="39dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="12px,24px,12px,24px" titleFont="_Default_ BOLD 18" labelFont="_Default_ PLAIN 15" valueFont="_Default_ PLAIN 15"/>
 				<box id="nameField" fieldId="Field.name" column="1" row="1" columnSpan="3" rowSpan="1" font="title" />
 				<box id="durationLabel" textId="Field.duration" column="1" row="2" columnSpan="1" rowSpan="1" font="label" minZoom="-2"/>
 				<box id="durationField" fieldId="Field.duration" column="3" row="2" columnSpan="1" rowSpan="1" font="value" minZoom="-2"/>
@@ -156,14 +156,14 @@
 			</form>
 		</format>
 		<format id="Pert.summary" row="1" layer="1" main="true">
-			<middle shapeName="PARALLELOGRAM" colorName="BLACK" paintName="TRANSPARENT" strokeName="LARGE_FRAMED"/>
+			<middle shapeName="ROUNDED_BOX" colorName="#3D4553" paintName="TRANSPARENT" strokeName="MEDIUM_FRAMED"/>
 			<form>
-				<layout columnGrid="21dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="9px,7px,9px,7px" titleFont="_Default_ BOLD 10" labelFont="_Default_ BOLD 9" valueFont="_Default_ PLAIN 9"/>
-				<layout columnGrid="21dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="8px,10px,8px,10px" titleFont="_Default_ BOLD 10" labelFont="_Default_ BOLD 9" valueFont="_Default_ PLAIN 9"/>
-				<layout columnGrid="21dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="3px,12px,3px,12px" titleFont="_Default_ BOLD 11" labelFont="_Default_ BOLD 9" valueFont="_Default_ PLAIN 9"/>
-				<layout defaultZoom="true" columnGrid="27dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="5px,16px,5px,16px" titleFont="_Default_ BOLD 12" labelFont="_Default_ BOLD 10" valueFont="_Default_ PLAIN 10"/>
-				<layout  columnGrid="33dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="8px,21px,8px,21px" titleFont="_Default_ BOLD 15" labelFont="_Default_ BOLD 12" valueFont="_Default_ PLAIN 12"/>
-				<layout  columnGrid="39dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="12px,24px,12px,24px" titleFont="_Default_ BOLD 18" labelFont="_Default_ BOLD 15" valueFont="_Default_ PLAIN 15"/>
+				<layout columnGrid="21dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="9px,7px,9px,7px" titleFont="_Default_ BOLD 10" labelFont="_Default_ PLAIN 9" valueFont="_Default_ PLAIN 9"/>
+				<layout columnGrid="21dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="8px,10px,8px,10px" titleFont="_Default_ BOLD 10" labelFont="_Default_ PLAIN 9" valueFont="_Default_ PLAIN 9"/>
+				<layout columnGrid="21dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="3px,12px,3px,12px" titleFont="_Default_ BOLD 11" labelFont="_Default_ PLAIN 9" valueFont="_Default_ PLAIN 9"/>
+				<layout defaultZoom="true" columnGrid="27dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="5px,16px,5px,16px" titleFont="_Default_ BOLD 12" labelFont="_Default_ PLAIN 10" valueFont="_Default_ PLAIN 10"/>
+				<layout  columnGrid="33dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="8px,21px,8px,21px" titleFont="_Default_ BOLD 15" labelFont="_Default_ PLAIN 12" valueFont="_Default_ PLAIN 12"/>
+				<layout  columnGrid="39dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="12px,24px,12px,24px" titleFont="_Default_ BOLD 18" labelFont="_Default_ PLAIN 15" valueFont="_Default_ PLAIN 15"/>
 				<box id="nameField" fieldId="Field.name" column="1" row="1" columnSpan="3" rowSpan="1" font="title" />
 				<box id="durationLabel" textId="Field.duration" column="1" row="2" columnSpan="1" rowSpan="1" font="label" minZoom="-2"/>
 				<box id="durationField" fieldId="Field.duration" column="3" row="2" columnSpan="1" rowSpan="1" font="value" minZoom="-2"/>
@@ -174,14 +174,14 @@
 			</form>
 		</format>
 		<format id="Pert.critical" row="1" layer="1" main="true">
-			<middle shapeName="FULL_HEIGHT" colorName="RED" paintName="VERY_SPACED_DOTS" strokeName="LARGE_FRAMED"/>
+			<middle shapeName="ROUNDED_BOX" colorName="#E8686E" paintName="TRANSPARENT" strokeName="MEDIUM_FRAMED"/>
 			<form>
-				<layout columnGrid="21dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="9px,7px,9px,7px" titleFont="_Default_ BOLD 10" labelFont="_Default_ BOLD 9" valueFont="_Default_ PLAIN 9"/>
-				<layout columnGrid="21dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="8px,10px,8px,10px" titleFont="_Default_ BOLD 10" labelFont="_Default_ BOLD 9" valueFont="_Default_ PLAIN 9"/>
-				<layout columnGrid="21dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="3px,12px,3px,12px" titleFont="_Default_ BOLD 11" labelFont="_Default_ BOLD 9" valueFont="_Default_ PLAIN 9"/>
-				<layout defaultZoom="true" columnGrid="27dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="5px,16px,5px,16px" titleFont="_Default_ BOLD 12" labelFont="_Default_ BOLD 10" valueFont="_Default_ PLAIN 10"/>
-				<layout columnGrid="33dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="8px,21px,8px,21px" titleFont="_Default_ BOLD 15" labelFont="_Default_ BOLD 12" valueFont="_Default_ PLAIN 12"/>
-				<layout columnGrid="39dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="12px,24px,12px,24px" titleFont="_Default_ BOLD 18" labelFont="_Default_ BOLD 15" valueFont="_Default_ PLAIN 15"/>
+				<layout columnGrid="21dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="9px,7px,9px,7px" titleFont="_Default_ BOLD 10" labelFont="_Default_ PLAIN 9" valueFont="_Default_ PLAIN 9"/>
+				<layout columnGrid="21dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="8px,10px,8px,10px" titleFont="_Default_ BOLD 10" labelFont="_Default_ PLAIN 9" valueFont="_Default_ PLAIN 9"/>
+				<layout columnGrid="21dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="3px,12px,3px,12px" titleFont="_Default_ BOLD 11" labelFont="_Default_ PLAIN 9" valueFont="_Default_ PLAIN 9"/>
+				<layout defaultZoom="true" columnGrid="27dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="5px,16px,5px,16px" titleFont="_Default_ BOLD 12" labelFont="_Default_ PLAIN 10" valueFont="_Default_ PLAIN 10"/>
+				<layout columnGrid="33dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="8px,21px,8px,21px" titleFont="_Default_ BOLD 15" labelFont="_Default_ PLAIN 12" valueFont="_Default_ PLAIN 12"/>
+				<layout columnGrid="39dlu,3dlu,p:grow" rowGrid="p,p,p,p" border="12px,24px,12px,24px" titleFont="_Default_ BOLD 18" labelFont="_Default_ PLAIN 15" valueFont="_Default_ PLAIN 15"/>
 				<box id="nameField" fieldId="Field.name" column="1" row="1" columnSpan="3" rowSpan="1" font="title" />
 				<box id="durationLabel" textId="Field.duration" column="1" row="2" columnSpan="1" rowSpan="1" font="label" minZoom="-2"/>
 				<box id="durationField" fieldId="Field.duration" column="3" row="2" columnSpan="1" rowSpan="1" font="value" minZoom="-2"/>
@@ -193,13 +193,13 @@
 		</format>
 
 		<format id="WBS.task" row="1" layer="1" main="true">
-			<middle shapeName="FULL_HEIGHT" colorName="BLACK" paintName="TRANSPARENT" strokeName="LARGE_FRAMED"/>
+			<middle shapeName="ROUNDED_BOX" colorName="#8C96A6" paintName="TRANSPARENT" strokeName="MEDIUM_FRAMED"/>
 			<form>
-				<layout columnGrid="19dlu,3dlu,p:grow" rowGrid="p,p,p" border="5px,7px,5px,7px" titleFont="_Default_ BOLD 10" labelFont="_Default_ BOLD 9" valueFont="_Default_ PLAIN 9"/>
-				<layout columnGrid="19dlu,3dlu,p:grow" rowGrid="p,p,p" border="1px,12px,1px,12px" titleFont="_Default_ BOLD 11" labelFont="_Default_ BOLD 9" valueFont="_Default_ PLAIN 9"/>
-				<layout defaultZoom="true" columnGrid="25dlu,3dlu,p:grow" rowGrid="p,p,p" border="2px,16px,2px,16px" titleFont="_Default_ BOLD 12" labelFont="_Default_ BOLD 10" valueFont="_Default_ PLAIN 10"/>
-				<layout columnGrid="31dlu,3dlu,p:grow" rowGrid="p,p,p" border="3px,21px,3px,21px" titleFont="_Default_ BOLD 15" labelFont="_Default_ BOLD 12" valueFont="_Default_ PLAIN 12"/>
-				<layout columnGrid="37dlu,3dlu,p:grow" rowGrid="p,p,p" border="7px,24px,7px,24px" titleFont="_Default_ BOLD 18" labelFont="_Default_ BOLD 15" valueFont="_Default_ PLAIN 15"/>
+				<layout columnGrid="19dlu,3dlu,p:grow" rowGrid="p,p,p" border="5px,7px,5px,7px" titleFont="_Default_ BOLD 10" labelFont="_Default_ PLAIN 9" valueFont="_Default_ PLAIN 9"/>
+				<layout columnGrid="19dlu,3dlu,p:grow" rowGrid="p,p,p" border="1px,12px,1px,12px" titleFont="_Default_ BOLD 11" labelFont="_Default_ PLAIN 9" valueFont="_Default_ PLAIN 9"/>
+				<layout defaultZoom="true" columnGrid="25dlu,3dlu,p:grow" rowGrid="p,p,p" border="2px,16px,2px,16px" titleFont="_Default_ BOLD 12" labelFont="_Default_ PLAIN 10" valueFont="_Default_ PLAIN 10"/>
+				<layout columnGrid="31dlu,3dlu,p:grow" rowGrid="p,p,p" border="3px,21px,3px,21px" titleFont="_Default_ BOLD 15" labelFont="_Default_ PLAIN 12" valueFont="_Default_ PLAIN 12"/>
+				<layout columnGrid="37dlu,3dlu,p:grow" rowGrid="p,p,p" border="7px,24px,7px,24px" titleFont="_Default_ BOLD 18" labelFont="_Default_ PLAIN 15" valueFont="_Default_ PLAIN 15"/>
 				<box id="nameField" fieldId="Field.name" column="1" row="1" columnSpan="3" rowSpan="1" font="title" />
 				<box id="costLabel" textId="Field.cost" column="1" row="2" columnSpan="1" rowSpan="1" font="label" minZoom="-1"/>
 				<box id="costField" fieldId="Field.cost" column="3" row="2" columnSpan="1" rowSpan="1" font="value" minZoom="-1"/>
@@ -208,13 +208,13 @@
 			</form>
 		</format>
 		<format id="WBS.milestone" row="1" layer="1" main="true">
-			<middle shapeName="HEXAGON" colorName="BLACK" paintName="TRANSPARENT" strokeName="LARGE_FRAMED"/>
+			<middle shapeName="HEXAGON" colorName="#3D4553" paintName="TRANSPARENT" strokeName="MEDIUM_FRAMED"/>
 			<form>
-				<layout columnGrid="19dlu,3dlu,p:grow" rowGrid="p,p,p" border="5px,7px,5px,7px" titleFont="_Default_ BOLD 10" labelFont="_Default_ BOLD 9" valueFont="_Default_ PLAIN 9"/>
-				<layout columnGrid="19dlu,3dlu,p:grow" rowGrid="p,p,p" border="1px,12px,1px,12px" titleFont="_Default_ BOLD 11" labelFont="_Default_ BOLD 9" valueFont="_Default_ PLAIN 9"/>
-				<layout defaultZoom="true" columnGrid="25dlu,3dlu,p:grow" rowGrid="p,p,p" border="2px,16px,2px,16px" titleFont="_Default_ BOLD 12" labelFont="_Default_ BOLD 10" valueFont="_Default_ PLAIN 10"/>
-				<layout columnGrid="31dlu,3dlu,p:grow" rowGrid="p,p,p" border="3px,21px,3px,21px" titleFont="_Default_ BOLD 15" labelFont="_Default_ BOLD 12" valueFont="_Default_ PLAIN 12"/>
-				<layout columnGrid="37dlu,3dlu,p:grow" rowGrid="p,p,p" border="7px,24px,7px,24px" titleFont="_Default_ BOLD 18" labelFont="_Default_ BOLD 15" valueFont="_Default_ PLAIN 15"/>
+				<layout columnGrid="19dlu,3dlu,p:grow" rowGrid="p,p,p" border="5px,7px,5px,7px" titleFont="_Default_ BOLD 10" labelFont="_Default_ PLAIN 9" valueFont="_Default_ PLAIN 9"/>
+				<layout columnGrid="19dlu,3dlu,p:grow" rowGrid="p,p,p" border="1px,12px,1px,12px" titleFont="_Default_ BOLD 11" labelFont="_Default_ PLAIN 9" valueFont="_Default_ PLAIN 9"/>
+				<layout defaultZoom="true" columnGrid="25dlu,3dlu,p:grow" rowGrid="p,p,p" border="2px,16px,2px,16px" titleFont="_Default_ BOLD 12" labelFont="_Default_ PLAIN 10" valueFont="_Default_ PLAIN 10"/>
+				<layout columnGrid="31dlu,3dlu,p:grow" rowGrid="p,p,p" border="3px,21px,3px,21px" titleFont="_Default_ BOLD 15" labelFont="_Default_ PLAIN 12" valueFont="_Default_ PLAIN 12"/>
+				<layout columnGrid="37dlu,3dlu,p:grow" rowGrid="p,p,p" border="7px,24px,7px,24px" titleFont="_Default_ BOLD 18" labelFont="_Default_ PLAIN 15" valueFont="_Default_ PLAIN 15"/>
 				<box id="nameField" fieldId="Field.name" column="1" row="1" columnSpan="3" rowSpan="1" font="title" />
 				<box id="costLabel" textId="Field.cost" column="1" row="2" columnSpan="1" rowSpan="1" font="label" minZoom="-1"/>
 				<box id="costField" fieldId="Field.cost" column="3" row="2" columnSpan="1" rowSpan="1" font="value" minZoom="-1"/>
@@ -223,13 +223,13 @@
 			</form>
 		</format>
 		<format id="WBS.summary" row="1" layer="1" main="true">
-			<middle shapeName="PARALLELOGRAM" colorName="BLACK" paintName="TRANSPARENT" strokeName="LARGE_FRAMED"/>
+			<middle shapeName="ROUNDED_BOX" colorName="#3D4553" paintName="TRANSPARENT" strokeName="MEDIUM_FRAMED"/>
 			<form>
-				<layout columnGrid="19dlu,3dlu,p:grow" rowGrid="p,p,p" border="5px,7px,5px,7px" titleFont="_Default_ BOLD 10" labelFont="_Default_ BOLD 9" valueFont="_Default_ PLAIN 9"/>
-				<layout columnGrid="19dlu,3dlu,p:grow" rowGrid="p,p,p" border="1px,12px,1px,12px" titleFont="_Default_ BOLD 11" labelFont="_Default_ BOLD 9" valueFont="_Default_ PLAIN 9"/>
-				<layout defaultZoom="true" columnGrid="25dlu,3dlu,p:grow" rowGrid="p,p,p" border="2px,16px,2px,16px" titleFont="_Default_ BOLD 12" labelFont="_Default_ BOLD 10" valueFont="_Default_ PLAIN 10"/>
-				<layout columnGrid="31dlu,3dlu,p:grow" rowGrid="p,p,p" border="3px,21px,3px,21px" titleFont="_Default_ BOLD 15" labelFont="_Default_ BOLD 12" valueFont="_Default_ PLAIN 12"/>
-				<layout columnGrid="37dlu,3dlu,p:grow" rowGrid="p,p,p" border="7px,24px,7px,24px" titleFont="_Default_ BOLD 18" labelFont="_Default_ BOLD 15" valueFont="_Default_ PLAIN 15"/>
+				<layout columnGrid="19dlu,3dlu,p:grow" rowGrid="p,p,p" border="5px,7px,5px,7px" titleFont="_Default_ BOLD 10" labelFont="_Default_ PLAIN 9" valueFont="_Default_ PLAIN 9"/>
+				<layout columnGrid="19dlu,3dlu,p:grow" rowGrid="p,p,p" border="1px,12px,1px,12px" titleFont="_Default_ BOLD 11" labelFont="_Default_ PLAIN 9" valueFont="_Default_ PLAIN 9"/>
+				<layout defaultZoom="true" columnGrid="25dlu,3dlu,p:grow" rowGrid="p,p,p" border="2px,16px,2px,16px" titleFont="_Default_ BOLD 12" labelFont="_Default_ PLAIN 10" valueFont="_Default_ PLAIN 10"/>
+				<layout columnGrid="31dlu,3dlu,p:grow" rowGrid="p,p,p" border="3px,21px,3px,21px" titleFont="_Default_ BOLD 15" labelFont="_Default_ PLAIN 12" valueFont="_Default_ PLAIN 12"/>
+				<layout columnGrid="37dlu,3dlu,p:grow" rowGrid="p,p,p" border="7px,24px,7px,24px" titleFont="_Default_ BOLD 18" labelFont="_Default_ PLAIN 15" valueFont="_Default_ PLAIN 15"/>
 				<box id="nameField" fieldId="Field.name" column="1" row="1" columnSpan="3" rowSpan="1" font="title" />
 				<box id="costLabel" textId="Field.cost" column="1" row="2" columnSpan="1" rowSpan="1" font="label" minZoom="-1"/>
 				<box id="costField" fieldId="Field.cost" column="3" row="2" columnSpan="1" rowSpan="1" font="value" minZoom="-1"/>
@@ -239,13 +239,13 @@
 		</format>
 
 		<format id="RBS.resource" row="1" layer="1" main="true">
-			<middle shapeName="FULL_HEIGHT" colorName="BLACK" paintName="TRANSPARENT" strokeName="LARGE_FRAMED"/>
+			<middle shapeName="ROUNDED_BOX" colorName="#8C96A6" paintName="TRANSPARENT" strokeName="MEDIUM_FRAMED"/>
 			<form>
-				<layout columnGrid="19dlu,3dlu,p:grow" rowGrid="p,p,p" border="5px,7px,5px,7px" titleFont="_Default_ BOLD 10" labelFont="_Default_ BOLD 9" valueFont="_Default_ PLAIN 9"/>
-				<layout columnGrid="19dlu,3dlu,p:grow" rowGrid="p,p,p" border="1px,12px,1px,12px" titleFont="_Default_ BOLD 11" labelFont="_Default_ BOLD 9" valueFont="_Default_ PLAIN 9"/>
-				<layout defaultZoom="true" columnGrid="25dlu,3dlu,p:grow" rowGrid="p,p,p" border="2px,16px,2px,16px" titleFont="_Default_ BOLD 12" labelFont="_Default_ BOLD 10" valueFont="_Default_ PLAIN 10"/>
-				<layout columnGrid="31dlu,3dlu,p:grow" rowGrid="p,p,p" border="3px,21px,3px,21px" titleFont="_Default_ BOLD 15" labelFont="_Default_ BOLD 12" valueFont="_Default_ PLAIN 12"/>
-				<layout columnGrid="37dlu,3dlu,p:grow" rowGrid="p,p,p" border="7px,24px,7px,24px" titleFont="_Default_ BOLD 18" labelFont="_Default_ BOLD 15" valueFont="_Default_ PLAIN 15"/>
+				<layout columnGrid="19dlu,3dlu,p:grow" rowGrid="p,p,p" border="5px,7px,5px,7px" titleFont="_Default_ BOLD 10" labelFont="_Default_ PLAIN 9" valueFont="_Default_ PLAIN 9"/>
+				<layout columnGrid="19dlu,3dlu,p:grow" rowGrid="p,p,p" border="1px,12px,1px,12px" titleFont="_Default_ BOLD 11" labelFont="_Default_ PLAIN 9" valueFont="_Default_ PLAIN 9"/>
+				<layout defaultZoom="true" columnGrid="25dlu,3dlu,p:grow" rowGrid="p,p,p" border="2px,16px,2px,16px" titleFont="_Default_ BOLD 12" labelFont="_Default_ PLAIN 10" valueFont="_Default_ PLAIN 10"/>
+				<layout columnGrid="31dlu,3dlu,p:grow" rowGrid="p,p,p" border="3px,21px,3px,21px" titleFont="_Default_ BOLD 15" labelFont="_Default_ PLAIN 12" valueFont="_Default_ PLAIN 12"/>
+				<layout columnGrid="37dlu,3dlu,p:grow" rowGrid="p,p,p" border="7px,24px,7px,24px" titleFont="_Default_ BOLD 18" labelFont="_Default_ PLAIN 15" valueFont="_Default_ PLAIN 15"/>
 				<box id="nameField" fieldId="Field.name" column="1" row="1" columnSpan="3" rowSpan="1" font="title"/>
 				<box id="costLabel" textId="Field.cost" column="1" row="2" columnSpan="1" rowSpan="1" font="label" minZoom="-1"/>
 				<box id="costField" fieldId="Field.cost" column="3" row="2" columnSpan="1" rowSpan="1" font="value" minZoom="-1"/>
@@ -254,13 +254,13 @@
 			</form>
 		</format>
 		<format id="RBS.summary" row="1" layer="1" main="true">
-			<middle shapeName="PARALLELOGRAM" colorName="BLACK" paintName="TRANSPARENT" strokeName="LARGE_FRAMED"/>
+			<middle shapeName="ROUNDED_BOX" colorName="#3D4553" paintName="TRANSPARENT" strokeName="MEDIUM_FRAMED"/>
 			<form>
-				<layout columnGrid="19dlu,3dlu,p:grow" rowGrid="p,p,p" border="5px,7px,5px,7px" titleFont="_Default_ BOLD 10" labelFont="_Default_ BOLD 9" valueFont="_Default_ PLAIN 9"/>
-				<layout columnGrid="19dlu,3dlu,p:grow" rowGrid="p,p,p" border="1px,12px,1px,12px" titleFont="_Default_ BOLD 11" labelFont="_Default_ BOLD 9" valueFont="_Default_ PLAIN 9"/>
-				<layout defaultZoom="true" columnGrid="25dlu,3dlu,p:grow" rowGrid="p,p,p" border="2px,16px,2px,16px" titleFont="_Default_ BOLD 12" labelFont="_Default_ BOLD 10" valueFont="_Default_ PLAIN 10"/>
-				<layout columnGrid="31dlu,3dlu,p:grow" rowGrid="p,p,p" border="3px,21px,3px,21px" titleFont="_Default_ BOLD 15" labelFont="_Default_ BOLD 12" valueFont="_Default_ PLAIN 12"/>
-				<layout columnGrid="37dlu,3dlu,p:grow" rowGrid="p,p,p" border="7px,24px,7px,24px" titleFont="_Default_ BOLD 18" labelFont="_Default_ BOLD 15" valueFont="_Default_ PLAIN 15"/>
+				<layout columnGrid="19dlu,3dlu,p:grow" rowGrid="p,p,p" border="5px,7px,5px,7px" titleFont="_Default_ BOLD 10" labelFont="_Default_ PLAIN 9" valueFont="_Default_ PLAIN 9"/>
+				<layout columnGrid="19dlu,3dlu,p:grow" rowGrid="p,p,p" border="1px,12px,1px,12px" titleFont="_Default_ BOLD 11" labelFont="_Default_ PLAIN 9" valueFont="_Default_ PLAIN 9"/>
+				<layout defaultZoom="true" columnGrid="25dlu,3dlu,p:grow" rowGrid="p,p,p" border="2px,16px,2px,16px" titleFont="_Default_ BOLD 12" labelFont="_Default_ PLAIN 10" valueFont="_Default_ PLAIN 10"/>
+				<layout columnGrid="31dlu,3dlu,p:grow" rowGrid="p,p,p" border="3px,21px,3px,21px" titleFont="_Default_ BOLD 15" labelFont="_Default_ PLAIN 12" valueFont="_Default_ PLAIN 12"/>
+				<layout columnGrid="37dlu,3dlu,p:grow" rowGrid="p,p,p" border="7px,24px,7px,24px" titleFont="_Default_ BOLD 18" labelFont="_Default_ PLAIN 15" valueFont="_Default_ PLAIN 15"/>
 				<box id="nameField" fieldId="Field.name" column="1" row="1" columnSpan="3" rowSpan="1" font="title" />
 				<box id="costLabel" textId="Field.cost" column="1" row="2" columnSpan="1" rowSpan="1" font="label" minZoom="-1"/>
 				<box id="costField" fieldId="Field.cost" column="3" row="2" columnSpan="1" rowSpan="1" font="value" minZoom="-1"/>
@@ -271,22 +271,22 @@
 
 
 		<format id="Link.link1">
-			<middle colorName="BLACK" paintName="SOLID" strokeName="SOLID"/>
-			<end shapeName="LINK_ARROW1" shapeScaleX="10" shapeScaleY="5" colorName="BLACK" paintName="SOLID" strokeName="SOLID"/>
+			<middle colorName="#8C96A6" paintName="SOLID" strokeName="SOLID"/>
+			<end shapeName="LINK_ARROW1" shapeScaleX="7" shapeScaleY="3.5" colorName="#8C96A6" paintName="SOLID" strokeName="SOLID"/>
 		</format>
 		<format id="Annotation.normal" fieldId="Field.resourceNames">
-			<middle colorName="BLACK" paintName="SOLID" strokeName="SOLID"/>
+			<middle colorName="#6B7280" paintName="SOLID" strokeName="SOLID"/>
 		</format>
 		<format id="Annotation.milestone" fieldId="Field.finish">
-			<middle colorName="BLACK" paintName="SOLID" strokeName="SOLID"/>
+			<middle colorName="#6B7280" paintName="SOLID" strokeName="SOLID"/>
 		</format>
 
 		<format id="Calendar.nonWorking">
-			<middle colorName="LIGHT_GRAY" paintName="DOT_LINE"/>
+			<middle colorName="#F3F4F6" paintName="SOLID"/>
 		</format>
 
 		<format id="Grid.showRows">
-			<middle shapeName="FULL_HEIGHT" colorName="LIGHT_GRAY" paintName="SOLID" strokeName="SOLID"/>
+			<middle shapeName="FULL_HEIGHT" colorName="#F0F1F4" paintName="SOLID" strokeName="SOLID"/>
 		</format>
 
 
@@ -316,7 +316,7 @@
 			<style id="Styles.Annotation.normal" formatId="Annotation.normal" formulaClass="com.projectlibre1.scripting.formulas.NormalTaskFormula" annotation="true" />
 			<style id="Styles.Annotation.milestone" formatId="Annotation.milestone" formulaClass="com.projectlibre1.scripting.formulas.MilestoneTaskFormula" annotation="true" />
 			<style id="Styles.Calendar.nonWorking" formatId="Calendar.nonWorking" calendar="true" />
-			<style id="Styles.Gantt.showRows" formatId="Grid.showRows" horizontalGrid="true" active="false" />
+			<style id="Styles.Gantt.showRows" formatId="Grid.showRows" horizontalGrid="true" />
 
 
 		</styles>
