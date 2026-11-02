@@ -172,6 +172,7 @@ public class ChartLegend  implements SelectionNodeListener, Serializable , Savab
 			
 		});
 		tree.setCellRenderer(new TreeRenderer());
+		javax.swing.ToolTipManager.sharedInstance().registerComponent(tree);
 		if (treeScrollPane == null)
 			treeScrollPane = new JScrollPane(tree);
 		else
@@ -330,6 +331,7 @@ public class ChartLegend  implements SelectionNodeListener, Serializable , Savab
 	class TreeRenderer extends DefaultTreeCellRenderer {
 		private static final long serialVersionUID = 1L;
 		private Icon activeIcon = IconManager.getIcon("greenCircle");	 //$NON-NLS-1$
+		private Icon noIcon = new javax.swing.ImageIcon(new java.awt.image.BufferedImage(Math.max(1, activeIcon.getIconWidth()), Math.max(1, activeIcon.getIconHeight()), java.awt.image.BufferedImage.TYPE_INT_ARGB));
 		
 		public Component getTreeCellRendererComponent(JTree tree, Object value,
 				boolean selected, boolean expanded, boolean leaf, int row,
@@ -338,9 +340,13 @@ public class ChartLegend  implements SelectionNodeListener, Serializable , Savab
 			Component c = super.getTreeCellRendererComponent(tree, value,
 					selected, expanded, leaf, row, hasFocus);
 
-			if (selectedResourcesFromTasks.contains( ((GraphicNode)value).getNode().getImpl() )) {
+			// the tree keeps each row's width, so every row has the dot's room: a row that gets the dot later
+			// would otherwise cut its name short ("Sara Br...")
+			if (selectedResourcesFromTasks.contains( ((GraphicNode)value).getNode().getImpl() ))
 				setIcon(activeIcon);
-			}
+			else if (getText() != null && getText().length() > 0) // not the hidden root
+				setIcon(noIcon);
+			setToolTipText(getText());
 
 			return c;
 		}
