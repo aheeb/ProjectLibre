@@ -199,7 +199,7 @@ public class GanttView extends SplittedView implements BaseView, ScheduleEventLi
 		cache.update();
 
 		// The view is built before the window has its real size; once it has, give the task grid the
-		// room its columns need (up to 60%) so Depends on, Assigned to and % Done are visible from the start.
+		// room its columns need, but at most 55% so the Gantt chart keeps at least 45% of the width.
 		addComponentListener(new java.awt.event.ComponentAdapter() {
 			public void componentResized(java.awt.event.ComponentEvent e) {
 				if (getWidth() < 600) return;
@@ -214,8 +214,8 @@ public class GanttView extends SplittedView implements BaseView, ScheduleEventLi
 					}
 				});
 				if (dividerRestored || leftScrollPane == null) return;
-				int wanted = Math.min(leftScrollPane.getPreferredSize().width + 2, getWidth() * 3 / 5);
-				if (wanted > getDividerLocation()) setDividerLocation(wanted);
+				int wanted = Math.min(leftScrollPane.getPreferredSize().width + 2, getWidth() * 11 / 20);
+				if (wanted != getDividerLocation()) setDividerLocation(wanted);
 			}
 		});
 
