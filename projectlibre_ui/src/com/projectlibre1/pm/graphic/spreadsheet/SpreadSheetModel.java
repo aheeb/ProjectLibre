@@ -72,6 +72,8 @@ import com.projectlibre1.grouping.core.model.NodeModel;
 import com.projectlibre1.pm.dependency.Dependency;
 import com.projectlibre1.pm.dependency.DependencyService;
 import com.projectlibre1.pm.dependency.DependencyType;
+import com.projectlibre1.pm.task.NormalTask;
+import com.projectlibre1.configuration.Configuration;
 import com.projectlibre1.pm.task.Project;
 import com.projectlibre1.strings.Messages;
 import com.projectlibre1.util.ClassUtils;
@@ -106,6 +108,19 @@ public class SpreadSheetModel extends CommonSpreadSheetModel {
 
 	public Object getValueAt(int row, int col) {
 		return SpreadSheetUtils.getValueAt(row,col,getRowMultiple(),cache,colModel,fieldContext);
+	}
+
+	/** Explains a change of duration or work caused by changing who works on {@code task}, or null. */
+	private static String assignmentChange(NormalTask task, long oldDuration, long oldWork) {
+		boolean durationChanged = task.getDurationMillis() != oldDuration;
+		boolean workChanged = Math.abs(task.getWork(null) - oldWork) > 60 * 1000L;
+		if (oldWork == 0 || durationChanged == workChanged)
+			return null; // first people on an empty task, or both changed: nothing simple to say
+		String duration = Configuration.getFieldFromId("Field.duration").getText(task, null);
+		String work = Configuration.getFieldFromId("Field.work").getText(task, null);
+		return durationChanged
+			? Messages.getStringWithParam("Assignee.durationChanged", new Object[] {task.getName(), duration, work})
+			: Messages.getStringWithParam("Assignee.workChanged", new Object[] {task.getName(), duration, work});
 	}
 
 	public String getColumnName(int col) {
@@ -150,6 +165,11 @@ public class SpreadSheetModel extends CommonSpreadSheetModel {
 				value = People.resolve(project.getResourcePool(), (String) value, newPeople);
 			}
 		}
+		// assigning people may change a package's duration or its work: say which, and why
+		NormalTask assignedTask = newPeople != null && rowNode.getImpl() instanceof NormalTask && !((NormalTask) rowNode.getImpl()).isWbsParent()
+				? (NormalTask) rowNode.getImpl() : null;
+		long oldDuration = assignedTask == null ? 0 : assignedTask.getDurationMillis();
+		long oldWork = assignedTask == null ? 0 : assignedTask.getWork(null);
 		if (value instanceof String && "Field.predecessors".equals(field.getId()) && getCache().getModel().getDataFactory() instanceof Project)
 			value = People.resolveTasks((Project) getCache().getModel().getDataFactory(), (String) value);
 
@@ -195,8 +215,12 @@ public class SpreadSheetModel extends CommonSpreadSheetModel {
 			} else {
 				getCache().getModel().setFieldValue(field, rowNode, this, value, fieldContext, NodeModel.NORMAL);
 			}
-			if (newPeople != null && !newPeople.isEmpty())
-				Toast.show(null, Messages.getStringWithParam("Assignee.added", String.join(", ", newPeople)));
+			String note = newPeople != null && !newPeople.isEmpty() ? Messages.getStringWithParam("Assignee.added", String.join(", ", newPeople)) : null;
+			String change = assignedTask == null ? null : assignmentChange(assignedTask, oldDuration, oldWork);
+			if (change != null)
+				note = note == null ? change : note + " " + change;
+			if (note != null)
+				Toast.show(null, note);
 		} catch (FieldParseException e) {
 			throw new RuntimeException(e); // exceptions will be treated by the spreadsheet, not the model, because there is a popup.  Because this method doesn't have an exception, a runtime exception will be caught by the spreadsheet
 		}
