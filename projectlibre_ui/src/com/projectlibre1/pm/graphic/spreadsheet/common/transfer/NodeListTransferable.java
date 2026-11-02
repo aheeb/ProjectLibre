@@ -283,12 +283,18 @@ public class NodeListTransferable implements Transferable {
 		if (rows.length<2||cols.length==0||spreadsheet.getSelectedFields()==null)
 			return;
 		String[] values=selectionToString(spreadsheet,new int[]{rows[0]},cols).split("\t",-1);
-		for (int c=0;c<cols.length;c++){
-			String v=values[c];
-			if (c==cols.length-1&&v.endsWith("\n")) v=v.substring(0,v.length()-1);
-			int[] rest=new int[rows.length-1];
-			System.arraycopy(rows,1,rest,0,rest.length);
-			fillCells(v,spreadsheet,rest,new int[]{cols[c]});
+		int[] rest=new int[rows.length-1];
+		System.arraycopy(rows,1,rest,0,rest.length);
+		UndoController undo=GraphicManager.getInstance(spreadsheet).getUndoController();
+		if (undo!=null) undo.beginUpdate(); // one Undo step for all columns (fillCells' groups nest inside)
+		try{
+			for (int c=0;c<cols.length;c++){
+				String v=values[c];
+				if (c==cols.length-1&&v.endsWith("\n")) v=v.substring(0,v.length()-1);
+				fillCells(v,spreadsheet,rest,new int[]{cols[c]});
+			}
+		}finally{
+			if (undo!=null) undo.endUpdate();
 		}
 	}
 
@@ -309,7 +315,7 @@ public class NodeListTransferable implements Transferable {
 					if (!spreadsheet.isCellEditable(rows[r],cols[c]))
 						continue;
 					try{
-						model.setValueAt(value,rows[r],cols[c]+1);
+						model.setValueAt(value,rows[r],spreadsheet.convertColumnIndexToModel(cols[c])); // columns may be reordered
 					}catch(Exception e){}
 				}
 			}
@@ -338,7 +344,7 @@ public class NodeListTransferable implements Transferable {
 			if (delim.equals(valueS)) valueS="";
 			else if (st.hasMoreTokens()) st.nextToken();
 			try{
-				model.setValueAt(valueS,row0,++col);
+				model.setValueAt(valueS,row0,spreadsheet.convertColumnIndexToModel(col++)); // columns may be reordered
 			}catch(Exception e){}
 		}
 		fieldContext.setRound(round);
