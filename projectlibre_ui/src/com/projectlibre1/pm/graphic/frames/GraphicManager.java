@@ -122,6 +122,7 @@ import org.apache.batik.util.gui.resource.MissingListenerException;
 import org.apache.commons.collections.Closure;
 import org.projectlibre.strings.Strings;
 import org.pushingpixels.flamingo.api.common.AbstractCommandButton;
+import org.pushingpixels.flamingo.api.common.RichTooltip;
 import org.pushingpixels.flamingo.api.ribbon.JRibbon;
 import org.pushingpixels.flamingo.api.ribbon.JRibbonFrame;
 import org.pushingpixels.flamingo.api.ribbon.RibbonApplicationMenu;
@@ -129,6 +130,9 @@ import org.pushingpixels.flamingo.api.ribbon.RibbonTask;
 
 import com.projectlibre.ui.ribbon.CustomRibbonBandGenerator;
 import com.projectlibre.ui.ribbon.ProjectLibreRibbonUI;
+import com.projectlibre.ui.ribbon.RibbonActions;
+import com.projectlibre.ui.ribbon.ViewSwitcher;
+import com.projectlibre1.menu.AppMenuBar;
 import com.projectlibre1.configuration.Configuration;
 import com.projectlibre1.configuration.FieldDictionary;
 import com.projectlibre1.configuration.Settings;
@@ -1087,6 +1091,7 @@ public class GraphicManager implements  FrameHolder, NamedFrameListener, WindowS
 		actionsMap.addHandler(ACTION_LOOK_AND_FEEL, new LookAndFeelAction());
 		actionsMap.addHandler(ACTION_FULL_SCREEN, new FullScreenAction());
 		actionsMap.addHandler(ACTION_REFRESH, new RefreshAction());
+		RibbonActions.register(this, actionsMap);
 
 
 	}
@@ -1626,7 +1631,7 @@ public class GraphicManager implements  FrameHolder, NamedFrameListener, WindowS
 		}
 	}
 	
-	public class LocaleAction extends MenuActionsMap.DocumentMenuAction {
+	public class LocaleAction extends MenuActionsMap.GlobalMenuAction {
 		private static final long serialVersionUID = 1L;
 		public void actionPerformed(ActionEvent arg0) {
 			setMeAsLastGraphicManager();
@@ -2418,18 +2423,22 @@ protected boolean loadLocalDocument(String fileName,boolean merge){ //uses serve
 		for (RibbonTask ribbonTask : ribbonTasks){
 			ribbon.addTask(ribbonTask);
 		}
+		String selectedTask = menuManger.getStringOrNull(MenuManager.STANDARD_RIBBON + ".selected");
+		if (selectedTask != null && Integer.parseInt(selectedTask.trim()) < ribbon.getTaskCount())
+			ribbon.setSelectedTask(ribbon.getTask(Integer.parseInt(selectedTask.trim())));
 		
 		
 		RibbonApplicationMenu applicationMenu=new RibbonApplicationMenu();
 		
 		
 		ribbon.setApplicationMenu(applicationMenu);
+		ribbon.setApplicationMenuRichTooltip(new RichTooltip("ProjectLibre", MenuManager.getMenuStringOrNull("RibbonLogo.tooltip")));
 		
 		Collection<AbstractCommandButton> taskBars=menuManger.getTaskBar(MenuManager.STANDARD_RIBBON);
 		for (AbstractCommandButton button : taskBars)
 			ribbon.addTaskbarComponent(button);
 		
-		ribbon.configureHelp(IconManager.getRibbonIcon("ribbon.help",26,26), new ActionListener() {
+		ribbon.configureHelp(IconManager.getRibbonIcon("ribbon.help",20,20), new ActionListener() {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -2448,33 +2457,20 @@ protected boolean loadLocalDocument(String fileName,boolean merge){ //uses serve
 		
 		JPanel projectViews=ribbon.getProjectViews();
 		projectViews.setBorder(new EmptyBorder(0,0,0,0));		
-		getMenuManager().initComponent(MenuManager.RIBBON_VIEW_BAR,projectViews);
+		projectViews.setLayout(new BorderLayout());
+		projectViews.setOpaque(false);
+		projectViews.add(new ViewSwitcher(getMenuManager()), BorderLayout.CENTER);
 		
 		JPanel fileSelector=ribbon.getFileSelector();
 		fileSelector.setLayout(new BorderLayout());
-		fileSelector.setBackground(ProjectLibreRibbonUI.RIBBON_MENU_COLOR);
+		fileSelector.setOpaque(false);
 		JComponent filesComponent=((DefaultFrameManager)getFrameManager()).getProjectComboPanel();
-		filesComponent.setBackground(ProjectLibreRibbonUI.RIBBON_MENU_COLOR);
-		fileSelector.add(filesComponent,BorderLayout.EAST);
+		filesComponent.setOpaque(false);
+		filesComponent.setLayout(new BorderLayout());
+		filesComponent.setToolTipText(MenuManager.getMenuStringOrNull("ViewSwitcher.ProjectsCombo.tooltip"));
+		fileSelector.add(filesComponent,BorderLayout.CENTER);
 
-		
-		JPanel languageSelector=ribbon.getLanguageSelector();
-		languageSelector.setLayout(new BorderLayout());
-		languageSelector.setBackground(ProjectLibreRibbonUI.RIBBON_MENU_COLOR);
-		
-		JButton localeButton=new JButton(IconManager.getIcon("menu16.locale"));
-		localeButton.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				LocaleDialog localeDialog = LocaleDialog.getInstance(getGraphicManager());
-				localeDialog.doModal();
-			}
-		});
-		localeButton.setBorderPainted(false);
-		localeButton.setFocusPainted(false);
-		localeButton.setContentAreaFilled(false);
-		languageSelector.add(localeButton,BorderLayout.EAST);
+		// the language button lives in File > Settings
 		
 //		String[] slocales=Settings.LANGUAGES.split(";");
 //		String[] translatedLocales=new String[slocales.length];
@@ -2688,6 +2684,9 @@ protected boolean loadLocalDocument(String fileName,boolean merge){ //uses serve
 
 			// To force a recalculation. This normally shouldn't be needed.
 		    addCtrlAccel(KeyEvent.VK_R, ACTION_RECALCULATE, new RecalculateAction());
+
+		    if (Environment.isRibbonUI() && container instanceof JFrame)
+		    	AppMenuBar.install((JFrame)container, getMenuManager(), getMenuManager().getActionFromId(ACTION_CALENDAR_OPTIONS));
     }
 
     private void addCtrlAccel(int vk, String actionConstant, Action action) {

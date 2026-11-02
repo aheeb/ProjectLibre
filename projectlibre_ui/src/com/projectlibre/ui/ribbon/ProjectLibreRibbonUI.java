@@ -103,6 +103,7 @@ import java.util.Set;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.Popup;
@@ -113,6 +114,8 @@ import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.ListDataEvent;
+import javax.swing.event.ListDataListener;
 import javax.swing.plaf.BorderUIResource;
 import javax.swing.plaf.ComponentUI;
 import javax.swing.plaf.UIResource;
@@ -140,9 +143,11 @@ import org.pushingpixels.flamingo.internal.ui.ribbon.RibbonBandUI;
 import org.pushingpixels.flamingo.internal.ui.ribbon.RibbonUI;
 import org.pushingpixels.flamingo.internal.ui.ribbon.appmenu.JRibbonApplicationMenuButton;
 import org.pushingpixels.flamingo.internal.utils.FlamingoUtilities;
+import org.pushingpixels.flamingo.internal.utils.FlatRibbonStyle;
 import org.pushingpixels.flamingo.internal.utils.KeyTipManager;
 import org.pushingpixels.flamingo.internal.utils.RenderingUtils;
 
+import com.projectlibre1.menu.MenuManager;
 import com.projectlibre1.util.BrowserControl;
 
 public class ProjectLibreRibbonUI extends RibbonUI {
@@ -235,6 +240,15 @@ public class ProjectLibreRibbonUI extends RibbonUI {
 	protected int heightToReduce = 20;
 
 	protected int helpSpaceWidth = 30;
+
+	// flat header: [logo] [tabs] ........ [projects] [view switcher] | [save undo redo] [help]
+	protected static final int HEADER_HEIGHT = 44;
+	protected static final int LOGO_X = 14;
+	protected static final int LOGO_WIDTH = 144;
+	protected static final int LOGO_HEIGHT = 31;
+	protected static final int LOGO_GAP = 18;
+	protected int quickAccessSeparatorX = -1;
+	protected JComboBox<?> trackedProjectCombo;
 
 	/*
 	 * (non-Javadoc)
@@ -512,6 +526,9 @@ public class ProjectLibreRibbonUI extends RibbonUI {
 			FlamingoUtilities
 					.updateRibbonFrameIconImages((JRibbonFrame) windowAncestor);
 		}
+		if (FlatRibbonStyle.isActive()) {
+			applicationMenuButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+		}
 		applicationMenuButton.addMouseListener(new MouseAdapter() { // popup is
 																	// disabled
 																	// in
@@ -629,6 +646,21 @@ public class ProjectLibreRibbonUI extends RibbonUI {
 	 *            Graphics context.
 	 */
 	protected void paintBackground(Graphics g) {
+		if (FlatRibbonStyle.isActive()) {
+			Graphics2D g2d = (Graphics2D) g.create();
+			int w = ribbon.getWidth();
+			int h = ribbon.getHeight();
+			g2d.setColor(FlatRibbonStyle.background());
+			g2d.fillRect(0, 0, w, h);
+			g2d.setColor(FlatRibbonStyle.hairline());
+			int headerBottom = ribbon.getInsets().top + getTaskToggleButtonHeight() - 1;
+			g2d.fillRect(0, headerBottom, w, 1);
+			g2d.fillRect(0, h - 1, w, 1);
+			if (quickAccessSeparatorX > 0)
+				g2d.fillRect(quickAccessSeparatorX, ribbon.getInsets().top + 12, 1, getTaskToggleButtonHeight() - 24);
+			g2d.dispose();
+			return;
+		}
 		Graphics2D g2d = (Graphics2D) g.create();
 
 		int w=200;
@@ -671,7 +703,7 @@ public class ProjectLibreRibbonUI extends RibbonUI {
 	 *            Height of the tasks band bounds.
 	 */
 	protected void paintTaskArea(Graphics g, int x, int y, int width, int height) {
-		if (ribbon.getTaskCount() == 0)
+		if (ribbon.getTaskCount() == 0 || FlatRibbonStyle.isActive())
 			return;
 
 		JRibbonTaskToggleButton selectedTaskButton = this.taskToggleButtons
@@ -761,6 +793,8 @@ public class ProjectLibreRibbonUI extends RibbonUI {
 	 * @return The layout gap for the bands in the associated ribbon.
 	 */
 	protected int getBandGap() {
+		if (FlatRibbonStyle.isActive())
+			return 0;
 		return 2;
 	}
 
@@ -770,6 +804,8 @@ public class ProjectLibreRibbonUI extends RibbonUI {
 	 * @return The layout gap for the tab buttons in the associated ribbon.
 	 */
 	protected int getTabButtonGap() {
+		if (FlatRibbonStyle.isActive())
+			return 2;
 		return 6;
 	}
 
@@ -799,6 +835,8 @@ public class ProjectLibreRibbonUI extends RibbonUI {
 	 * @return The height of the taskbar area.
 	 */
 	public int getTaskbarHeight() {
+		if (FlatRibbonStyle.isActive())
+			return 0; // the quick access toolbar shares the row of the tabs
 		return defaultTaskbartHeight; // ProjectLibre
 		// return 24;
 	}
@@ -809,6 +847,8 @@ public class ProjectLibreRibbonUI extends RibbonUI {
 	 * @return The height of the task toggle button area.
 	 */
 	public int getTaskToggleButtonHeight() {
+		if (FlatRibbonStyle.isActive())
+			return HEADER_HEIGHT;
 		return defaultTaskToggleButtonHeight; // ProjectLibre
 		// return 22;
 	}
@@ -866,7 +906,7 @@ public class ProjectLibreRibbonUI extends RibbonUI {
 			if (!isUsingTitlePane())
 				extraHeight += getTaskbarHeight();
 			int prefHeight = maxPrefBandHeight + extraHeight + ins.top
-					+ ins.bottom - heightToReduce;
+					+ ins.bottom - (FlatRibbonStyle.isActive() ? 0 : heightToReduce);
 			// System.out.println("Ribbon pref = " + prefHeight);
 			return new Dimension(c.getWidth(), prefHeight);
 		}
@@ -922,6 +962,10 @@ public class ProjectLibreRibbonUI extends RibbonUI {
 		@Override
 		public void layoutContainer(Container c) {
 			// System.out.println("Ribbon real = " + c.getHeight());
+			if (FlatRibbonStyle.isActive() && !isUsingTitlePane()) {
+				layoutFlat(c);
+				return;
+			}
 
 			Insets ins = c.getInsets();
 			int tabButtonGap = getTabButtonGap();
@@ -1094,6 +1138,147 @@ public class ProjectLibreRibbonUI extends RibbonUI {
 	}
 
 	/**
+	 * Single header row: the ProjectLibre logo at the top left, the tabs right next to it, and on the right the
+	 * project selector (only with several projects open), the view switcher, the quick access toolbar and help.
+	 */
+	protected void layoutFlat(Container c) {
+		Insets ins = c.getInsets();
+		int width = c.getWidth();
+		int h = getTaskToggleButtonHeight();
+		int y = ins.top;
+
+		applicationMenuButton.setVisible(ribbon.getApplicationMenu() != null);
+		applicationMenuButton.setBounds(ins.left + LOGO_X, y + (h - LOGO_HEIGHT) / 2, LOGO_WIDTH, LOGO_HEIGHT);
+		int x = ins.left + LOGO_X + LOGO_WIDTH + LOGO_GAP;
+		int right = width - ins.right - 10;
+
+		if (helpPanel != null) {
+			Dimension p = helpPanel.getPreferredSize();
+			helpPanel.setBounds(right - p.width, y + (h - p.height) / 2, p.width, p.height);
+			right -= p.width + 4;
+		}
+
+		taskBarPanel.removeAll();
+		for (Component regComp : ribbon.getTaskbarComponents())
+			taskBarPanel.add(regComp);
+		Dimension tp = taskBarPanel.getPreferredSize();
+		int taskBarHeight = 32;
+		taskBarPanel.setBounds(right - tp.width, y + (h - taskBarHeight) / 2, tp.width, taskBarHeight);
+		taskBarPanel.doLayout();
+		right -= tp.width + 10;
+		quickAccessSeparatorX = right;
+		right -= 12;
+
+		if (ribbon.getLanguageSelector() != null)
+			ribbon.getLanguageSelector().setBounds(0, 0, 0, 0);
+
+		TaskToggleButtonsHostPanel taskToggleButtonsHostPanel = taskToggleButtonsScrollablePanel.getView();
+		int tabsWidth = taskToggleButtonsHostPanel.getLayout().preferredLayoutSize(taskToggleButtonsHostPanel).width;
+
+		JComponent fileSelector = ribbon.getFileSelector();
+		boolean showProjects = fileSelector != null && showProjectSelector(fileSelector);
+		int projectsWidth = 0;
+		if (fileSelector != null) {
+			fileSelector.setVisible(showProjects);
+			if (showProjects)
+				projectsWidth = Math.min(180, fileSelector.getPreferredSize().width) + 8;
+		}
+
+		JComponent projectViews = ribbon.getProjectViews();
+		if (projectViews != null) {
+			ViewSwitcher switcher = findViewSwitcher(projectViews);
+			if (switcher != null)
+				switcher.setCompact(right - x - tabsWidth - projectsWidth - 24 < switcher.getFullWidth());
+			Dimension vp = projectViews.getPreferredSize();
+			projectViews.setBounds(right - vp.width, y + (h - vp.height) / 2, vp.width, vp.height);
+			right -= vp.width + 8;
+		}
+
+		if (showProjects) {
+			int fw = projectsWidth - 8;
+			fileSelector.setBounds(right - fw, y + (h - 28) / 2, fw, 28);
+			right -= projectsWidth;
+		}
+
+		setNonOpaque(taskToggleButtonsScrollablePanel);
+		applicationMenuButton.setOpaque(false);
+		// one pixel short so the header hairline stays visible under the tabs
+		taskToggleButtonsScrollablePanel.setBounds(x, y, Math.max(0, right - x - 8), h - 1);
+		taskToggleButtonsHostPanel.setPreferredSize(new Dimension(
+				taskToggleButtonsHostPanel.getMinimumSize().width, h - 1));
+		taskToggleButtonsScrollablePanel.doLayout();
+
+		y += h;
+		if (bandScrollablePanel.getParent() == ribbon) {
+			if (!ribbon.isMinimized() && (ribbon.getTaskCount() > 0)) {
+				bandScrollablePanel.setBounds(ins.left, y + 2, width - ins.left - ins.right,
+						c.getHeight() - y - ins.bottom - 3);
+				BandHostPanel bandHostPanel = bandScrollablePanel.getView();
+				bandHostPanel.setPreferredSize(new Dimension(bandHostPanel.getMinimumSize().width,
+						bandScrollablePanel.getBounds().height));
+				bandScrollablePanel.doLayout();
+				bandHostPanel.doLayout();
+			} else {
+				bandScrollablePanel.setBounds(0, 0, 0, 0);
+			}
+		}
+	}
+
+	private static void setNonOpaque(Component c) {
+		if (c instanceof JComponent)
+			((JComponent) c).setOpaque(false);
+		if (c instanceof Container)
+			for (Component child : ((Container) c).getComponents())
+				setNonOpaque(child);
+	}
+
+	private static ViewSwitcher findViewSwitcher(Container c) {
+		for (Component child : c.getComponents()) {
+			if (child instanceof ViewSwitcher)
+				return (ViewSwitcher) child;
+			if (child instanceof Container) {
+				ViewSwitcher s = findViewSwitcher((Container) child);
+				if (s != null)
+					return s;
+			}
+		}
+		return null;
+	}
+
+	private static JComboBox<?> findCombo(Container c) {
+		for (Component child : c.getComponents()) {
+			if (child instanceof JComboBox)
+				return (JComboBox<?>) child;
+			if (child instanceof Container) {
+				JComboBox<?> combo = findCombo((Container) child);
+				if (combo != null)
+					return combo;
+			}
+		}
+		return null;
+	}
+
+	/** The project selector only earns its place when more than one project is open. */
+	protected boolean showProjectSelector(JComponent fileSelector) {
+		JComboBox<?> combo = findCombo(fileSelector);
+		if (combo == null)
+			return false;
+		if (combo != trackedProjectCombo) {
+			trackedProjectCombo = combo;
+			combo.getModel().addListDataListener(new ListDataListener() {
+				public void intervalAdded(ListDataEvent e) { relayout(); }
+				public void intervalRemoved(ListDataEvent e) { relayout(); }
+				public void contentsChanged(ListDataEvent e) { }
+				private void relayout() {
+					ribbon.revalidate();
+					ribbon.repaint();
+				}
+			});
+		}
+		return combo.getItemCount() > 1;
+	}
+
+	/**
 	 * Layout for the task bar.
 	 * 
 	 * @author Kirill Grouchnikov
@@ -1129,7 +1314,8 @@ public class ProjectLibreRibbonUI extends RibbonUI {
 			int pw = 0;
 			int gap = getBandGap();
 			for (Component regComp : ribbon.getTaskbarComponents()) {
-				pw += regComp.getPreferredSize().width;
+				pw += FlatRibbonStyle.isActive() ? Math.max(32, regComp.getPreferredSize().width)
+						: regComp.getPreferredSize().width;
 				pw += gap;
 			}
 			return new Dimension(pw + ins.left + ins.right, getTaskbarHeight()
@@ -1158,7 +1344,14 @@ public class ProjectLibreRibbonUI extends RibbonUI {
 
 			boolean ltr = c.getComponentOrientation().isLeftToRight();
 
-			if (ltr) {
+			if (FlatRibbonStyle.isActive()) {
+				int x = ins.left;
+				for (Component regComp : ribbon.getTaskbarComponents()) {
+					int pw = Math.max(32, regComp.getPreferredSize().width);
+					regComp.setBounds(x, ins.top, pw, c.getHeight() - ins.top - ins.bottom);
+					x += pw + gap;
+				}
+			} else if (ltr) {
 				int x = ins.left + 1;
 				if (applicationMenuButton.isVisible()) {
 					x += (applicationMenuButton.getX() + applicationMenuButton
@@ -1202,6 +1395,8 @@ public class ProjectLibreRibbonUI extends RibbonUI {
 			/* this.setBorder(new EmptyBorder(1, 0, 1, 0)); */
 			this.setBorder(BorderFactory.createEmptyBorder());
 			setBackground(background3);
+			if (FlatRibbonStyle.isActive())
+				setOpaque(false);
 		}
 
 		/*
@@ -1211,6 +1406,8 @@ public class ProjectLibreRibbonUI extends RibbonUI {
 		 */
 		@Override
 		protected void paintComponent(Graphics g) {
+			if (FlatRibbonStyle.isActive())
+				return;
 			Shape contour = getOutline(this);
 
 			Graphics2D g2d = (Graphics2D) g.create();
@@ -1454,6 +1651,8 @@ public class ProjectLibreRibbonUI extends RibbonUI {
 		@Override
 		public Dimension getPreferredSize() {
 			Dimension result = super.getPreferredSize();
+			if (FlatRibbonStyle.isActive())
+				return result;
 			return new Dimension(result.width + result.height / 2,
 					result.height);
 		}
@@ -2223,7 +2422,20 @@ public class ProjectLibreRibbonUI extends RibbonUI {
 		}
 
 		ActionListener helpListener = this.ribbon.getHelpActionListener();
-		if (helpListener != null) {
+		if (helpListener != null && FlatRibbonStyle.isActive()) {
+			helpPanel = new JPanel(new BorderLayout());
+			helpPanel.setOpaque(false);
+			JButton helpButton = new JButton(this.ribbon.getHelpIcon());
+			helpButton.putClientProperty("JButton.buttonType", "toolBarButton");
+			helpButton.setFocusable(false);
+			helpButton.setPreferredSize(new Dimension(32, 32));
+			String tip = MenuManager.getMenuStringOrNull("RibbonHelp.tooltip");
+			if (tip != null)
+				helpButton.setToolTipText(tip);
+			helpButton.addActionListener(helpListener);
+			helpPanel.add(helpButton, BorderLayout.CENTER);
+			this.ribbon.add(this.helpPanel);
+		} else if (helpListener != null) {
 			helpPanel = new JPanel();
 
 			helpPanel.setBackground(taskToggleButtonsScrollablePanel

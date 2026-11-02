@@ -73,6 +73,7 @@ import org.pushingpixels.flamingo.api.common.icon.ImageWrapperResizableIcon;
 import org.pushingpixels.flamingo.api.common.icon.ResizableIcon;
 
 import com.projectlibre1.menu.HyperLinkToolTip;
+import com.projectlibre1.menu.MenuShortcuts;
 import com.projectlibre1.pm.graphic.IconManager;
 import com.projectlibre1.util.ClassLoaderUtils;
 
@@ -280,7 +281,11 @@ public class ButtonFactory extends ResourceManager {
 					
 					if (doc != null)
 						s = HyperLinkToolTip.helpTipText(s,help,demo, doc);
-					b.setActionRichTooltip(new RichTooltip(" ", s));
+					String tipTitle = title == null ? " " : title;
+					String shortcut = MenuShortcuts.getDisplayString(getStringOrNull(name + ACTION_SUFFIX));
+					if (shortcut != null)
+						tipTitle += "   " + shortcut;
+					b.setActionRichTooltip(new RichTooltip(tipTitle, s));
 				}
 			} catch (MissingResourceException e) {
 			}

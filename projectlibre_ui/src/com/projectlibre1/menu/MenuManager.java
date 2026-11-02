@@ -117,6 +117,16 @@ public class MenuManager {
 	public void add(TabbedNavigation t) {
 		tabbedNavigations.add(t);
 	}
+
+	/** Notified when a view action (Gantt, Resources, ...) becomes selected or unselected. */
+	public interface ViewSelectionListener {
+		void setActivatedView(String id, boolean selected);
+	}
+	private final LinkedList<ViewSelectionListener> viewSelectionListeners = new LinkedList<ViewSelectionListener>();
+
+	public void addViewSelectionListener(ViewSelectionListener l) {
+		viewSelectionListeners.add(l);
+	}
 	private MenuManager(ActionMap rootActionMap) {
 		this.rootActionMap = rootActionMap;
 		ResourceBundle internalBundle=null,bundle=null;
@@ -165,6 +175,16 @@ public class MenuManager {
     	if (exception!=null) throw exception;
     	return s;
 	}
+	public static String getMenuStringOrNull(String key) {
+		if (bundles == null)
+			return null;
+		try {
+			String s = getMenuString(key);
+			return s == null ? null : s.trim();
+		} catch (MissingResourceException e) {
+			return null;
+		}
+	}
 	public String getString(String key) {
 		return menuFactory.getString(key);
 	}
@@ -180,7 +200,7 @@ public class MenuManager {
 	public String getActionStringFromId(String id) {
 		String result = menuFactory.getActionStringFromId(id);
 		if (result == null)
-			System.out.println("Invalid item: " + id + " it must be a menu item in the menu properties, even if it's only shown in a toolbar");
+			System.err.println("Invalid item: " + id + " it must be a menu item in the menu properties, even if it's only shown in a toolbar");
 		return result;
 	}
 
@@ -218,6 +238,7 @@ public class MenuManager {
 	}
 
 	public void setActionEnabled(String id, boolean enable) {
+		setRibbonActionEnabled(id, enable);
 		Collection buttons = getToolButtonsFromId(id);
 		if (buttons != null) {
 			Iterator i = buttons.iterator();
@@ -231,6 +252,28 @@ public class MenuManager {
 		if (menuItem != null)
 			menuItem.setEnabled(enable);
 	}
+	/**
+	 * Ribbon buttons, the menu bar, the view switcher and keyboard shortcuts all follow the Action, so disable
+	 * the Action itself and the ribbon buttons calling it. id is a menu id ("Undo") or an action name ("UndoAction").
+	 */
+	private void setRibbonActionEnabled(String id, boolean enable) {
+		if (ribbonFactory == null)
+			return;
+		String actionName = menuFactory.getActionStringFromId(id);
+		if (actionName == null)
+			actionName = id;
+		actionName = actionName.trim();
+		for (AbstractCommandButton b : ribbonFactory.getCommandButtons(actionName))
+			b.setEnabled(enable);
+		try {
+			Action action = rootActionMap.getAction(actionName);
+			if (action != null)
+				action.setEnabled(enable);
+		} catch (RuntimeException e) {
+			// not a registered action
+		}
+	}
+
 	public void setActionVisible(String id, boolean enable) {
 		Collection buttons = getToolButtonsFromId(id);
 		if (buttons != null) {
@@ -265,6 +308,8 @@ public class MenuManager {
 		Iterator i = tabbedNavigations.iterator();
 		while (i.hasNext())
 			((TabbedNavigation)i.next()).setActivatedView(id, enable);
+		for (ViewSelectionListener l : viewSelectionListeners)
+			l.setActivatedView(id, enable);
 
 	}
 	public void setText(String id, String text) {

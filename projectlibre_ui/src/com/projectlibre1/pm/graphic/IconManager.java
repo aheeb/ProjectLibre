@@ -62,10 +62,14 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
+import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
 import org.pushingpixels.flamingo.api.common.icon.ImageWrapperResizableIcon;
 import org.pushingpixels.flamingo.api.common.icon.ResizableIcon;
+import org.pushingpixels.flamingo.api.common.icon.SvgResizableIcon;
+
+import com.formdev.flatlaf.extras.FlatSVGIcon;
 
 import com.projectlibre1.util.ClassLoaderUtils;
 
@@ -76,6 +80,7 @@ public class IconManager {
 	protected static ClassLoader classLoader=ClassLoaderUtils.getLocalClassLoader();
 	protected static HashMap icons = new HashMap();
 	protected static HashMap ribbonIcons = new HashMap();
+	private final static String SVG_PACKAGE = "com/projectlibre1/pm/graphic/images/svg/";
 	private final static String[] iconPackages = new String[] {
 			"com/projectlibre1/pm/graphic/images/"
 			,"com/projectlibre1/pm/graphic/images/big/"
@@ -126,6 +131,9 @@ public class IconManager {
 //		String key=name+"-"+width+"-"+height;
 //		ResizableIcon icon = (ResizableIcon) ribbonIcons.get(key); //don't store
 		ResizableIcon icon=null;
+		URL svg = getSvgURL(name);
+		if (svg != null)
+			return new SvgResizableIcon(svg, width, height);
 //		if (icon == null) {
 			URL url = getURL(name);
 			if (url == null)
@@ -134,6 +142,17 @@ public class IconManager {
 //			ribbonIcons.put(key, icon);
 //		}
 		return icon;
+	}
+
+	/** Modern outline icon for the given key, or null if the key has no SVG version. */
+	public static URL getSvgURL(String key) {
+		return classLoader.getResource(SVG_PACKAGE + key + ".svg");
+	}
+
+	/** Plain Swing icon from the SVG set, for menus and regular buttons. Returns null if missing. */
+	public static Icon getSvgIcon(String key, int size) {
+		URL url = getSvgURL(key);
+		return url == null ? null : new FlatSVGIcon(url).derive(size, size);
 	}
 
 	public static ImageIcon getHalfSizedIcon(String key) {

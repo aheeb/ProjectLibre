@@ -36,6 +36,11 @@ public class ModernLaf {
 	public static final Color WARNING_SOFT = new Color(0xFFF1CC);
 	/** Selection fill behind dark text where ACCENT would be too strong (e.g. selected calendar days). */
 	public static final Color SELECTION_SOFT = new Color(0xC7D9FB);
+	public static final Color TEXT_DISABLED = new Color(0xA8ADB4);
+	/** Translucent fills for flat buttons and tabs (hover, pressed, selected). */
+	public static final Color HOVER = new Color(0, 0, 0, 13);
+	public static final Color PRESSED = new Color(0, 0, 0, 26);
+	public static final Color SELECTED = new Color(0x2F, 0x6F, 0xEB, 36);
 
 	private static boolean installed = false;
 

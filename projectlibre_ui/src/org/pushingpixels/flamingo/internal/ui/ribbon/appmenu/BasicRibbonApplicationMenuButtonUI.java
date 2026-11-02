@@ -44,6 +44,7 @@ import org.pushingpixels.flamingo.api.common.popup.PopupPanelCallback;
 import org.pushingpixels.flamingo.api.ribbon.*;
 import org.pushingpixels.flamingo.internal.ui.common.BasicCommandButtonUI;
 import org.pushingpixels.flamingo.internal.utils.FlamingoUtilities;
+import org.pushingpixels.flamingo.internal.utils.FlatRibbonStyle;
 
 /**
  * Basic UI for ribbon application menu button
@@ -176,6 +177,19 @@ public class BasicRibbonApplicationMenuButtonUI extends BasicCommandButtonUI {
 	@Override
 	public void paint(Graphics g, JComponent c) {
 		Graphics2D g2d = (Graphics2D) g.create();
+		if (FlatRibbonStyle.isActive()) {
+			// ProjectLibre logo: the attribution graphic itself, drawn at its native size with smooth scaling
+			// for high resolution screens. No pill, gradient or rollover effect around it.
+			Icon icon = this.commandButton.getIcon();
+			if (icon != null) {
+				g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+				g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+				icon.paintIcon(c, g2d, (c.getWidth() - icon.getIconWidth()) / 2,
+						(c.getHeight() - icon.getIconHeight()) / 2);
+			}
+			g2d.dispose();
+			return;
+		}
 		// g2d.setColor(Color.red);
 		// g2d.fillRect(0, 0, c.getWidth(), c.getHeight());
 		Insets ins = c.getInsets();
