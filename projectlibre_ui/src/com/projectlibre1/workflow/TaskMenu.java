@@ -22,7 +22,9 @@ import com.projectlibre1.field.FieldParseException;
 import com.projectlibre1.grouping.core.Node;
 import com.projectlibre1.grouping.core.model.NodeModel;
 import com.projectlibre1.menu.MenuActionConstants;
+import com.projectlibre1.menu.MenuShortcuts;
 import com.projectlibre1.pm.dependency.DependencyService;
+import com.projectlibre1.pm.graphic.frames.DocumentFrame;
 import com.projectlibre1.pm.graphic.frames.GraphicManager;
 import com.projectlibre1.pm.graphic.model.cache.GraphicNode;
 import com.projectlibre1.pm.graphic.spreadsheet.SpreadSheet;
@@ -55,7 +57,20 @@ public class TaskMenu {
 		return Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx();
 	}
 
-	/** Cmd/Ctrl+] and Cmd/Ctrl+[ (and Alt+Shift+Right/Left as in other planners) indent and outdent rows. */
+	/**
+	 * The task commands of the menu bar act on the task grid of the active view, if it has one.
+	 * @return null when the active view does not list tasks
+	 */
+	public static TaskMenu forCurrentView(GraphicManager gm) {
+		DocumentFrame frame = gm == null ? null : gm.getCurrentFrame();
+		SpreadSheet sheet = frame == null ? null : frame.getTopSpreadSheet();
+		return sheet != null && isTaskSheet(sheet) ? new TaskMenu(sheet) : null;
+	}
+
+	/**
+	 * Alt+Shift+Right/Left indent and outdent rows as in other planners. The main shortcuts (Cmd/Ctrl+] and [ on
+	 * the Mac, see {@link MenuShortcuts}) belong to the Indent and Outdent commands of the menu bar.
+	 */
 	public static void installKeys(final SpreadSheet sheet) {
 		Action indent = new AbstractAction() {
 			public void actionPerformed(ActionEvent e) {
@@ -67,12 +82,15 @@ public class TaskMenu {
 				if (!sheet.isReadOnly()) sheet.executeAction(MenuActionConstants.ACTION_OUTDENT);
 			}
 		};
-		sheet.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_CLOSE_BRACKET, menuMask()), "plIndent");
-		sheet.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_OPEN_BRACKET, menuMask()), "plOutdent");
 		sheet.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, InputEvent.ALT_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK), "plIndent");
 		sheet.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, InputEvent.ALT_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK), "plOutdent");
 		sheet.getActionMap().put("plIndent", indent);
 		sheet.getActionMap().put("plOutdent", outdent);
+	}
+
+	/** True when tasks are selected and the plan can be changed. */
+	public boolean canChangeSelection() {
+		return !sheet.isReadOnly() && !selectedTasks().isEmpty();
 	}
 
 	/** Selected tasks in row order (no blank rows, no assignments). */
@@ -98,19 +116,16 @@ public class TaskMenu {
 		add(menu, "TaskMenu.insert", editable, null, () -> sheet.executeAction(MenuActionConstants.ACTION_NEW));
 		add(menu, "TaskMenu.delete", editable && any, KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), () -> sheet.executeAction(MenuActionConstants.ACTION_DELETE));
 		menu.addSeparator();
-		add(menu, "TaskMenu.indent", editable && any, KeyStroke.getKeyStroke(KeyEvent.VK_CLOSE_BRACKET, menuMask()), () -> sheet.executeAction(MenuActionConstants.ACTION_INDENT));
-		add(menu, "TaskMenu.outdent", editable && any, KeyStroke.getKeyStroke(KeyEvent.VK_OPEN_BRACKET, menuMask()), () -> sheet.executeAction(MenuActionConstants.ACTION_OUTDENT));
+		add(menu, "TaskMenu.indent", editable && any, MenuShortcuts.getKeyStroke("IndentAction"), () -> sheet.executeAction(MenuActionConstants.ACTION_INDENT));
+		add(menu, "TaskMenu.outdent", editable && any, MenuShortcuts.getKeyStroke("OutdentAction"), () -> sheet.executeAction(MenuActionConstants.ACTION_OUTDENT));
 		menu.addSeparator();
 		add(menu, tasks.size() > 1 ? "TaskMenu.linkSequence" : "TaskMenu.linkPrevious", editable && any, null, this::linkToPrevious);
 		add(menu, "TaskMenu.unlink", editable && any, null, () -> GraphicManager.getInstance(sheet).getCurrentFrame().doUnlinkTasks());
 		menu.addSeparator();
-		add(menu, milestones ? "TaskMenu.normalTask" : "TaskMenu.milestone", editable && leafs, null, () -> setMilestone(!milestonesSelected()));
+		add(menu, milestones ? "TaskMenu.normalTask" : "TaskMenu.milestone", editable && leafs, null, this::toggleMilestone);
 		add(menu, "TaskMenu.assign", editable && leafs, null, () -> GraphicManager.getInstance(sheet).showAssignmentDialog(GraphicManager.getInstance(sheet).getCurrentFrame()));
-		boolean pinned = false;
-		for (Task t : tasks)
-			pinned |= !t.isWbsParent() && t.getConstraintType() != ConstraintType.ASAP;
-		if (pinned)
-			add(menu, "TaskMenu.unpin", editable, null, () -> setField("Field.constraintType", Integer.valueOf(ConstraintType.ASAP)));
+		if (hasPinnedStart())
+			add(menu, "TaskMenu.unpin", editable, null, this::unpinStart);
 		menu.addSeparator();
 		add(menu, "TaskMenu.notStarted", editable && leafs, null, () -> setPercentComplete(0));
 		add(menu, "TaskMenu.halfDone", editable && leafs, null, () -> setPercentComplete(0.5));
@@ -127,7 +142,27 @@ public class TaskMenu {
 		return menu;
 	}
 
-	private boolean milestonesSelected() {
+	/** True when a selected task has a pinned start (any constraint other than "as soon as possible"). */
+	public boolean hasPinnedStart() {
+		for (Task t : selectedTasks())
+			if (!t.isWbsParent() && t.getConstraintType() != ConstraintType.ASAP) return true;
+		return false;
+	}
+
+	public void unpinStart() {
+		setField("Field.constraintType", Integer.valueOf(ConstraintType.ASAP));
+	}
+
+	/** Makes the selected tasks milestones, or normal tasks again when they all are milestones already. */
+	public void toggleMilestone() {
+		if (selectedTasks().isEmpty()) {
+			Toast.show(sheet, Messages.getString("TaskMenu.selectTasks"));
+			return;
+		}
+		setMilestone(!milestonesSelected());
+	}
+
+	public boolean milestonesSelected() {
 		List<Task> tasks = selectedTasks();
 		for (Task t : tasks)
 			if (!t.isMilestone()) return false;

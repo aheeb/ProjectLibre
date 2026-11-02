@@ -11,9 +11,12 @@ import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import javax.swing.Action;
 import javax.swing.ActionMap;
@@ -32,16 +35,24 @@ import javax.swing.JMenuItem;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JRootPane;
 import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 import javax.swing.text.JTextComponent;
 
 import com.projectlibre.ui.toolbar.MainToolBar;
 import com.projectlibre1.pm.graphic.IconManager;
+import com.projectlibre1.pm.graphic.frames.DocumentFrame;
+import com.projectlibre1.pm.graphic.frames.GraphicManager;
 import com.projectlibre1.pm.graphic.laf.ModernLaf;
+import com.projectlibre1.pm.graphic.spreadsheet.SpreadSheet;
+import com.projectlibre1.pm.graphic.spreadsheet.SpreadSheetColumnMenu;
+import com.projectlibre1.pm.graphic.spreadsheet.common.CommonSpreadSheet;
+import com.projectlibre1.strings.Messages;
 import com.projectlibre1.toolbar.FilterToolBarManager;
 import com.projectlibre1.util.BrowserControl;
 import com.projectlibre1.util.Environment;
+import com.projectlibre1.workflow.TaskMenu;
 
 /**
  * The menu bar of the main window: File, Edit, Task, Resource, Project, View, Window, Help. It holds every
@@ -53,6 +64,8 @@ public class AppMenuBar implements MenuActionConstants {
 	private final Map<String, JRadioButtonMenuItem> viewItems = new HashMap<String, JRadioButtonMenuItem>();
 	private final boolean mac = Environment.isMac();
 	private JMenu windowMenu;
+	/** Task menu commands acting on the selected tasks, enabled when the menu opens. */
+	private final List<JMenuItem> taskItems = new ArrayList<JMenuItem>();
 
 	private AppMenuBar(MenuManager menuManager) {
 		this.menuManager = menuManager;
@@ -95,15 +108,11 @@ public class AppMenuBar implements MenuActionConstants {
 		item(file, ACTION_SAVE_PROJECT_AS, "RibbonSaveProjectAs", true);
 		file.addSeparator();
 		item(file, ACTION_PDF, "RibbonPDF", true);
+		item(file, ACTION_EXPORT_MSPROJECT, "RibbonExportMSProject", true);
+		file.addSeparator();
 		item(file, ACTION_PRINT_PREVIEW, "RibbonPrintPreview", false);
 		item(file, ACTION_PRINT, "RibbonPrint", true);
 		file.addSeparator();
-		if (!mac && settingsAction != null) {
-			JMenuItem settings = new JMenuItem(text("AppMenu.Settings"));
-			bind(settings, settingsAction, ACTION_CALENDAR_OPTIONS);
-			settings.addActionListener(settingsAction);
-			file.add(settings);
-		}
 		item(file, ACTION_LOCALE, "RibbonLocale", true);
 		if (!mac) {
 			file.addSeparator();
@@ -121,25 +130,48 @@ public class AppMenuBar implements MenuActionConstants {
 		edit.add(editItem("RibbonCopy", ACTION_COPY, "copy-to-clipboard"));
 		edit.add(editItem("RibbonPaste", ACTION_PASTE, "paste-from-clipboard"));
 		item(edit, ACTION_DELETE, "RibbonDelete", false);
+		edit.add(fillDownItem(frame));
 		edit.add(selectAllItem());
 		edit.addSeparator();
 		edit.add(findItem(frame));
 		bar.add(edit);
 
-		JMenu task = menu("MacMenu.Task");
+		final JMenu task = menu("MacMenu.Task");
 		item(task, "NewTask", "RibbonInsert", false);
-		// HOOK: more ways to add tasks (e.g. a milestone) go here, see Toolbar.TaskCommands in menuInternal.properties
+		// HOOK: more ways to add tasks go here, see Toolbar.TaskCommands in menuInternal.properties
+		final JMenuItem milestone = taskItem(frame, task, "TaskMenu.milestone", TaskMenu::toggleMilestone);
 		task.addSeparator();
 		item(task, ACTION_INDENT, "RibbonIndent", false);
 		item(task, ACTION_OUTDENT, "RibbonOutdent", false);
 		task.addSeparator();
 		item(task, ACTION_LINK, "RibbonLink", false);
+		taskItem(frame, task, "TaskMenu.linkPrevious", TaskMenu::linkToPrevious);
 		item(task, ACTION_UNLINK, "RibbonUnlink", false);
+		final JMenuItem unpin = taskItem(frame, task, "TaskMenu.unpin", TaskMenu::unpinStart);
+		task.addSeparator();
+		taskItem(frame, task, "TaskMenu.notStarted", t -> t.setPercentComplete(0));
+		taskItem(frame, task, "TaskMenu.halfDone", t -> t.setPercentComplete(0.5));
+		taskItem(frame, task, "TaskMenu.done", t -> t.setPercentComplete(1));
 		task.addSeparator();
 		item(task, ACTION_INFORMATION, "RibbonTaskInformation", true);
 		item(task, ACTION_ASSIGN_RESOURCES, "RibbonAssignResources", true);
 		item(task, ACTION_NOTES, "RibbonNotes", true);
 		item(task, ACTION_UPDATE_TASKS, "RibbonUpdateTasks", true);
+		task.addMenuListener(new MenuListener() {
+			public void menuSelected(MenuEvent e) {
+				// the selection-dependent commands are updated when the menu opens
+				TaskMenu tasks = TaskMenu.forCurrentView(GraphicManager.getInstance(frame));
+				boolean can = tasks != null && tasks.canChangeSelection();
+				for (JMenuItem item : taskItems)
+					item.setEnabled(can);
+				milestone.setText(Messages.getString(can && tasks.milestonesSelected() ? "TaskMenu.normalTask" : "TaskMenu.milestone"));
+				unpin.setEnabled(can && tasks.hasPinnedStart());
+			}
+			public void menuDeselected(MenuEvent e) {
+			}
+			public void menuCanceled(MenuEvent e) {
+			}
+		});
 		bar.add(task);
 
 		JMenu resource = menu("AppMenu.Resource");
@@ -147,12 +179,19 @@ public class AppMenuBar implements MenuActionConstants {
 		resource.addSeparator();
 		item(resource, ACTION_INFORMATION, "RibbonResourceInformation", true);
 		item(resource, ACTION_NOTES, "RibbonNotes", true);
-		item(resource, ACTION_CHANGE_WORKING_TIME, "RibbonChangeWorkingTime", true);
+		item(resource, ACTION_CHANGE_WORKING_TIME, "RibbonPersonWorkingTime", true);
 		bar.add(resource);
 
 		JMenu project = menu("MacMenu.Project");
 		item(project, ACTION_PROJECT_INFORMATION, "RibbonProjectInformation", true);
-		item(project, ACTION_CHANGE_WORKING_TIME, "RibbonChangeWorkingTime", true);
+		item(project, ACTION_PROJECT_WORKING_TIME, "RibbonProjectWorkingTime", true);
+		if (settingsAction != null) {
+			// also Settings… (Cmd+,) in the application menu on the Mac
+			JMenuItem settings = new JMenuItem(label("RibbonOptions", true));
+			bind(settings, settingsAction, ACTION_CALENDAR_OPTIONS);
+			settings.addActionListener(settingsAction);
+			project.add(settings);
+		}
 		item(project, ACTION_PROJECTS_DIALOG, "RibbonProjectsDialog", true);
 		project.addSeparator();
 		item(project, ACTION_SAVE_BASELINE, "RibbonSaveBaseline", true);
@@ -189,6 +228,7 @@ public class AppMenuBar implements MenuActionConstants {
 			view.add(transformMenu("AppMenu.Sort", filters.getSortersComboBox()));
 			view.add(transformMenu("AppMenu.Group", filters.getGroupersComboBox()));
 		}
+		view.add(insertColumnItem(frame));
 		view.addSeparator();
 		item(view, ACTION_ZOOM_IN, "RibbonZoomIn", false);
 		item(view, ACTION_ZOOM_OUT, "RibbonZoomOut", false);
@@ -282,7 +322,7 @@ public class AppMenuBar implements MenuActionConstants {
 		String[] words = s.split(" ");
 		for (int i = 0; i < words.length; i++) {
 			String w = words[i];
-			boolean small = i > 0 && (w.equals("to") || w.equals("of") || w.equals("and"));
+			boolean small = i > 0 && (w.equals("to") || w.equals("of") || w.equals("and") || w.equals("for"));
 			if (!small && w.length() > 0)
 				w = Character.toUpperCase(w.charAt(0)) + w.substring(1);
 			if (i > 0)
@@ -379,9 +419,8 @@ public class AppMenuBar implements MenuActionConstants {
 		JMenuItem item = new JMenuItem(label(ribbonKey, false));
 		if (appAction == null)
 			return item;
-		KeyStroke ks = MenuShortcuts.getKeyStroke(menuManager.getActionStringFromId(id));
-		if (ks != null)
-			item.setAccelerator(ks);
+		// disabled with no project open; text fields in dialogs handle their own shortcuts
+		bind(item, appAction, id);
 		item.addActionListener(e -> {
 			Component focus = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
 			if (textAction != null && focus instanceof JTextComponent) {
@@ -397,11 +436,83 @@ public class AppMenuBar implements MenuActionConstants {
 		return item;
 	}
 
+	/** Command of the task right-click menu ({@link TaskMenu}), acting on the selected tasks of the active view. */
+	private JMenuItem taskItem(final JFrame frame, JMenu menu, String messageKey, final Consumer<TaskMenu> command) {
+		JMenuItem item = new JMenuItem(Messages.getString(messageKey));
+		item.addActionListener(e -> {
+			TaskMenu tasks = TaskMenu.forCurrentView(GraphicManager.getInstance(frame));
+			if (tasks != null && tasks.canChangeSelection())
+				command.accept(tasks);
+		});
+		item.setEnabled(false);
+		taskItems.add(item);
+		menu.add(item);
+		return item;
+	}
+
+	/** True while a project is open: the close command is enabled exactly then. */
+	private Action documentOpenAction() {
+		return action(ACTION_CLOSE_PROJECT);
+	}
+
+	/** Enabled while a project is open. */
+	private void enableWithDocument(final JMenuItem item) {
+		final Action close = documentOpenAction();
+		if (close == null)
+			return;
+		item.setEnabled(close.isEnabled());
+		close.addPropertyChangeListener(evt -> {
+			if ("enabled".equals(evt.getPropertyName()))
+				item.setEnabled(close.isEnabled());
+		});
+	}
+
+	/** The grid the keyboard is in, or the main grid of the active view. */
+	private static SpreadSheet activeSheet(JFrame frame) {
+		Component focus = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
+		Component c = focus == null ? null : SwingUtilities.getAncestorOfClass(SpreadSheet.class, focus);
+		if (focus instanceof SpreadSheet)
+			c = focus;
+		if (c instanceof SpreadSheet && SwingUtilities.getWindowAncestor(c) == frame)
+			return (SpreadSheet) c;
+		DocumentFrame df = GraphicManager.getInstance(frame).getCurrentFrame();
+		return df == null ? null : df.getTopSpreadSheet();
+	}
+
+	/** Fill Down (Cmd/Ctrl+D) copies the top row of the selected cells into the rows below; see NodeListTransferable. */
+	private JMenuItem fillDownItem(final JFrame frame) {
+		JMenuItem item = new JMenuItem(text("AppMenu.FillDown"));
+		item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_D, menuMask()));
+		item.addActionListener(e -> {
+			SpreadSheet sheet = activeSheet(frame);
+			Action fill = sheet == null ? null : sheet.getActionMap().get("fillDown");
+			if (fill != null)
+				fill.actionPerformed(new ActionEvent(sheet, ActionEvent.ACTION_PERFORMED, "fillDown"));
+		});
+		enableWithDocument(item);
+		return item;
+	}
+
+	/** Insert Column… adds a column after the selected cell's column, or at the end. */
+	private JMenuItem insertColumnItem(final JFrame frame) {
+		JMenuItem item = new JMenuItem(text("AppMenu.InsertColumn") + "…");
+		item.addActionListener(e -> {
+			SpreadSheet sheet = activeSheet(frame);
+			if (!(sheet instanceof CommonSpreadSheet) || !((CommonSpreadSheet) sheet).isHasColumnHeaderPopup())
+				return;
+			int col = sheet.getSelectedColumn();
+			SpreadSheetColumnMenu.insertColumn((CommonSpreadSheet) sheet, col < 0 ? 0 : col + 2);
+		});
+		enableWithDocument(item);
+		return item;
+	}
+
 	/** Find goes to the search field of the toolbar, or opens the Find dialog in views without one. */
 	private JMenuItem findItem(final JFrame frame) {
 		final Action find = action(ACTION_FIND);
 		JMenuItem item = new JMenuItem(label("RibbonFind", true));
 		item.setAccelerator(MenuShortcuts.getKeyStroke("FindAction"));
+		enableWithDocument(item);
 		item.addActionListener(e -> {
 			if (MainToolBar.focusSearch(frame.getRootPane()))
 				return;
@@ -414,6 +525,7 @@ public class AppMenuBar implements MenuActionConstants {
 	private JMenuItem selectAllItem() {
 		JMenuItem item = new JMenuItem(text("MacMenu.SelectAll"));
 		item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_A, menuMask()));
+		enableWithDocument(item);
 		item.addActionListener(e -> {
 			Component focus = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
 			if (focus instanceof JComponent) {

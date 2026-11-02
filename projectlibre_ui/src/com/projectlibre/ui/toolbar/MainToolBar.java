@@ -404,6 +404,7 @@ public class MainToolBar extends JPanel implements MenuManager.ViewSelectionList
 		addMenuItem(menu, "RibbonPrint");
 		addMenuItem(menu, "RibbonPrintPreview");
 		menu.addSeparator();
+		addMenuItem(menu, "RibbonExportMSProject");
 		addMenuItem(menu, "RibbonSaveProjectAs");
 		menu.show(share, 0, share.getHeight() + 2);
 	}
@@ -421,6 +422,7 @@ public class MainToolBar extends JPanel implements MenuManager.ViewSelectionList
 				menu.addSeparator();
 			addMenuItem(menu, "RibbonPDF");
 			addMenuItem(menu, "RibbonPrint");
+			addMenuItem(menu, "RibbonExportMSProject");
 			addMenuItem(menu, "RibbonSaveProjectAs");
 		}
 		if (isCollapsed(help)) {

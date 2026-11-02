@@ -135,6 +135,7 @@ import com.projectlibre.ui.ribbon.RibbonActions;
 import com.projectlibre.ui.toolbar.MainToolBar;
 import com.projectlibre.ui.ribbon.ViewSwitcher;
 import com.projectlibre1.menu.AppMenuBar;
+import com.projectlibre1.workflow.TaskMenu;
 import com.projectlibre1.configuration.Configuration;
 import com.projectlibre1.configuration.FieldDictionary;
 import com.projectlibre1.configuration.Settings;
@@ -1046,6 +1047,8 @@ public class GraphicManager implements  FrameHolder, NamedFrameListener, WindowS
 		actionsMap.addHandler(ACTION_REDO, new RedoAction());
 //		actionsMap.addHandler(ACTION_ENTERPRISE_RESOURCES, new EnterpriseResourcesAction());
 		actionsMap.addHandler(ACTION_CHANGE_WORKING_TIME, new ChangeWorkingTimeAction());
+		actionsMap.addHandler(ACTION_PROJECT_WORKING_TIME, new ProjectWorkingTimeAction());
+		actionsMap.addHandler(ACTION_MILESTONE, new MilestoneAction());
 		actionsMap.addHandler(ACTION_LEVEL_RESOURCES, new LevelResourcesAction());
 		actionsMap.addHandler(ACTION_DELEGATE_TASKS, new DelegateTasksAction());
 		actionsMap.addHandler(ACTION_UPDATE_TASKS, new UpdateTasksAction());
@@ -1526,6 +1529,30 @@ public class GraphicManager implements  FrameHolder, NamedFrameListener, WindowS
 			boolean restrict = dlg != null;
 			if (isDocumentActive())
 				getCurrentFrame().doChangeWorkingTimeDialog(restrict);
+		}
+	}
+
+	/** Working time of the project, whatever is selected. */
+	public class ProjectWorkingTimeAction extends MenuActionsMap.DocumentMenuAction {
+		private static final long serialVersionUID = 1L;
+		public void actionPerformed(ActionEvent arg0) {
+			setMeAsLastGraphicManager();
+			if (isDocumentActive())
+				getCurrentFrame().doProjectWorkingTimeDialog();
+		}
+	}
+
+	public class MilestoneAction extends MenuActionsMap.DocumentMenuAction {
+		private static final long serialVersionUID = 1L;
+		public void actionPerformed(ActionEvent arg0) {
+			setMeAsLastGraphicManager();
+			TaskMenu tasks = TaskMenu.forCurrentView(GraphicManager.this);
+			if (tasks != null)
+				tasks.toggleMilestone();
+		}
+		protected boolean allowed(boolean enable) {
+			if (enable==false) return true;
+			return isDocumentWritable();
 		}
 	}
 

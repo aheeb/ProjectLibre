@@ -122,6 +122,8 @@ public interface MenuActionConstants {
 	public static final String ACTION_INSERT_RECURRING        = "InsertRecurring";
 	public static final String ACTION_INSERT_PROJECT          = "InsertProject";
 	public static final String ACTION_INSERT_COLUMN           = "InsertColumn";
+	public static final String ACTION_MILESTONE               = "Milestone";
+	public static final String ACTION_PROJECT_WORKING_TIME    = "ProjectWorkingTime";
 	public static final String ACTION_INSERT_HYPERLINK        = "InsertHyperlink";
 	public static final String ACTION_NEW             	      = ACTION_INSERT_TASK;
 
