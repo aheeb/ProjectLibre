@@ -111,11 +111,15 @@ public class SpreadSheetModel extends CommonSpreadSheetModel {
 	public String getColumnName(int col) {
 		if (col == 0)
 			return "";
-		Field field = getFieldInColumn(col);
-		String key = "Column." + field.getId(); // plain grid headers, e.g. "Depends on" for Predecessors
+		return columnTitle(getFieldInColumn(col));
+
+	}
+
+	/** Header of a column in the grid and in print: plain words where defined, e.g. "Depends on" for Predecessors. */
+	public static String columnTitle(Field field) {
+		String key = "Column." + field.getId();
 		String header = Messages.getStringOrSelf(key);
 		return key.equals(header) ? field.getName() : header;
-
 	}
 
 	public void setValueAt(Object value, int row, int col) {
@@ -146,6 +150,8 @@ public class SpreadSheetModel extends CommonSpreadSheetModel {
 				value = People.resolve(project.getResourcePool(), (String) value, newPeople);
 			}
 		}
+		if (value instanceof String && "Field.predecessors".equals(field.getId()) && getCache().getModel().getDataFactory() instanceof Project)
+			value = People.resolveTasks((Project) getCache().getModel().getDataFactory(), (String) value);
 
 		try {
 			if (rowNode.isVoid()) {

@@ -154,6 +154,7 @@ public class AssigneeEditor extends SimpleEditor {
 			return;
 		}
 		list.setSelectedIndex(word.length() > 0 ? 0 : -1);
+		list.setVisibleRowCount(Math.min(6, suggestions.size()));
 		int width = Math.max(component.getWidth(), 160);
 		list.setFixedCellWidth(width - 4);
 		popup.setPreferredSize(null);

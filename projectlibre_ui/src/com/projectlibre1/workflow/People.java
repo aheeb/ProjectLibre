@@ -8,6 +8,8 @@ import com.projectlibre1.configuration.Settings;
 import com.projectlibre1.pm.resource.Resource;
 import com.projectlibre1.pm.resource.ResourceImpl;
 import com.projectlibre1.pm.resource.ResourcePool;
+import com.projectlibre1.pm.task.Project;
+import com.projectlibre1.pm.task.Task;
 
 /**
  * Lets people be assigned by just typing their names: names are matched to the team ignoring case,
@@ -48,6 +50,34 @@ public class People {
 			if (s.length() > 0) list.add(s);
 		}
 		return list;
+	}
+
+	/**
+	 * Lets "Depends on" take task names as well as row numbers: every element that is the name of
+	 * exactly one task (ignoring case) is replaced by that task's number. Other text is left for the
+	 * normal parser, so "3FS+2d" keeps working.
+	 */
+	public static String resolveTasks(Project project, String text) {
+		if (project == null || text == null) return text;
+		StringBuilder sb = new StringBuilder();
+		for (String element : split(text)) {
+			String replacement = element;
+			if (!Character.isDigit(element.charAt(0))) {
+				Task match = null;
+				int count = 0;
+				for (Object o : project.getTasks()) {
+					Task t = (Task) o;
+					if (t.getName() != null && t.getName().trim().equalsIgnoreCase(element)) {
+						match = t;
+						count++;
+					}
+				}
+				if (count == 1) replacement = String.valueOf(match.getId());
+			}
+			if (sb.length() > 0) sb.append(Settings.LIST_SEPARATOR);
+			sb.append(replacement);
+		}
+		return sb.toString();
 	}
 
 	/**
