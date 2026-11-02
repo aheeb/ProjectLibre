@@ -88,7 +88,9 @@ public class AssociationListFormat extends java.text.Format {
 			
 			Association association;
 			for (int i =0; i < elements.length; i++) {
-				association = (Association) associationFormat.parseObject(elements[i],new ParsePosition(0));
+				if (elements[i].trim().length() == 0) // "2, 3" and a trailing comma are fine
+					continue;
+				association = (Association) associationFormat.parseObject(elements[i].trim(),new ParsePosition(0));
 				if (association == null)
 					return null;
 				newList.add(association);
