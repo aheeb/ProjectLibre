@@ -2064,7 +2064,19 @@ protected boolean loadLocalDocument(String fileName,boolean merge){ //uses serve
 
 	void doCalendarOptionsDialog() {
 		finishAnyOperations();
-		CalendarDialogBox.getInstance(getFrame(), null).doModal();
+		// same handling as the Options button of the working time dialog
+		Project project = getCurrentFrame() == null ? null : getCurrentFrame().getProject();
+		CalendarOption option = project == null ? null : project.getCalendarOption();
+		if (option == null)
+			option = CalendarOption.getInstance();
+		CalendarDialogBox dialog = CalendarDialogBox.getInstance(getFrame(), option);
+		if (dialog.doModal()) {
+			option = CalendarOption.getNewInstance();
+			dialog.getForm().copyToOption(option);
+			CalendarOption.setInstance(option);
+			if (project != null)
+				project.setCalendarOption(option);
+		}
 	}
 
 
