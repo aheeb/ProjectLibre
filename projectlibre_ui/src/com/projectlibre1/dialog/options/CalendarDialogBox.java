@@ -76,7 +76,9 @@ import com.jgoodies.forms.layout.CellConstraints;
 import com.jgoodies.forms.layout.FormLayout;
 import com.projectlibre1.dialog.AbstractDialog;
 import com.projectlibre1.configuration.Settings;
+import com.projectlibre1.datatype.TimeUnit;
 import com.projectlibre1.options.CalendarOption;
+import com.projectlibre1.options.ScheduleOption;
 import com.projectlibre1.strings.Messages;
 
 /**
@@ -171,6 +173,7 @@ public class CalendarDialogBox extends AbstractDialog{
         JSpinner hoursPerDay;
         JSpinner hoursPerWeek;
         JSpinner daysPerMonth;
+        JComboBox workUnit;
         JTextField startTime;
         JTextField endTime;
         JComboBox weekStart;
@@ -188,6 +191,11 @@ public class CalendarDialogBox extends AbstractDialog{
     		CalendarOption option = project == null ? null : project.getCalendarOption();
     		CalendarDialogBox dialog = getInstance(owner, option);
     		if (dialog.doModal()) {
+    			int unit = WORK_UNITS[dialog.workUnit.getSelectedIndex()];
+    			if (unit != ScheduleOption.getInstance().getWorkUnit()) {
+    				ScheduleOption.getInstance().setEffortDisplay(unit);
+    				if (owner != null) owner.repaint(); // work is formatted when painted
+    			}
     			option = CalendarOption.getNewInstance();
     			dialog.getForm().copyToOption(option);
     			CalendarOption.setInstance(option);
@@ -195,6 +203,8 @@ public class CalendarDialogBox extends AbstractDialog{
     				project.setCalendarOption(option);
     		}
     	}
+
+    	private static final int[] WORK_UNITS = {TimeUnit.HOURS, TimeUnit.DAYS, TimeUnit.WEEKS};
 
     	private CalendarDialogBox(Frame owner, CalendarOption option) {
     		super(owner, Messages.getString("CalendarDialogBox.DurationSettings"), true); //$NON-NLS-1$
@@ -233,6 +243,11 @@ public class CalendarDialogBox extends AbstractDialog{
     		editor3 = new JSpinner.NumberEditor(daysPerMonth,"##.##"); //$NON-NLS-1$
     		daysPerMonth.setEditor(editor3);
     		
+    		workUnit = new JComboBox(new String[] {Messages.getString("ScheduleDialogBox.Hours"), Messages.getString("ScheduleDialogBox.Days"), Messages.getString("ScheduleDialogBox.Weeks")}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    		for (int i = 0; i < WORK_UNITS.length; i++)
+    			if (WORK_UNITS[i] == ScheduleOption.getInstance().getWorkUnit())
+    				workUnit.setSelectedIndex(i);
+
             setAsDefault= new JButton(Messages.getString("CalendarDialogBox.SetAsDefault")); //$NON-NLS-1$
 
     		fiscalYearStart.addActionListener(new ActionListener(){
@@ -288,11 +303,18 @@ public class CalendarDialogBox extends AbstractDialog{
     		
     		FormLayout layout = new FormLayout(
     		        "p,4dlu,50dlu,p:grow", //$NON-NLS-1$
-    	    		  "p,12dlu,p,4dlu,p,4dlu,p"); //$NON-NLS-1$
+    	    		  "p,4dlu,p,3dlu,p,14dlu,p,12dlu,p,4dlu,p,4dlu,p"); //$NON-NLS-1$
 
     		DefaultFormBuilder builder = new DefaultFormBuilder(layout);
     		builder.setDefaultDialogBorder();
     		CellConstraints cc = new CellConstraints();
+    		builder.append(Messages.getString("CalendarDialogBox.ShowWorkIn"), workUnit); //$NON-NLS-1$
+    		builder.nextLine(2);
+			builder.add(FieldComponentMap.createHintLabelText(Messages.getString("CalendarDialogBox.WorkUnitHint"), 190),cc.xyw(builder.getColumn(), builder //$NON-NLS-1$
+					.getRow(), 4));
+    		builder.nextLine(2);
+    		builder.addSeparator("", cc.xyw(builder.getColumn(), builder.getRow(), 4)); //$NON-NLS-1$
+    		builder.nextLine(2);
 			builder.add(FieldComponentMap.createHintLabelText(Messages.getString("CalendarDialogBox.TheseSettingsOnlyApplyToDuration"), 190),cc.xyw(builder.getColumn(), builder //$NON-NLS-1$
 					.getRow(), 4));
     		builder.nextLine(2);
