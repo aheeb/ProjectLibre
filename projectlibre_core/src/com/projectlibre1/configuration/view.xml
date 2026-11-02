@@ -608,12 +608,10 @@
 	<spreadsheet id="Spreadsheet.Assignment.resourceUsage" category="resourceAssignmentSpreadsheet" cellStyleId="CellStyle.assignments" actionListId="ActionList.resource">
 		<columns>
 			<column>Field.id</column>
+			<column>Field.indicators</column>
 			<column>Field.name</column>
 			<column>Field.work</column>
-			<column>Field.workContour</column>
-			<column>Field.delay</column>
-			<column>Field.levelingDelay</column>
-			<column>Field.costRateTable</column>
+			<column>Field.assignmentUnits</column>
 		</columns>
 	</spreadsheet>
 
