@@ -55,12 +55,11 @@
  *******************************************************************************/
 package org.projectlibre1.util;
 
-import groovy.lang.GroovyClassLoader;
-
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.text.MessageFormat;
 import java.util.Locale;
@@ -78,9 +77,6 @@ import com.projectlibre1.util.VersionUtils;
  * Format:
  * version: series of integers separated by dots
  * name: string
- *
- * %UpdateChecker
- * <groovy formula>
  */
 public class UpdateChecker {
 	private static final int UPDATE_CHECKER_VERSION=1;
@@ -106,16 +102,17 @@ public class UpdateChecker {
 					"&osArch="+URLEncoder.encode(System.getProperty("os.arch"),"UTF-8")+
 					"&javaVersion="+URLEncoder.encode(System.getProperty("java.version"),"UTF-8")+
 					"&javaVendor="+URLEncoder.encode(System.getProperty("java.vendor"),"UTF-8")+
-					"&validation="+URLEncoder.encode(System.getProperty("projectlibre.validation","0"),"UTF-8")+
 					"&runNumber="+URLEncoder.encode(System.getProperty("projectlibre.runNumber","0"),"UTF-8")+
 					"&firstRun="+URLEncoder.encode(System.getProperty("projectlibre.firstRun","0"),"UTF-8")+
 					"&openprojRunNumber="+URLEncoder.encode(System.getProperty("projectlibre.projectLibreRunNumber","0"),"UTF-8")+  //deprecated
 					"&openprojFirstRun="+URLEncoder.encode(System.getProperty("projectlibre.projectLibreFirstRun","0"),"UTF-8")+   //deprecated
 					"&projectLibreRunNumber="+URLEncoder.encode(System.getProperty("projectlibre.projectLibreRunNumber","0"),"UTF-8")+
-					"&projectLibreFirstRun="+URLEncoder.encode(System.getProperty("projectlibre.projectLibreFirstRun","0"),"UTF-8")+
-					"&email="+URLEncoder.encode(System.getProperty("projectlibre.userEmail","0"),"UTF-8")
+					"&projectLibreFirstRun="+URLEncoder.encode(System.getProperty("projectlibre.projectLibreFirstRun","0"),"UTF-8")
 					); //$NON-NLS-1$
-			InputStream stream=  url.openStream();
+			URLConnection connection=url.openConnection();
+			connection.setConnectTimeout(5000);
+			connection.setReadTimeout(5000);
+			InputStream stream=connection.getInputStream();
 			BufferedReader in = new BufferedReader(
 					new InputStreamReader(
 					stream));
@@ -139,22 +136,11 @@ public class UpdateChecker {
 				}
 			}
 
-			String latestName = in.readLine();
-
-			StringBuffer formulaDef=new StringBuffer();
-			String s=null;
-			while ((s=in.readLine())!=null ){
-				if(s.trim().toUpperCase().equals("%UPDATECHECKER")) break;
-			}
-			if (s!=null){
-				while ((s=in.readLine())!=null){
-					formulaDef.append(s).append('\n');
-				}
-			}
+			// The response may end with a Groovy formula (%UpdateChecker section). It is ignored:
+			// compiling code downloaded over plain HTTP would let anyone on the network run code here.
 			in.close();
 
-			UpdateCheckerFormula formula=getFormula(formulaDef.toString().trim());
-			if (formula.mainCompare(thisVersion, latestVersion) < 0){
+			if (f.mainCompare(thisVersion, latestVersion) < 0){
 				final String message = MessageFormat.format(Messages.getString("Text.newVersion"), new Object[] {latestVersion,thisVersion});
 				Preferences.userNodeForPackage(UpdateChecker.class).put("lastVersionChecked",latestVersion);
 				SwingUtilities.invokeLater(new Runnable() {
@@ -171,32 +157,13 @@ public class UpdateChecker {
 
 
 
-	private static UpdateCheckerFormula getFormula(String formulaDef){
-	    if (formulaDef.length()==0) return new UpdateCheckerFormula();
-	    StringBuffer classText=new StringBuffer();
-	    classText.append("package org.projectlibre1.util;\n");
-	    classText.append("public class UpdateCheckerFormulaImpl extends UpdateCheckerFormula{\n");
-	    classText.append("\tpublic int mainCompare(String currentVersion,String latestVersion){\n");
-	    classText.append("\t\t").append(formulaDef).append('\n');
-	    classText.append("\t}\n");
-	    classText.append("}\n");
-	    GroovyClassLoader loader = new GroovyClassLoader(UpdateChecker.class.getClassLoader());
-		try {
-			Class groovyClass = loader.parseClass(classText.toString()); //TODO this his horribly slow (~500ms)  Can we parse all at once or can we do this lazily or initialize in another thread?
-			return (UpdateCheckerFormula)groovyClass.newInstance();
-		} catch (Exception e) {
-			return new UpdateCheckerFormula();
-		}
-	}
-
-
-
-
 	public static void checkForUpdateInBackground() {
-		new Thread(new Runnable() {
+		Thread thread=new Thread(new Runnable() {
 			public void run() {
 				checkForUpdate();
-			}}).start();
+			}},"UpdateChecker");
+		thread.setDaemon(true);
+		thread.start();
 	}
 
 }

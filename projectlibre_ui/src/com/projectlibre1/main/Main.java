@@ -61,7 +61,6 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.prefs.Preferences;
 
-import com.projectlibre1.dialog.UserInfoDialog;
 import com.projectlibre1.strings.Messages;
 import com.projectlibre1.util.Environment;
 

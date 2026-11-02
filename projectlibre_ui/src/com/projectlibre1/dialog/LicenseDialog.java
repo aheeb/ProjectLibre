@@ -59,8 +59,6 @@ import java.awt.Dimension;
 import java.awt.Frame;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Random;
-import java.util.prefs.Preferences;
 
 import javax.swing.JComponent;
 import javax.swing.JEditorPane;
@@ -81,28 +79,20 @@ public final class LicenseDialog extends AbstractDialog {
 	JEditorPane license = null;
 	JEditorPane thirdParty = null;
 	private boolean init = false;
-	private static boolean validated = Preferences.userNodeForPackage(LicenseDialog.class).getBoolean("validatedLicense",false); //$NON-NLS-1$
-	private static boolean resetData;
+	/**
+	 * Shows the license text. The CPAL doesn't require accepting the license before using the software,
+	 * so this is a viewer only (opened from the About and Help dialogs), never a click-through at startup.
+	 * @param force kept for compatibility: the dialog is only shown when true
+	 */
 	public static boolean showDialog(Frame owner, boolean force) {
-		resetData=!force;
-		if (!Environment.isProjectLibre() && !force)
+		if (!force)
 			return false;
-		if (!validated || force) {
-			LicenseDialog dlg = new LicenseDialog(owner);
-			if (!validated)
-				dlg.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE); // force user to click a button
-			dlg.doModal();
-			return true;
-		}
-		if (Environment.isProjectLibre())
-			System.setProperty("projectlibre.validation", Preferences.userNodeForPackage(LicenseDialog.class).get("licenseValidationDate","0"));
-		return false;
+		new LicenseDialog(owner).doModal();
+		return true;
 	}
 
 	private LicenseDialog(Frame owner) {
 		super(owner, Messages.getContextString("Text.ApplicationTitle") + " "+Messages.getString("LicenseDialog.License"), true); //$NON-NLS-1$ //$NON-NLS-2$
-		if (!Environment.isProjectLibre())
-			validated = true; // POD validation is on web
 	}
 
 
@@ -115,14 +105,8 @@ public final class LicenseDialog extends AbstractDialog {
 			          }
 			};
 		} catch (Exception e) {
-			if (!validated) {
-				Alert.error(Messages.getString("LicenseDialog.CouldNotLoadExiting")); //$NON-NLS-1$
-				System.exit(-1);
-			} else {
-				Alert.error(Messages.getString("LicenseDialog.CouldNotLoadLater")); //$NON-NLS-1$
-				return null;
-
-			}
+			Alert.error(Messages.getString("LicenseDialog.CouldNotLoadLater")); //$NON-NLS-1$
+			return null;
 		}
 
 		pane.setEditable(false);
@@ -189,34 +173,8 @@ public final class LicenseDialog extends AbstractDialog {
 
 
 	@Override
-	public ButtonPanel createButtonPanel() {
-		ButtonPanel bp = super.createButtonPanel();
-		if (!validated)
-			ok.setText(Messages.getString("ButtonText.IAccept")); //$NON-NLS-1$
-		return bp;
-	}
-
-	@Override
 	protected boolean hasCloseButton() {
-		return validated;
-	}
-
-	@Override
-	protected void onCancel() {
-		if (!validated)
-			System.exit(-1);
-		super.onCancel();
-	}
-
-	@Override
-	public void onOk() {
-		validated = true;
-		if (resetData){//About dialog shouldn't reset data
-			Preferences.userNodeForPackage(LicenseDialog.class).put("licenseValidationDate",System.currentTimeMillis()+"."+(new Random()).nextInt(1000)); //$NON-NLS-1$
-			Preferences.userNodeForPackage(LicenseDialog.class).putBoolean("validatedLicense",validated); //$NON-NLS-1$
-			System.setProperty("projectlibre.validation", Preferences.userNodeForPackage(LicenseDialog.class).get("licenseValidationDate","0"));
-		}
-		super.onOk();
+		return true;
 	}
 
 }
