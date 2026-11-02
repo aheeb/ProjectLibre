@@ -68,6 +68,7 @@ import net.sf.mpxj.TaskField;
 import com.projectlibre1.configuration.Configuration;
 import com.projectlibre1.configuration.FieldDictionary;
 import com.projectlibre1.field.Field;
+import com.projectlibre1.pm.task.ProjectFactory;
 
 /**
  * The names users give their own columns (aliases of custom fields such as Text1 = "Profile")
@@ -105,6 +106,11 @@ public class CustomFieldAliases {
 	}
 
 	public static void fromMpx(ProjectFile projectFile) {
+		boolean otherProjectsOpen = false; // the project being imported isn't in the portfolio yet
+		try {
+			otherProjectsOpen = ProjectFactory.getInstance().getPortfolio().getNodeModel().iterator().hasNext();
+		} catch (Exception e) {
+		}
 		for (CustomField customField : projectFile.getCustomFields()) {
 			FieldType type = customField.getFieldType();
 			String alias = customField.getAlias();
@@ -116,7 +122,9 @@ public class CustomFieldAliases {
 			for (int k = 0; k < KINDS.length; k++) {
 				if (KINDS[k][1].equals(m.group(1))) {
 					Field field = Configuration.getFieldFromId(KINDS[k][0] + m.group(2));
-					if (field != null)
+					// Column names are shared by all open projects: while another project is open, only name
+					// a field nobody has named yet, so importing never renames a column in that project.
+					if (field != null && (!otherProjectsOpen || field.getAlias() == null || field.getAlias().trim().length() == 0))
 						field.setAlias(alias.trim());
 				}
 			}
