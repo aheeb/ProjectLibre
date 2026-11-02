@@ -8,6 +8,7 @@ import com.projectlibre1.menu.MenuActionConstants;
 import com.projectlibre1.menu.MenuActionsMap;
 import com.projectlibre1.pm.graphic.frames.DocumentFrame;
 import com.projectlibre1.pm.graphic.frames.GraphicManager;
+import com.projectlibre1.pm.graphic.model.cache.GraphicNode;
 import com.projectlibre1.pm.graphic.spreadsheet.SpreadSheetModel;
 import com.projectlibre1.pm.graphic.spreadsheet.common.CommonSpreadSheet;
 
@@ -42,7 +43,8 @@ public class RibbonActions {
 		SpreadSheetModel model = (SpreadSheetModel) sheet.getModel();
 		int row = 0;
 		while (row < sheet.getRowCount() - 1) {
-			if (model.getObjectInRow(row) == null)
+			GraphicNode node = model.getNode(row);
+			if (node == null || node.getNode() == null || node.getNode().isVoid())
 				break;
 			row++;
 		}

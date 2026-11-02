@@ -1181,7 +1181,7 @@ public class ProjectLibreRibbonUI extends RibbonUI {
 		if (fileSelector != null) {
 			fileSelector.setVisible(showProjects);
 			if (showProjects)
-				projectsWidth = Math.min(220, fileSelector.getPreferredSize().width) + 8;
+				projectsWidth = Math.min(180, fileSelector.getPreferredSize().width) + 8;
 		}
 
 		JComponent projectViews = ribbon.getProjectViews();
