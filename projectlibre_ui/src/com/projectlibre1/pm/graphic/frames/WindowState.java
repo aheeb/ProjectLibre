@@ -44,15 +44,20 @@ public class WindowState {
 				save(frame);
 			}
 		});
-		frame.addWindowStateListener(new WindowAdapter() {
+		WindowAdapter listener = new WindowAdapter() {
+			public void windowOpened(WindowEvent e) {
+				save(frame);
+			}
 			public void windowStateChanged(WindowEvent e) {
 				prefs().putBoolean("maximized", (e.getNewState() & Frame.MAXIMIZED_BOTH) == Frame.MAXIMIZED_BOTH);
 			}
-		});
+		};
+		frame.addWindowListener(listener);
+		frame.addWindowStateListener(listener);
 	}
 
 	private static void save(Frame frame) {
-		if (!frame.isShowing() || frame.getExtendedState() != Frame.NORMAL) return; // keep the normal bounds while maximized
+		if (frame.getExtendedState() != Frame.NORMAL) return; // keep the normal bounds while maximized
 		Rectangle r = frame.getBounds();
 		Preferences p = prefs();
 		p.putInt("x", r.x);
