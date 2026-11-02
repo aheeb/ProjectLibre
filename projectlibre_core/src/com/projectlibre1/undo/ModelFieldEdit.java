@@ -110,15 +110,19 @@ public class ModelFieldEdit extends AbstractUndoableEdit{
 	public void redo() throws CannotRedoException {
 		super.redo();
 		try {
-			model.setFieldValue(field,node,source,value,context,NodeModel.EVENT);
+			model.setFieldValue(field,node,source,restorable(value,oldValue),context,NodeModel.EVENT);
 		} catch (FieldParseException e) {
 			e.printStackTrace();
 		}
 	}
+	/** An empty text cell holds null, which text fields refuse to be set to: restore it as an empty string. */
+	private static Object restorable(Object v, Object other) {
+		return v == null && other instanceof String ? "" : v; //$NON-NLS-1$
+	}
 	public void undo() throws CannotUndoException {
 		super.undo();
 		try {
-			model.setFieldValue(field,node,source,oldValue,context,NodeModel.EVENT);
+			model.setFieldValue(field,node,source,restorable(oldValue,value),context,NodeModel.EVENT);
 		} catch (FieldParseException e) {
 			e.printStackTrace();
 		}

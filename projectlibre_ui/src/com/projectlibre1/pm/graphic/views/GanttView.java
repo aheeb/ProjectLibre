@@ -56,6 +56,7 @@
 package com.projectlibre1.pm.graphic.views;
 
 import java.awt.Dimension;
+import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -63,6 +64,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import javax.swing.JScrollPane;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -82,7 +84,10 @@ import com.projectlibre1.pm.graphic.timescale.ScaledScrollPane;
 import com.projectlibre1.pm.graphic.views.synchro.Synchronizer;
 import com.projectlibre1.configuration.Configuration;
 import com.projectlibre1.configuration.Dictionary;
+import com.projectlibre1.configuration.FieldDictionary;
 import com.projectlibre1.configuration.Settings;
+import com.projectlibre1.dialog.ColumnDialog;
+import com.projectlibre1.field.Field;
 import com.projectlibre1.field.FieldContext;
 import com.projectlibre1.graphic.configuration.BarStyles;
 import com.projectlibre1.graphic.configuration.CellStyle;
@@ -199,6 +204,15 @@ public class GanttView extends SplittedView implements BaseView, ScheduleEventLi
 			public void componentResized(java.awt.event.ComponentEvent e) {
 				if (getWidth() < 600) return;
 				removeComponentListener(this);
+				// a cell scrolled into view while the grid was still narrow left it scrolled sideways
+				// (the first columns cut off); start at the left edge now that it has its real width
+				SwingUtilities.invokeLater(new Runnable() {
+					public void run() {
+						if (leftScrollPane == null) return;
+						Point p = leftScrollPane.getViewport().getViewPosition();
+						if (p.x != 0) leftScrollPane.getViewport().setViewPosition(new Point(0, p.y));
+					}
+				});
 				if (dividerRestored || leftScrollPane == null) return;
 				int wanted = Math.min(leftScrollPane.getPreferredSize().width + 2, getWidth() * 3 / 5);
 				if (wanted > getDividerLocation()) setDividerLocation(wanted);
@@ -244,6 +258,8 @@ public class GanttView extends SplittedView implements BaseView, ScheduleEventLi
 		SpreadSheetFieldArray fields=getFields();
 		if (project.getFieldArray() != null) {
 			fields = project.getFieldArray();
+		} else {
+			fields = addColumnsTheProjectUses(fields);
 		}
 		spreadSheet.setCache(cache,fields,fields.getCellStyle(),fields.getActionList());
 		if (project.getFieldArray() != null)
@@ -269,6 +285,28 @@ public class GanttView extends SplittedView implements BaseView, ScheduleEventLi
    }
 
 	//spreadsheet fields
+	/**
+	 * A plan opened without a saved layout (e.g. imported from Microsoft Project) also shows its work, if it has estimates,
+	 * and the columns the user named that hold values (like a "Profile" text column).
+	 */
+	private SpreadSheetFieldArray addColumnsTheProjectUses(SpreadSheetFieldArray fields) {
+		if (project.getWork(null) > 0) {
+			Field work = Configuration.getFieldFromId("Field.work"); //$NON-NLS-1$
+			int duration = fields.indexOf(Configuration.getFieldFromId("Field.duration")); //$NON-NLS-1$
+			if (work != null && duration >= 0 && !fields.contains(work))
+				fields = fields.insertField(duration + 1, work);
+		}
+		int position = fields.indexOf(Configuration.getFieldFromId("Field.name")) + 1; //$NON-NLS-1$
+		for (Iterator i = FieldDictionary.getAliasMap().keySet().iterator(); i.hasNext();) {
+			Field field = Configuration.getFieldFromId((String) i.next());
+			if (field == null || !field.isCustom() || fields.contains(field) || position <= 0)
+				continue;
+			if (ColumnDialog.hasValues(field, project))
+				fields = fields.insertField(position++, field);
+		}
+		return fields;
+	}
+
 	private static SpreadSheetFieldArray getFields() {
 		return (SpreadSheetFieldArray) Dictionary.get(spreadsheetCategory,Messages.getString("Spreadsheet.Task.entry")); //TODO don't hardcode
 	}

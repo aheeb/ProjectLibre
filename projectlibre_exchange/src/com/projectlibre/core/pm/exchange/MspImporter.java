@@ -160,6 +160,7 @@ public class MspImporter {
 				reader = new PlannerReader();
 			mpxProjectFile = reader.read(in);
 			state.setMpxProjectFile(mpxProjectFile);
+			com.projectlibre1.server.data.CustomFieldAliases.fromMpx(mpxProjectFile); // names of the user's own columns
 		
 		} finally {
 			if (in!=null)

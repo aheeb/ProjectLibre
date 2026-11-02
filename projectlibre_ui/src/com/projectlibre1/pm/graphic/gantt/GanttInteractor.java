@@ -245,6 +245,16 @@ public class GanttInteractor extends GraphInteractor{
     	return beforeLinkState==BAR_MOVE||beforeLinkState==BAR_MOVE_START||beforeLinkState==BAR_MOVE_END;
     }
 
+    /** Dropping a link anywhere on a task's row links to that task: summary bars are only a thin bracket. */
+    protected GraphicNode getLinkTargetAt(double x,double y){
+    	GraphicNode node=super.getLinkTargetAt(x,y);
+    	if (node!=null) return node;
+    	int row=(int)Math.floor(y/((Gantt)getGraph()).getRowHeight());
+    	if (row<0||row>=getGraph().getModel().getCache().getSize()) return null;
+    	node=(GraphicNode)getGraph().getModel().getCache().getElementAt(row);
+    	return node==null||node.isVoid()?null:node;
+    }
+
     protected boolean switchOnLinkCreation(double x, double y){
     	if (state==PROGRESS_BAR_MOVE) return false;
 		GraphicNode node=(GraphicNode)selected;

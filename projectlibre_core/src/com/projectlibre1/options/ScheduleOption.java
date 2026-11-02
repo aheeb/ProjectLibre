@@ -58,6 +58,8 @@ package com.projectlibre1.options;
 import com.projectlibre1.datatype.TimeUnit;
 import com.projectlibre1.pm.scheduling.SchedulingType;
 
+import java.util.prefs.Preferences;
+
 /**
  * Corresponds to Schedule tab on options dialog in MSProject
  */
@@ -72,7 +74,8 @@ public class ScheduleOption {
 	int schedulingRule = SchedulingType.FIXED_UNITS;
 	boolean effortDriven = false; // adding a person keeps the length a newcomer typed; still settable per task
 	int durationEnteredIn = TimeUnit.DAYS;
-	int workUnit = TimeUnit.HOURS;
+	private static final String WORK_UNIT_PREFERENCE = "workUnit"; //$NON-NLS-1$
+	int workUnit = Preferences.userNodeForPackage(ScheduleOption.class).getInt(WORK_UNIT_PREFERENCE, TimeUnit.DAYS); // person-days unless the user chose otherwise
 	int rateEnteredIn = TimeUnit.HOURS;
 	boolean newTasksStartToday = false; // default is project start;
 	/**
@@ -141,6 +144,7 @@ public class ScheduleOption {
 	 */
 	public void setEffortDisplay(int effortDisplay) {
 		this.workUnit = effortDisplay;
+		Preferences.userNodeForPackage(ScheduleOption.class).putInt(WORK_UNIT_PREFERENCE, effortDisplay);
 	}
 	/**
 	 * @return Returns the newTasksStartToday.

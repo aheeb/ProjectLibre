@@ -57,7 +57,11 @@ package com.projectlibre1.dialog;
 
 import java.awt.Font;
 import java.awt.Frame;
+import java.text.MessageFormat;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -73,7 +77,10 @@ import com.projectlibre1.pm.graphic.frames.DocumentSelectedEvent;
 import com.projectlibre1.pm.graphic.spreadsheet.selection.event.SelectionNodeEvent;
 import com.projectlibre1.configuration.FieldDictionary;
 import com.projectlibre1.document.ObjectEvent;
+import com.projectlibre1.pm.assignment.Assignment;
 import com.projectlibre1.pm.resource.Resource;
+import com.projectlibre1.pm.resource.ResourceImpl;
+import com.projectlibre1.pm.task.NormalTask;
 import com.projectlibre1.pm.task.Project;
 import com.projectlibre1.pm.task.Task;
 import com.projectlibre1.strings.Messages;
@@ -186,6 +193,7 @@ public class ProjectInformationDialog extends InformationDialog {
 		StringBuffer rowSpec = new StringBuffer("p, 8dlu, p, 4dlu, p, 6dlu, p"); //$NON-NLS-1$
 		for (int i = 0; i < rows.length; i++)
 			rowSpec.append(", 6dlu, p"); //$NON-NLS-1$
+		rowSpec.append(", 14dlu, p, 6dlu, p, 6dlu, p"); //$NON-NLS-1$ // size of the plan
 		FormLayout layout = new FormLayout("max(75dlu;pref), 4dlu, 70dlu, 8dlu, 70dlu, 8dlu, 70dlu, 8dlu, 70dlu, 0dlu:grow", //$NON-NLS-1$
 				rowSpec.toString());
 		DefaultFormBuilder builder = new DefaultFormBuilder(layout);
@@ -210,6 +218,14 @@ public class ProjectInformationDialog extends InformationDialog {
 					builder.add(map.getComponent(rows[r][c], ComponentFactory.READ_ONLY), cc.xy(3 + 2 * c, row));
 			}
 		}
+		row += 2;
+		builder.addSeparator(Messages.getString("ProjectInformationDialog.Size"), cc.xyw(1, row, 9)); //$NON-NLS-1$
+		row += 2;
+		builder.addLabel(Messages.getString("ProjectInformationDialog.Tasks"), cc.xy(1, row)); //$NON-NLS-1$
+		builder.add(taskCount, cc.xyw(3, row, 7));
+		row += 2;
+		builder.addLabel(Messages.getString("ProjectInformationDialog.People"), cc.xy(1, row)); //$NON-NLS-1$
+		builder.add(peopleCount, cc.xyw(3, row, 7));
 		return builder.getPanel();
 	}
 
@@ -257,5 +273,43 @@ public class ProjectInformationDialog extends InformationDialog {
 		if (object != null)	
 			updateAll();
 	}	
+
+	protected void updateAll() {
+		super.updateAll();
+		updateCounts();
+	}
+
+	private final JLabel taskCount = new JLabel();
+	private final JLabel peopleCount = new JLabel();
+
+	/** How many tasks (not counting summary tasks) the plan has, and how many team members have work in it. */
+	private void updateCounts() {
+		if (!(getObject() instanceof Project))
+			return;
+		Project project = (Project) getObject();
+		int tasks = 0, summaries = 0;
+		Set people = new HashSet();
+		for (Iterator i = project.getTaskOutlineIterator(); i.hasNext();) {
+			Task task = (Task) i.next();
+			if (task.isWbsParent()) {
+				summaries++;
+				continue;
+			}
+			tasks++;
+			if (task instanceof NormalTask) {
+				for (Iterator a = ((NormalTask) task).getAssignments().iterator(); a.hasNext();) {
+					Resource resource = ((Assignment) a.next()).getResource();
+					if (resource instanceof ResourceImpl && !((ResourceImpl) resource).isDefault())
+						people.add(resource);
+				}
+			}
+		}
+		int team = 0;
+		for (Iterator i = project.getResourcePool().getResourceList().iterator(); i.hasNext();)
+			if (!((ResourceImpl) i.next()).isDefault())
+				team++;
+		taskCount.setText(MessageFormat.format(Messages.getString("ProjectInformationDialog.TaskCount"), tasks, summaries)); //$NON-NLS-1$
+		peopleCount.setText(MessageFormat.format(Messages.getString("ProjectInformationDialog.PeopleCount"), people.size(), team)); //$NON-NLS-1$
+	}
 	
 }

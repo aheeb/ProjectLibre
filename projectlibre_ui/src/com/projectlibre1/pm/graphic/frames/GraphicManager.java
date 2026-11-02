@@ -71,6 +71,7 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -203,6 +204,7 @@ import com.projectlibre1.print.GraphPageable;
 import com.projectlibre1.print.PrintDocumentFactory;
 import com.projectlibre1.server.data.DocumentData;
 import com.projectlibre1.session.CreateOptions;
+import com.projectlibre1.session.FileHelper;
 import com.projectlibre1.session.LoadOptions;
 import com.projectlibre1.session.LocalSession;
 import com.projectlibre1.session.SaveOptions;
@@ -1163,7 +1165,7 @@ public class GraphicManager implements  FrameHolder, NamedFrameListener, WindowS
 		private static final long serialVersionUID = 1L;
 		public void actionPerformed(ActionEvent arg0) {
 			setMeAsLastGraphicManager();
-			saveLocalProject(true);		}
+			exportMicrosoftProject();		}
 	}
 
 	public class AboutAction extends MenuActionsMap.GlobalMenuAction {
@@ -2052,6 +2054,41 @@ protected boolean loadLocalDocument(String fileName,boolean merge){ //uses serve
 		if (fileName!=null) saveLocalDocument(fileName,saveAs);
 	}
 
+
+	/** Writes a Microsoft Project (.xml) copy of the current project. The project stays open as the file it was. */
+	public void exportMicrosoftProject(){
+		final DocumentFrame frame=getCurrentFrame();
+		if (frame==null) return;
+		final Project project=frame.getProject();
+		String fileName=SessionFactory.getInstance().getLocalSession().chooseFileName(true,FileHelper.changeFileExtension(project.getGuessedFileName(),"xml")); //$NON-NLS-1$
+		if (fileName==null) return;
+		if (!fileName.toLowerCase().endsWith(".xml")) fileName=FileHelper.changeFileExtension(fileName,"xml"); //$NON-NLS-1$ //$NON-NLS-2$
+		exportMicrosoftProject(fileName);
+	}
+	public void exportMicrosoftProject(final String exported){
+		final DocumentFrame frame=getCurrentFrame();
+		final Project project=frame.getProject();
+		final String oldFileName=project.getFileName();
+		final boolean wasDirty=project.isGroupDirty();
+		SaveOptions opt=new SaveOptions();
+		opt.setLocal(true);
+		opt.setSaveAs(true);
+		opt.setFileName(exported);
+		opt.setImporter(LocalSession.MICROSOFT_PROJECT_IMPORTER);
+		opt.setPostSaving(new Closure(){
+			public void execute(Object arg0) {
+				project.setFileName(oldFileName); // a copy: keep working on the original file
+				project.setGroupDirty(wasDirty);
+				SwingUtilities.invokeLater(new Runnable(){
+					public void run() {
+						refreshSaveStatus(false);
+						com.projectlibre1.workflow.Toast.show(frame,Messages.getStringWithParam("Export.savedMicrosoftProject",new File(exported).getName())); //$NON-NLS-1$
+					}
+				});
+			}
+		});
+		projectFactory.saveProject(project,opt);
+	}
 
     public void showAboutDialog() {
     	if (aboutDialog == null) {
