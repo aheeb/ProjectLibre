@@ -212,8 +212,9 @@ public class FileHelper {
 		FileFilter currentFilter=fileChooser.getFileFilter();
 		if (save){
 			fileName=microsoftProjectName(fileName);
-			if (currentFilter==microsoftXMLFilter){
-				if(!fileName.endsWith(".xml")) fileName+=".xml";
+			// a name typed as .mpp/.mpx/.xml is a Microsoft Project file whichever filter is selected
+			if (currentFilter==microsoftXMLFilter||fileName.toLowerCase().endsWith(".xml")){
+				if(!fileName.toLowerCase().endsWith(".xml")) fileName+=".xml";
 			}
 			else if (!fileName.endsWith(".pod")) fileName+=".pod";
 		}
