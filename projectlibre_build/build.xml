@@ -170,6 +170,9 @@
  					<zipfileset dir="." >
  						<include name="license/**" />
  					</zipfileset>
+ 					<zipfileset dir="${resources}/samples" prefix="samples" >
+ 						<include name="*.pod" />
+ 					</zipfileset>
 
  					<manifest>
  						<attribute name="Main-Class" value="com.projectlibre1.main.Main"/>
@@ -188,6 +191,9 @@
  					</zipfileset>
  					<zipfileset dir="." >
  						<include name="license/**" />
+ 					</zipfileset>
+ 					<zipfileset dir="${resources}/samples" prefix="samples" >
+ 						<include name="*.pod" />
  					</zipfileset>
 
  					<manifest>

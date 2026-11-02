@@ -147,7 +147,6 @@ import com.projectlibre1.dialog.ResourceInformationDialog;
 import com.projectlibre1.dialog.ResourceMappingDialog;
 import com.projectlibre1.dialog.TaskInformationDialog;
 import com.projectlibre1.dialog.TipOfTheDay;
-import com.projectlibre1.dialog.WelcomeDialog;
 import com.projectlibre1.dialog.assignment.AssignmentDialog;
 import com.projectlibre1.dialog.options.CalendarDialogBox;
 import com.projectlibre1.document.Document;
@@ -518,6 +517,8 @@ public class GraphicManager implements  FrameHolder, NamedFrameListener, WindowS
 		final DocumentFrame frame = new DocumentFrame(this,project,tabId);
 		if (frame == null) // in case of out memory error
 			return null;
+		if (SampleProjects.isSample(project.getFileName())) project.setFileName(null); // saving a sample asks where to save it
+		else RecentFiles.add(project.getFileName());
 		getFrameManager().addFrame(frame);
 //		DocumentFrame newDocumentFrame = (DocumentFrame)getFrameManager().getFrame(tabId);
 
@@ -608,18 +609,7 @@ public class GraphicManager implements  FrameHolder, NamedFrameListener, WindowS
 			return;
 		}
 
-		WelcomeDialog instance = WelcomeDialog.getInstance(getFrame(),getMenuManager());
-		if (instance.doModal()) {
-			waitInitialization();
-			if (instance.getForm().isCreateProject())
-				doNewProjectDialog();
-			else if (instance.getForm().isOpenProject()){
-				if(Environment.getStandAlone()) openLocalProject();
-				else doOpenProjectDialog();
-			}else if (instance.getForm().isManageResources()) {
-				loadMasterProject();
-			}
-		}
+		// no dialog: the start panel is shown in the main window while no project is open
 	}
 
 	public boolean doNewProjectDialog() {
@@ -1930,6 +1920,11 @@ protected boolean loadLocalDocument(String fileName,boolean merge){ //uses serve
 		SaveOptions opt=new SaveOptions();
 		opt.setLocal(true);
 		final Project project=getCurrentFrame().getProject();
+		opt.setPostSaving(new Closure(){
+			public void execute(Object arg0) {
+				RecentFiles.add(project.getFileName());
+			}
+		});
 		if (project.getFileName()!=fileName){
 			final DocumentFrame frame=getCurrentFrame();
 			if (saveAs) opt.setSaveAs(true);
@@ -1937,6 +1932,7 @@ protected boolean loadLocalDocument(String fileName,boolean merge){ //uses serve
 				public void execute(Object arg0) {
 					if (saveAs) frame.setId(project.getUniqueId()+""); //$NON-NLS-1$
 					refreshSaveStatus(true);
+					RecentFiles.add(project.getFileName());
 				}
 			});
 		}
@@ -2912,7 +2908,7 @@ protected boolean loadLocalDocument(String fileName,boolean merge){ //uses serve
 			c=((RootPaneContainer)container).getContentPane();
 		}
         if (!Environment.isRibbonUI()) c.setLayout(new BorderLayout());
-        JPanel panel = new JPanel();
+        JPanel panel = Environment.isPlugin() ? new JPanel() : new StartPanel(this); // shown whenever no project is open
         c.add(panel, "Center"); //$NON-NLS-1$
         setFrameManager(new DefaultFrameManager(container, panel,this));
 
