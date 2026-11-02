@@ -62,7 +62,15 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import java.awt.Component;
+import java.awt.FlowLayout;
+
+import javax.swing.AbstractButton;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.Icon;
+import javax.swing.JComponent;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -71,6 +79,7 @@ import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
+import net.sf.jasperreports.view.JRViewer;
 
 import org.apache.commons.collections.Closure;
 import org.apache.commons.collections.CollectionUtils;
@@ -78,7 +87,10 @@ import org.apache.commons.collections.Predicate;
 
 import com.projectlibre1.contrib.ClassResolverFilter;
 import com.projectlibre1.help.HelpUtil;
+import com.formdev.flatlaf.FlatClientProperties;
+import com.projectlibre1.pm.graphic.IconManager;
 import com.projectlibre1.pm.graphic.frames.DocumentFrame;
+import com.projectlibre1.pm.graphic.laf.ModernLaf;
 import com.projectlibre1.pm.graphic.frames.GraphicManager;
 import com.projectlibre1.pm.graphic.model.cache.GeneralFilteredIterator;
 import com.projectlibre1.pm.graphic.model.cache.NodeModelCache;
@@ -263,6 +275,7 @@ public class ReportView extends JPanel implements BaseView, CacheListener {
 		} else {
 			viewer =  new ReportViewer(jasperPrint);
 			add(viewer,BorderLayout.CENTER);
+			adoptViewerToolBar();
 		}
 		// add new listener
 		if (cache != null) {
@@ -274,13 +287,94 @@ public class ReportView extends JPanel implements BaseView, CacheListener {
 
 	}
 	
+	private JPanel header;
 	private JPanel header() {
-		JPanel panel = new JPanel();
-		panel.add(reportLabel);
-		panel.add(reportChoice);
-		panel.add(columnsLabel);
-		panel.add(columnsChoice);
-		return panel;
+		header = new JPanel(new BorderLayout());
+		header.setBackground(ModernLaf.CHROME);
+		header.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, ModernLaf.HAIRLINE),
+				BorderFactory.createEmptyBorder(4, 8, 4, 8)));
+		JPanel choices = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+		choices.setOpaque(false);
+		choices.add(reportLabel);
+		choices.add(reportChoice);
+		choices.add(Box.createHorizontalStrut(8));
+		choices.add(columnsLabel);
+		choices.add(columnsChoice);
+		header.add(choices, BorderLayout.WEST);
+		return header;
+	}
+
+	/**
+	 * The report viewer brings its own toolbar (save, print, pages, zoom) with old icons in a second row; show
+	 * its commands in the row of the report chooser instead, as flat buttons with the icons of the main toolbar.
+	 */
+	private void adoptViewerToolBar() {
+		JPanel bar = (JPanel) viewerField("tlbToolBar");
+		if (bar == null || header == null)
+			return;
+		viewer.remove(bar);
+		hide("btnReload");
+		hide("pnlSep01");
+		hide("pnlSep02");
+		hide("pnlSep03");
+		restyle("btnSave", "ribbon.saveAs");
+		restyle("btnPrint", "ribbon.print");
+		restyle("btnFirst", "report.first");
+		restyle("btnPrevious", "report.previous");
+		restyle("btnNext", "report.next");
+		restyle("btnLast", "report.last");
+		restyle("btnActualSize", "report.actualSize");
+		restyle("btnFitPage", "report.fitPage");
+		restyle("btnFitWidth", "report.fitWidth");
+		restyle("btnZoomIn", "ribbon.zoomIn");
+		restyle("btnZoomOut", "ribbon.zoomOut");
+		bar.setOpaque(false);
+		bar.setBorder(null);
+		if (bar.getLayout() instanceof FlowLayout)
+			((FlowLayout) bar.getLayout()).setHgap(2);
+		for (Component c : bar.getComponents())
+			if (c instanceof JComponent && !(c instanceof AbstractButton))
+				((JComponent) c).setOpaque(false);
+		header.add(bar, BorderLayout.EAST);
+		header.revalidate();
+	}
+
+	private Object viewerField(String name) {
+		try {
+			java.lang.reflect.Field f = JRViewer.class.getDeclaredField(name);
+			f.setAccessible(true);
+			return f.get(viewer);
+		} catch (Exception e) {
+			return null;
+		}
+	}
+
+	private void hide(String name) {
+		Object o = viewerField(name);
+		if (o instanceof Component)
+			((Component) o).setVisible(false);
+	}
+
+	private void restyle(String name, String icon) {
+		Object o = viewerField(name);
+		if (!(o instanceof AbstractButton))
+			return;
+		AbstractButton b = (AbstractButton) o;
+		b.putClientProperty(FlatClientProperties.BUTTON_TYPE, FlatClientProperties.BUTTON_TYPE_TOOLBAR_BUTTON);
+		b.setBorder(null);
+		b.setMargin(new java.awt.Insets(4, 5, 4, 5));
+		b.setContentAreaFilled(true);
+		Icon svg = IconManager.getSvgIcon(icon, 20);
+		if (svg != null) {
+			b.setIcon(svg);
+			b.setDisabledIcon(null);
+			b.setPressedIcon(null);
+			b.setRolloverIcon(null);
+			b.setSelectedIcon(null);
+		}
+		b.setPreferredSize(null);
+		b.setMinimumSize(null);
+		b.setMaximumSize(null);
 	}
 	
 	private void initColumns() {

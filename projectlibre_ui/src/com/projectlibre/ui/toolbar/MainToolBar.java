@@ -74,8 +74,10 @@ public class MainToolBar extends JPanel implements MenuManager.ViewSelectionList
 	public static final int ICON_SIZE = 20;
 	private static final int HEIGHT = 44;
 	private static final int GROUP_GAP = 14;
-	private static final int SEARCH_WIDTH = 170;
-	private static final int TITLE_WIDTH = 200;
+	private static final int SEARCH_WIDTH = 160;
+	/** Room for the project name when there is enough space, and when space is short. */
+	private static final int TITLE_WIDE = 380;
+	private static final int TITLE_WIDTH = 180;
 	private static final int SEARCH_NARROW_WIDTH = 130;
 
 	private static final Set<String> TASK_VIEWS = new HashSet<String>(Arrays.asList(MenuActionConstants.ACTION_GANTT,
@@ -108,12 +110,13 @@ public class MainToolBar extends JPanel implements MenuManager.ViewSelectionList
 		private static final long serialVersionUID = 1L;
 		public Dimension getPreferredSize() {
 			Dimension d = super.getPreferredSize();
-			return new Dimension(Math.min(d.width, TITLE_WIDTH), d.height);
+			return new Dimension(Math.min(d.width, titleWidth), d.height);
 		}
 		public Dimension getMaximumSize() {
 			return getPreferredSize();
 		}
 	};
+	private int titleWidth = TITLE_WIDE;
 	private final boolean showTitle;
 	private final Component titleGap = Box.createHorizontalStrut(GROUP_GAP);
 	private final ViewSwitcher views;
@@ -383,7 +386,10 @@ public class MainToolBar extends JPanel implements MenuManager.ViewSelectionList
 		String name = project == null ? null : project.getName();
 		boolean modified = project != null && frame.getTitle() != null && frame.getTitle().endsWith("*");
 		title.setText(name == null || name.trim().isEmpty() ? null : name.trim());
-		title.setToolTipText(project == null ? null : project.getFileName());
+		// the name may be cut short, so the tooltip has all of it, and where the file is
+		String file = project == null ? null : project.getFileName();
+		String tip = title.getText() == null ? file : file == null ? title.getText() : title.getText() + " \u2014 " + file;
+		title.setToolTipText(tip);
 		// unsaved changes show as a dot in the close button
 		frame.getRootPane().putClientProperty("Window.documentModified", modified);
 		level = -1;
@@ -398,6 +404,7 @@ public class MainToolBar extends JPanel implements MenuManager.ViewSelectionList
 		addMenuItem(menu, "RibbonPrint");
 		addMenuItem(menu, "RibbonPrintPreview");
 		menu.addSeparator();
+		addMenuItem(menu, "RibbonExportMSProject");
 		addMenuItem(menu, "RibbonSaveProjectAs");
 		menu.show(share, 0, share.getHeight() + 2);
 	}
@@ -415,6 +422,7 @@ public class MainToolBar extends JPanel implements MenuManager.ViewSelectionList
 				menu.addSeparator();
 			addMenuItem(menu, "RibbonPDF");
 			addMenuItem(menu, "RibbonPrint");
+			addMenuItem(menu, "RibbonExportMSProject");
 			addMenuItem(menu, "RibbonSaveProjectAs");
 		}
 		if (isCollapsed(help)) {
@@ -571,11 +579,13 @@ public class MainToolBar extends JPanel implements MenuManager.ViewSelectionList
 	}
 
 	/**
-	 * Levels of compaction: 0 everything, 1 icon-only secondary commands, 2 no project title, 3 icon-only first
-	 * command ("Add task"), 4 views as a drop-down, 5 narrower search, then each further level moves one more
-	 * right-hand button into the "more" menu.
+	 * Levels of compaction: 0 everything with room for a long project name, 1 a shorter project name, 2 icon-only
+	 * secondary commands, 3 no project title, 4 icon-only first command ("Add task"), 5 views as a drop-down,
+	 * 6 narrower search, then each further level moves one more right-hand button into the "more" menu.
 	 */
 	private void applyLevel(int level) {
+		titleWidth = level == 0 ? TITLE_WIDE : TITLE_WIDTH;
+		level = Math.max(0, level - 1);
 		title.setVisible(showTitle && level < 2 && title.getText() != null);
 		titleGap.setVisible(title.isVisible());
 		for (ToolButton b : commandButtons)
@@ -594,7 +604,7 @@ public class MainToolBar extends JPanel implements MenuManager.ViewSelectionList
 	}
 
 	private int maxLevel() {
-		return 5 + collapsibles.size();
+		return 6 + collapsibles.size();
 	}
 
 	@Override

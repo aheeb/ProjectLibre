@@ -87,8 +87,25 @@ public class UndoController extends UndoManager implements UndoableEditListener{
 		//undoManager=new UndoManager();
 		editSupport.addUndoableEditListener(this);
 	}
+	/** While above 0, edits are not recorded: see {@link #beginIgnoring()}. */
+	protected transient int ignoring;
+
+	/**
+	 * Stops recording edits until {@link #endIgnoring()}, for changes that are side effects of an edit which
+	 * restores them itself. Undo and redo do this too: an edit recorded while undoing would discard the redo history.
+	 */
+	public void beginIgnoring() {
+		ignoring++;
+	}
+
+	public void endIgnoring() {
+		ignoring--;
+	}
+
 	public void undoableEditHappened(UndoableEditEvent e){
 		//System.out.println("undoableEditHappened");
+		if (ignoring>0)
+			return;
 		UndoableEdit edit=e.getEdit();
 //		undoManager.addEdit(edit);
 		super.addEdit(edit);
@@ -107,18 +124,26 @@ public class UndoController extends UndoManager implements UndoableEditListener{
 	public void undo() {
 		if (canUndo()) {
 			Environment.setBatchMode(true);
-			super.undo();
-//			undoManager.undo();
-			Environment.setBatchMode(false);
+			beginIgnoring();
+			try {
+				super.undo();
+			} finally {
+				endIgnoring();
+				Environment.setBatchMode(false);
+			}
 		}
 	}
 
 	public void redo() {
 		if (canRedo()) {
 			Environment.setBatchMode(true);
-//			undoManager.redo();
-			super.redo();
-			Environment.setBatchMode(false);
+			beginIgnoring();
+			try {
+				super.redo();
+			} finally {
+				endIgnoring();
+				Environment.setBatchMode(false);
+			}
 		}
 	}
 	public boolean canUndo() {

@@ -309,7 +309,8 @@ public class ProjectInformationDialog extends InformationDialog {
 			if (!((ResourceImpl) i.next()).isDefault())
 				team++;
 		taskCount.setText(MessageFormat.format(Messages.getString("ProjectInformationDialog.TaskCount"), tasks, summaries)); //$NON-NLS-1$
-		peopleCount.setText(MessageFormat.format(Messages.getString("ProjectInformationDialog.PeopleCount"), people.size(), team)); //$NON-NLS-1$
+		String peopleKey = team == 0 ? "ProjectInformationDialog.PeopleCountNone" : team == 1 ? "ProjectInformationDialog.PeopleCountOne" : "ProjectInformationDialog.PeopleCount"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		peopleCount.setText(MessageFormat.format(Messages.getString(peopleKey), people.size(), team));
 	}
 	
 }

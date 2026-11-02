@@ -98,7 +98,9 @@ import com.projectlibre1.pm.graphic.spreadsheet.common.CommonSpreadSheetAction;
 import com.projectlibre1.pm.graphic.spreadsheet.common.CommonSpreadSheetModel;
 import com.projectlibre1.pm.graphic.spreadsheet.common.transfer.NodeListTransferHandler;
 import com.projectlibre1.pm.graphic.spreadsheet.editor.SimpleComboBoxEditor;
+import com.projectlibre1.grouping.core.model.NodeModel;
 import com.projectlibre1.workflow.PeopleMenu;
+import com.projectlibre1.workflow.Toast;
 import com.projectlibre1.workflow.TaskMenu;
 import com.projectlibre1.pm.graphic.spreadsheet.renderer.NameCellComponent;
 import com.projectlibre1.pm.graphic.spreadsheet.selection.SpreadSheetListSelectionModel;
@@ -170,7 +172,25 @@ public class SpreadSheet extends CommonSpreadSheet implements Cloneable {
 	}
 	public boolean editCellAt(int row, int column, java.util.EventObject e) {
 		int target = row < 0 ? row : toNextTaskRow(row);
+		// a new task (or person) starts with its name: typing into another cell of the "+ Add a task" row
+		// would create one without a name, so the typing goes into the name instead
+		if (target >= 0 && target == getNextTaskRow() && !isReadOnly()) {
+			int name = getNameColumn();
+			if (name >= 0 && name != column) {
+				changeSelection(target, name, false, false);
+				return super.editCellAt(target, name, null);
+			}
+		}
 		return super.editCellAt(target, column, target == row ? e : null); // the click was elsewhere: edit as if from the keyboard
+	}
+
+	/** View index of the name column, or -1. */
+	private int getNameColumn() {
+		for (int c = 0; c < getColumnCount(); c++) {
+			Object id = getColumnModel().getColumn(c).getIdentifier();
+			if (id instanceof Field && ((Field) id).isNameField()) return c;
+		}
+		return -1;
 	}
 
 	protected void paintComponent(java.awt.Graphics g) {
@@ -181,11 +201,7 @@ public class SpreadSheet extends CommonSpreadSheet implements Cloneable {
 	private void paintAddTaskHint(java.awt.Graphics g) {
 		int row = getNextTaskRow();
 		if (row <= 0 || isReadOnly() || (isEditing() && getEditingRow() == row) || isEmptySheet()) return;
-		int nameColumn = -1;
-		for (int c = 0; c < getColumnCount(); c++) {
-			Object id = getColumnModel().getColumn(c).getIdentifier();
-			if (id instanceof Field && ((Field) id).isNameField()) nameColumn = c;
-		}
+		int nameColumn = getNameColumn();
 		if (nameColumn < 0) return;
 		Rectangle cell = getCellRect(row, nameColumn, true);
 		if (!g.getClipBounds().intersects(cell)) return;
@@ -820,12 +836,18 @@ public class SpreadSheet extends CommonSpreadSheet implements Cloneable {
 			List l = getSelectedDeletableRows();
 			if (l.isEmpty())
 				return;
-			if (!GeneralOption.getInstance().isConfirmDeletes() || Alert.okCancel(Messages.getString("Message.confirmDeleteRows"))) {
+			// a deletion that can be undone needs no confirmation; say what happened and offer Undo instead
+			NodeModel model = getCache() == null ? null : getCache().getModel();
+			boolean undoable = model != null && model.getUndoController() != null;
+			if (undoable || !GeneralOption.getInstance().isConfirmDeletes() || Alert.okCancel(Messages.getString("Message.confirmDeleteRows"))) {
 				int row = getSelectedRow(), column = getSelectedColumn();
 				getCache().deleteNodes(l);
 				// keep a cell selected where the deleted rows were, so Delete can be pressed again or typing continues
 				if (row >= 0 && getSelectedRow() < 0 && getRowCount() > 0)
 					changeSelection(Math.min(row, getRowCount() - 1), Math.max(column, 0), false, false);
+				if (undoable)
+					Toast.show(SpreadSheet.this, Messages.getStringWithParam("Spreadsheet.deleted", new Object[] {Integer.valueOf(l.size())}),
+							Messages.getString("GanttHint.undo"), e -> GraphicManager.getInstance(SpreadSheet.this).doUndoRedo(true));
 			}
 		}
 	};

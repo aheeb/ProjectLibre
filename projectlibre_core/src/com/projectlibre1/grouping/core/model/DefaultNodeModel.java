@@ -666,6 +666,10 @@ public class DefaultNodeModel implements NodeModel {
 	/* (non-Javadoc)
 	 * @see com.projectlibre1.grouping.core.NodeModel#setFieldValue(com.projectlibre1.field.Field, com.projectlibre1.grouping.core.Node, java.lang.Object, java.lang.Object, com.projectlibre1.field.FieldContext)
 	 */
+	/** Fields whose text lists assignments or dependencies. */
+	private static final java.util.Set<String> ASSOCIATION_FIELDS = new java.util.HashSet<String>(java.util.Arrays.asList(
+			"Field.resourceNames", "Field.predecessors", "Field.successors")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+
 	public void setFieldValue(Field field, Node node, Object eventSource, Object value, FieldContext context,int actionType) throws FieldParseException {
 		Object oldValue=field.getValue(node,this,context);
 
@@ -674,7 +678,18 @@ public class DefaultNodeModel implements NodeModel {
 //			context.setUserObject(FieldContext.getNoUpdateInstance());
 
 
-		field.setValue(node, this,eventSource, value, context);
+		// Typing names into Assigned to or Depends on creates and removes assignments or dependencies, which record
+		// edits of their own; the field edit below undoes all of it, so recording both would take two undos and
+		// make undoing the field record a new edit
+		boolean associations = isUndo(actionType) && undoController != null && ASSOCIATION_FIELDS.contains(field.getId());
+		if (associations)
+			undoController.beginIgnoring();
+		try {
+			field.setValue(node, this,eventSource, value, context);
+		} finally {
+			if (associations)
+				undoController.endIgnoring();
+		}
 
 //		No longer sending update event
 //		if (isEvent(actionType)) hierarchy.fireUpdate(new Node[]{node});

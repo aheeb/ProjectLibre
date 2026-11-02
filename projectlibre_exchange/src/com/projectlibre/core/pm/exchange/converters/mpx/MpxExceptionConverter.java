@@ -67,7 +67,9 @@ import net.sf.mpxj.ProjectCalendarException;
 public class MpxExceptionConverter extends MpxRangeConverter{
 	public void from(ProjectCalendarException mpxException, WorkCalendarException exception) {
 		super.from(mpxException, exception);
-		exception.setStart(TimeUtil.removeTimeZoneOffset(mpxException.getFromDate().getTime()));
-		exception.setEnd(TimeUtil.removeTimeZoneOffset(mpxException.getToDate().getTime()));
+		// local dates become the model's GMT-based days, as DateUTCLongConverter does for other dates; removing the
+		// offset put each day off on the evening before (east of GMT), so imported vacations were lost
+		exception.setStart(TimeUtil.addTimeZoneOffset(mpxException.getFromDate().getTime()));
+		exception.setEnd(TimeUtil.addTimeZoneOffset(mpxException.getToDate().getTime()));
 	}
 }

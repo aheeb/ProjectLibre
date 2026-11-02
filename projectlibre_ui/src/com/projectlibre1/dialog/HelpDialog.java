@@ -73,173 +73,67 @@ import com.jgoodies.forms.layout.CellConstraints;
 import com.jgoodies.forms.layout.FormLayout;
 import com.projectlibre1.pm.graphic.IconManager;
 import com.projectlibre1.pm.graphic.frames.GraphicManager;
-import com.projectlibre1.configuration.Settings;
+import com.projectlibre1.dialog.util.FieldComponentMap;
 import com.projectlibre1.strings.Messages;
 import com.projectlibre1.util.BrowserControl;
-import com.projectlibre1.util.Environment;
 import com.projectlibre1.util.VersionUtils;
 
 public final class HelpDialog extends AbstractDialog {
 	private static final long serialVersionUID = 1L;
 	private static final String helpUrl = "https://www.projectlibre.com/projectlibre-documentation"; //$NON-NLS-1$
-	private static final String trialUrl = "https://www.projectlibre.com/trial/";
-	private static final String helpLoginUrl = "https://www.projectlibre.com/login/";
-	private static final String videosUrl = Settings.SITE_HOME; //$NON-NLS-1$
 	public static final String donateUrl = "https://www.projectlibre.com";
-	JButton link;
-	JButton trial;
-	JButton registerToHelp;
-    JButton videos;
-    JButton tipOfTheDay;
-    JButton license;
-	private JPanel donatePanel;
+	JButton guide;
+	JButton license;
 	public static HelpDialog getInstance(Frame owner) {
 		return new HelpDialog(owner);
 	}
 
 	private HelpDialog(Frame owner) {
-		super(owner, Messages.getString("HelpDialog.About") + " " +Messages.getContextString("Text.ApplicationTitle"), true); //$NON-NLS-1$ //$NON-NLS-2$
+		super(owner, Messages.getString("HelpDialog.Title"), true); //$NON-NLS-1$
 	}
 
 	protected void initComponents() {
-		link = new JButton(Messages.getString("HelpDialog.GoToOnlineHelp")); //$NON-NLS-1$
-		link.setEnabled(true);
-		link.setToolTipText(helpUrl);
-		link.addActionListener(new ActionListener() {
+		guide = new JButton(Messages.getString("HelpDialog.OpenGuide")); //$NON-NLS-1$
+		guide.setToolTipText(helpUrl);
+		guide.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				BrowserControl.displayURL(helpUrl);
 			}
 		});
-
-		trial = new JButton(Messages.getString("HelpDialog.GoToCloudTrial"));
-		trial.setEnabled(true);
-		trial.setToolTipText(trialUrl);
-		trial.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				BrowserControl.displayURL(trialUrl);
-			}
-		});
-
-
-
-		registerToHelp = new JButton(Messages.getString("HelpDialog.RegisterToOnlineHelp")); //$NON-NLS-1$
-		registerToHelp.setEnabled(true);
-		registerToHelp.setToolTipText(helpUrl);
-		registerToHelp.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				BrowserControl.displayURL(helpLoginUrl);
-			}
-		});
-//		videos = new JButton(Messages.getString("HelpDialog.WatchHowToVideos")); //$NON-NLS-1$
-//		videos.setEnabled(true);
-//		videos.setToolTipText(helpUrl);
-//		videos.addActionListener(new ActionListener() {
-//			public void actionPerformed(ActionEvent arg0) {
-//				BrowserControl.displayURL(videosUrl);
-//			}
-//		});		
-		if (Environment.isProjectLibre()) {
-			tipOfTheDay = new JButton(Messages.getString("HelpDialog.ShowTipsOfTheDay")); //$NON-NLS-1$
-			tipOfTheDay.setEnabled(true);
-			tipOfTheDay.setToolTipText(Messages.getString("HelpDialog.ShowTipsOfTheDay")); //$NON-NLS-1$
-			tipOfTheDay.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent arg0) {
-					TipOfTheDay.showDialog(HelpDialog.this.getOwner(),true);
-				}
-			});		
-		}
 		license = new JButton(Messages.getString("HelpDialog.ShowLicense")); //$NON-NLS-1$
-		license.setEnabled(true);
-		license.setToolTipText(Messages.getString("HelpDialog.ShowLicense")); //$NON-NLS-1$
 		license.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				LicenseDialog.showDialog(GraphicManager.getFrameInstance(),true);
 			}
-		});		
-
-
+		});
 		super.initComponents();
 	}
 
 	// Building *************************************************************
 
-	/**
-	 * Builds the panel. Initializes and configures components first, then
-	 * creates a FormLayout, configures the layout, creates a builder, sets a
-	 * border, and finally adds the components.
-	 * 
-	 * @return the built panel
-	 */
-
+	/** A plain way into help: the user guide, where the commands are, and the license and version. */
 	public JComponent createContentPanel() {
-		// Separating the component initialization and configuration
-		// from the layout code makes both parts easier to read.
-		//TODO set minimum size
-		FormLayout layout = new FormLayout("250px,300px,250px" , // cols //$NON-NLS-1$
-			
-				"p, 6dlu, p, 6dlu, p, 6dlu, p, 1dlu, p, 1dlu, p, 1dlu, p, 1dlu, p, 6dlu, p, 6dlu, p, 6dlu, p, 10dlu, p, 6dlu, p, 6dlu, p"); // rows //$NON-NLS-1$
-
-		// Create a builder that assists in adding components to the container.
-		// Wrap the panel with a standardized border.
+		FormLayout layout = new FormLayout("default, 0:grow", // cols //$NON-NLS-1$
+				"p, 10dlu, p, 6dlu, p, 3dlu, p, 10dlu, p, 10dlu, p, 3dlu, p, 3dlu, p"); // rows //$NON-NLS-1$
 		DefaultFormBuilder builder = new DefaultFormBuilder(layout);
 		builder.setDefaultDialogBorder();
 		CellConstraints cc = new CellConstraints();
 		JLabel logo = new JLabel(IconManager.getIcon("logo.ProjectLibre"));
+		logo.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		logo.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent arg0) {
 				BrowserControl.displayURL("http://www.projectlibre.com");//$NON-NLS-1$
 			}});
-		builder.nextColumn();
-		builder.append(logo); 
-		builder.nextLine(2);
-		builder.nextColumn();
-		builder.append(link);
-		builder.nextLine(2);
-		builder.nextColumn();
-		builder.append(trial);
-		builder.nextLine(2);
-		builder.nextColumn();
-		builder.addLabel(Messages.getString("HelpDialog.RegisterToOnlineHelp1"),cc.xyw(1,  7, 3));
-		builder.nextLine(2);
-		builder.nextColumn();
-		builder.addLabel(Messages.getString("HelpDialog.RegisterToOnlineHelp2"),cc.xyw(1,  9, 3));
-		builder.nextLine(2);
-		builder.nextColumn();
-		builder.addLabel(Messages.getString("HelpDialog.RegisterToOnlineHelp3"),cc.xyw(1,  11, 3));
-		builder.nextLine(2);
-		builder.nextColumn();
-		builder.addLabel(Messages.getString("HelpDialog.RegisterToOnlineHelp4"),cc.xyw(1,  13, 3));
-		builder.nextLine(2);
-
-		builder.nextColumn();
-		builder.append(registerToHelp);
-
-//		builder.nextLine(2);
-//		builder.append(videos);
-		if (Environment.isProjectLibre()) {
-			builder.nextLine(2);
-			builder.nextColumn();
-			builder.append(tipOfTheDay);
-		}
-		builder.nextLine(2);
-		builder.nextColumn();
-		builder.append(license);
-		
-		builder.nextLine(2);
+		builder.add(logo, cc.xy(1, 1));
+		builder.add(FieldComponentMap.createHintLabelText(Messages.getString("HelpDialog.Intro"), 230), cc.xyw(1, 3, 2)); //$NON-NLS-1$
+		builder.add(guide, cc.xy(1, 5));
+		builder.add(FieldComponentMap.createHintLabelText(Messages.getString("HelpDialog.GuideHint"), 230), cc.xyw(1, 7, 2)); //$NON-NLS-1$
+		builder.add(FieldComponentMap.createHintLabelText(Messages.getString("HelpDialog.InApp"), 230), cc.xyw(1, 9, 2)); //$NON-NLS-1$
+		builder.add(license, cc.xy(1, 11));
 		String version=VersionUtils.getVersion();
-		builder.addLabel(Messages.getContextString("Text.ShortTitle")+" "+"Version "+(version==null?"Unknown":version),cc.xyw(1,  21, 3));
-		builder.nextLine(2);
-		builder.addLabel(Messages.getString("AboutDialog.copyright"),cc.xyw(1,  23, 3));
-
-		
-		if (false || Environment.isProjectLibre()) { // removed donation link
-			JPanel p = new JPanel();
-			p.add(builder.getPanel());
-	//		p.add(makeDonatePanel(false));
-			return p;
-		}
-		else 
-			return builder.getPanel();
+		builder.addLabel(Messages.getContextString("Text.ShortTitle")+" "+"Version "+(version==null?"Unknown":version),cc.xyw(1, 13, 2));
+		builder.addLabel(Messages.getString("AboutDialog.copyright"),cc.xyw(1, 15, 2));
+		return builder.getPanel();
 	}
 	protected boolean hasCloseButton() {
 		return true;

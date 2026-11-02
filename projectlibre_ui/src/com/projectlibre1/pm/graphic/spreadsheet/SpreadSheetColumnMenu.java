@@ -86,6 +86,21 @@ public class SpreadSheetColumnMenu extends JPopupMenu {
 	private JMenuItem find = new JMenuItem(Messages.getString("LookupDialog.Find")); //$NON-NLS-1$
 
 	/**
+	 * Asks which column to show and inserts it.
+	 * @param col index in the field array to insert at (the hidden id field is at 0); 0 adds it at the end
+	 */
+	public static void insertColumn(CommonSpreadSheet sp, int col) {
+		SpreadSheetFieldArray fields = (SpreadSheetFieldArray) sp.getFieldArray();
+		Field field = ColumnDialog.getFieldFromDialog(sp,sp.getAvailableFields(),fields);
+		if (field != null) {
+			int c = col;
+			if (c <= 0 || c > fields.size()) // takes care of when adding off to right. projectlibre bug 1815404
+				c = fields.size();
+			sp.setFieldArray(fields.insertField(c, field));
+		}
+	}
+
+	/**
 	 * @param col column that was clicked on
 	 * 
 	 */
@@ -98,14 +113,7 @@ public class SpreadSheetColumnMenu extends JPopupMenu {
 		insert.setIcon(IconManager.getIcon("menu.insertColumn")); //$NON-NLS-1$
 		insert.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				Field field = ColumnDialog.getFieldFromDialog(sp,sp.getAvailableFields(),fields);
-				if (field != null) {
-					int c = col;
-					if (c == 0) // takes care of when adding off to right. projectlibre bug 1815404 
-						c = fields.size();
-					sp.setFieldArray(fields.insertField(c, field));
-
-				}
+				insertColumn(sp, col);
 			}
 		});
 		hide.setIcon(IconManager.getIcon("menu.hideColumn")); //$NON-NLS-1$

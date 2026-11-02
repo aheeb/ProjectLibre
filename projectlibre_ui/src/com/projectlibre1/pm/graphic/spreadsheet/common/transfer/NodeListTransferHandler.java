@@ -66,9 +66,7 @@ import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 
-import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
-import java.awt.event.KeyEvent;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -283,8 +281,7 @@ public class NodeListTransferHandler extends TransferHandler {
 			amap.put(NodeListTransferHandler.getPasteAction().getValue(Action.NAME),
 					NodeListTransferHandler.getPasteAction());
 
-			// Fill Down: Cmd+D on macOS, Ctrl+D elsewhere
-			imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_D, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()), "fillDown"); //$NON-NLS-1$
+			// Fill Down; its shortcut (Cmd+D on macOS, Ctrl+D elsewhere) belongs to Edit > Fill Down of the menu bar
 			amap.put("fillDown", new AbstractAction() { //$NON-NLS-1$
 				public void actionPerformed(ActionEvent e) {
 					if (e.getSource() instanceof SpreadSheet) {

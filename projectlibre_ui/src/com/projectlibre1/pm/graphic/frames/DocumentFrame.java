@@ -341,9 +341,18 @@ public class DocumentFrame extends NamedFrame implements
 //	}
 
 
+	void doProjectWorkingTimeDialog() {
+		doChangeWorkingTimeDialog(false, null);
+	}
+
 	void doChangeWorkingTimeDialog(boolean restrict) {
 		finishAnyOperations();
-		Object rowObject = getSelectedImpl();
+		doChangeWorkingTimeDialog(restrict, getSelectedImpl());
+	}
+
+	/** @param rowObject the person (or task) whose calendar to edit; null for the project's */
+	private void doChangeWorkingTimeDialog(boolean restrict, Object rowObject) {
+		finishAnyOperations();
 		WorkingCalendar wc = null;
 		List documentCalendars = null;
 		if (rowObject instanceof HasCalendar) {
