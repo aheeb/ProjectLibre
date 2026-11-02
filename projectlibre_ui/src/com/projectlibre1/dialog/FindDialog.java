@@ -179,8 +179,8 @@ public final class FindDialog extends AbstractDialog implements ObjectEvent.List
 		// Separating the component initialization and configuration
 		// from the layout code makes both parts easier to read.
 		//TODO set minimum size
-		FormLayout layout = new FormLayout("default, 3dlu, default, 3dlu, default", // cols //$NON-NLS-1$
-				"p, 3dlu, p"); // rows //$NON-NLS-1$
+		FormLayout layout = new FormLayout("default, 4dlu, fill:150dlu:grow", // cols //$NON-NLS-1$
+				"p, 4dlu, p"); // rows //$NON-NLS-1$
 
 
 
@@ -192,9 +192,9 @@ public final class FindDialog extends AbstractDialog implements ObjectEvent.List
 
 
 
-		builder.append(Messages.getString("LookupDialog.Find"),search); //$NON-NLS-1$
+		builder.append(Messages.getString("FindDialog.Find"),search); //$NON-NLS-1$
 		builder.nextLine(2);
-		builder.append(Messages.getString("Text.Field"),combo); //$NON-NLS-1$
+		builder.append(Messages.getString("FindDialog.LookIn"),combo); //$NON-NLS-1$
 		return builder.getPanel();
 	}
 
@@ -216,10 +216,11 @@ public final class FindDialog extends AbstractDialog implements ObjectEvent.List
 	@Override
 	public ButtonPanel createButtonPanel() {
 		ButtonPanel buttonPanel = new ButtonPanel();
-		next = new JButton(Messages.getString("LookupDialog.Find"),IconManager.getIcon("image.down"));
-		previous = new JButton(Messages.getString("LookupDialog.Find"),IconManager.getIcon("image.up"));
-		buttonPanel.add(next);
+		next = new JButton(Messages.getString("FindDialog.FindNext")); //$NON-NLS-1$
+		previous = new JButton(Messages.getString("FindDialog.FindPrevious")); //$NON-NLS-1$
 		buttonPanel.add(previous);
+		buttonPanel.add(next);
+		getRootPane().setDefaultButton(next);
 		updateFindButtonState();
 		next.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {

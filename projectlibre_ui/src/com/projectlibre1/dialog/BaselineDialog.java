@@ -55,6 +55,8 @@
  *******************************************************************************/
 package com.projectlibre1.dialog;
 
+import com.projectlibre1.dialog.util.FieldComponentMap;
+
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -76,6 +78,7 @@ public final class BaselineDialog extends AbstractDialog {
 	private static final long serialVersionUID = 1L;
 	boolean hasTasksSelected;
     boolean entire = true;
+    boolean save = true;
 	public static class Form {
 		int baselineNumber = 0; // baselines start at 1
 		boolean entireProject = true;
@@ -142,6 +145,7 @@ public final class BaselineDialog extends AbstractDialog {
 			graphicManager.setBaselineDialog(instance);
 		} else
 			instance.setHasTasksSelected(hasTasksSelected);
+		instance.save = save;
 		instance.setTitle(Messages.getString( save ? "Text.SaveBaseline" : "Text.ClearBaseline")); //$NON-NLS-1$ //$NON-NLS-2$
 		instance.addDocHelp(save ? "Save_Baseline_Dialog" : "Clear_Baseline_Dialog");
 		
@@ -188,6 +192,10 @@ public final class BaselineDialog extends AbstractDialog {
 	}
 
 
+	protected String getOkButtonText() {
+		return Messages.getString(save ? "Text.SaveBaseline" : "Text.ClearBaseline"); //$NON-NLS-1$ //$NON-NLS-2$
+	}
+
 	// Building *************************************************************
 
 	/**
@@ -203,24 +211,17 @@ public final class BaselineDialog extends AbstractDialog {
 		// from the layout code makes both parts easier to read.
 		initControls();
 		//TODO set minimum size
-		FormLayout layout = new FormLayout("default, 3dlu, fill:80dlu:grow", // cols //$NON-NLS-1$
-				"p, 3dlu, p, 3dlu, p, 3dlu, p, 3dlu, p"); // rows //$NON-NLS-1$
+		FormLayout layout = new FormLayout("max(50dlu;pref), 4dlu, fill:110dlu:grow", // cols //$NON-NLS-1$
+				"p, 12dlu, p, 8dlu, p, 2dlu, p"); // rows //$NON-NLS-1$
 
-		// Create a builder that assists in adding components to the container.
-		// Wrap the panel with a standardized border.
 		DefaultFormBuilder builder = new DefaultFormBuilder(layout);
-		builder.setDefaultDialogBorder();
 		CellConstraints cc = new CellConstraints();
-		builder.append(Messages.getString("BaselineDialog.Baseline")); //$NON-NLS-1$
-		builder.append(baseline);
-		builder.nextLine(2);
-		builder.addSeparator(""); //$NON-NLS-1$
-		builder.nextLine(2);
-		builder.append(Messages.getString("BaselineDialog.For")); //$NON-NLS-1$
-		builder.nextLine(2);
-		builder.append(entireProject);
-		builder.nextLine(2);
-		builder.append(selectedTasks);
+		builder.add(FieldComponentMap.createHintLabelText(Messages.getString(save ? "BaselineDialog.SaveHint" : "BaselineDialog.ClearHint"), 170), cc.xyw(1, 1, 3)); //$NON-NLS-1$ //$NON-NLS-2$
+		builder.addLabel(Messages.getString("BaselineDialog.Baseline"), cc.xy(1, 3)); //$NON-NLS-1$
+		builder.add(baseline, cc.xy(3, 3));
+		builder.addLabel(Messages.getString("BaselineDialog.For"), cc.xy(1, 5)); //$NON-NLS-1$
+		builder.add(entireProject, cc.xy(3, 5));
+		builder.add(selectedTasks, cc.xy(3, 7));
 		return builder.getPanel();
 	}
 
