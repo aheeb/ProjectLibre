@@ -572,7 +572,7 @@ public class MainToolBar extends JPanel implements MenuManager.ViewSelectionList
 
 	/**
 	 * Levels of compaction: 0 everything, 1 icon-only secondary commands, 2 no project title, 3 icon-only first
-	 * command ("Add task"), 4 icon-only views, 5 narrower search, then each further level moves one more
+	 * command ("Add task"), 4 views as a drop-down, 5 narrower search, then each further level moves one more
 	 * right-hand button into the "more" menu.
 	 */
 	private void applyLevel(int level) {
