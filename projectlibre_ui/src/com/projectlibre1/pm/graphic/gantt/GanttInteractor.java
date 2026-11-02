@@ -55,9 +55,15 @@
  *******************************************************************************/
 package com.projectlibre1.pm.graphic.gantt;
 
+import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Shape;
+import java.awt.event.MouseEvent;
 import java.awt.geom.Rectangle2D;
+
+import javax.swing.JMenu;
+import javax.swing.JPopupMenu;
+import javax.swing.SwingUtilities;
 
 import com.projectlibre1.pm.graphic.graph.GraphInteractor;
 import com.projectlibre1.pm.graphic.graph.GraphUI;
@@ -72,8 +78,24 @@ import com.projectlibre1.pm.dependency.HasDependencies;
 import com.projectlibre1.pm.scheduling.Schedule;
 import com.projectlibre1.pm.scheduling.ScheduleInterval;
 import com.projectlibre1.pm.scheduling.ScheduleService;
+import com.projectlibre1.configuration.Configuration;
+import com.projectlibre1.datatype.DurationFormat;
+import com.projectlibre1.grouping.core.model.NodeModel;
+import com.projectlibre1.pm.calendar.WorkCalendar;
+import com.projectlibre1.pm.graphic.frames.GraphicManager;
+import com.projectlibre1.pm.graphic.spreadsheet.SpreadSheet;
+import com.projectlibre1.pm.graphic.spreadsheet.SpreadSheetModel;
+import com.projectlibre1.pm.graphic.spreadsheet.renderer.DateRenderer;
+import com.projectlibre1.pm.graphic.views.GanttView;
+import com.projectlibre1.pm.scheduling.ConstraintType;
+import com.projectlibre1.pm.task.Task;
+import com.projectlibre1.strings.Messages;
 import com.projectlibre1.util.Alert;
 import com.projectlibre1.util.ClassUtils;
+import com.projectlibre1.util.DateTime;
+import com.projectlibre1.workflow.DragTip;
+import com.projectlibre1.workflow.TaskMenu;
+import com.projectlibre1.workflow.Toast;
 
 /**
  *
@@ -249,17 +271,177 @@ public class GanttInteractor extends GraphInteractor{
 		}
     	if (cursor==null) super.selectCursor();
     	else getGraph().setCursor(cursor);
+    	updateHint();
     	return cursor;
     }
 
+    //Plain-language help: a hover hint on bars and a live tip while dragging
+
+    private String lastHint;
+    /** Says what dragging here would do, as the chart's tooltip. */
+    private void updateHint(){
+    	String hint;
+    	Task task=selectedTask();
+    	switch (task==null&&state!=LINK_SELECTION?NOTHING_SELECTED:state) {
+    	case BAR_MOVE: hint=Messages.getString(task.isWbsParent()?"GanttHint.summary":"GanttHint.move"); break;
+    	case BAR_MOVE_START: hint=Messages.getString("GanttHint.start"); break;
+    	case BAR_MOVE_END: hint=Messages.getString("GanttHint.end"); break;
+    	case PROGRESS_BAR_MOVE: hint=Messages.getString("GanttHint.progress"); break;
+    	case LINK_SELECTION: hint=Messages.getString("GanttHint.dependency"); break;
+    	case SPLIT: hint=null; break;
+    	default: hint=Messages.getString("Text.rightClickForOptions");
+    	}
+    	if (task!=null&&hint!=null) hint="<html><b>"+escape(task.getName())+"</b><br>"+hint+"</html>";
+    	if (hint==null?lastHint==null:hint.equals(lastHint)) return;
+    	lastHint=hint;
+    	getGraph().setToolTipText(hint);
+    }
+
+    private Task selectedTask(){
+    	if (!(selected instanceof GraphicNode)) return null;
+    	Object impl=((GraphicNode)selected).getNode().getImpl();
+    	return impl instanceof Task?(Task)impl:null;
+    }
+
+    private static String escape(String s){
+    	return s==null?"":s.replace("&","&amp;").replace("<","&lt;");
+    }
+
+    /**
+     * The time a drag to x moves the dragged edge by. When a pixel is more than an hour (day or coarser
+     * zoom), the edge lands on a day boundary so bars don't end up starting at odd hours.
+     */
+    private long snappedDelta(double x){
+    	long dt=(long)getCoord().toDuration(x-x0);
+    	if (selectedInterval==null||getCoord().toDuration(1)<HOUR) return dt;
+    	long edge=state==BAR_MOVE_END?selectedInterval.getEnd():selectedInterval.getStart();
+    	if (state==BAR_MOVE&&selectedIntervalNumber==0&&selected instanceof GraphicNode) edge=((GraphicNode)selected).getStart();
+    	long target=DateTime.dayFloor(edge+dt+DAY/2);
+    	if (target==DateTime.dayFloor(edge+DAY/2)) return 0; // still the same day: no change, and no date pin
+    	return target-edge;
+    }
+    private static final long HOUR=60L*60*1000;
+    private static final long DAY=24*HOUR;
+
+    /** What the drop at x would do: new dates, new length, new progress or the new dependency. */
+    private String dragText(double x){
+    	if (state==LINK_CREATION){
+    		Task from=sourceNode==null||!(sourceNode.getNode().getImpl() instanceof Task)?null:(Task)sourceNode.getNode().getImpl();
+    		Task to=destinationNode==null||!(destinationNode.getNode().getImpl() instanceof Task)?null:(Task)destinationNode.getNode().getImpl();
+    		if (from==null) return null;
+    		if (to==null) return "<html>"+Messages.getString("GanttHint.linkDrop")+"</html>";
+    		return "<html>"+Messages.getString("GanttHint.linkWillStart").replace("{0}","<b>"+escape(to.getName())+"</b>").replace("{1}","<b>"+escape(from.getName())+"</b>")+"</html>";
+    	}
+    	if (!isMove()||!(selected instanceof GraphicNode)||selectedInterval==null) return null;
+    	GraphicNode node=(GraphicNode)selected;
+    	if (!(node.getNode().getImpl() instanceof Schedule)) return null;
+    	WorkCalendar cal=((Schedule)node.getNode().getImpl()).getEffectiveWorkCalendar();
+    	long dt=snappedDelta(x);
+    	long start=selectedIntervalNumber==0&&state==BAR_MOVE?node.getStart():selectedInterval.getStart();
+    	long end=selectedIntervalNumber==0&&state==BAR_MOVE?node.getEnd():selectedInterval.getEnd();
+    	switch (state){
+    	case BAR_MOVE:{
+    		long work=cal.compare(end,start,false);
+    		long s=cal.adjustInsideCalendar(start+dt,false);
+    		return "<html>"+Messages.getString("GanttHint.dates").replace("{0}",DateRenderer.formatDay(s)).replace("{1}",DateRenderer.formatDay(cal.add(s,work,true)))+"</html>";
+    	}
+    	case BAR_MOVE_START:{
+    		long s=Math.min(start+dt,end);
+    		return "<html>"+Messages.getString("GanttHint.newStart").replace("{0}",DateRenderer.formatDay(cal.adjustInsideCalendar(s,false))).replace("{1}",DurationFormat.format(cal.compare(end,s,false)))+"</html>";
+    	}
+    	case BAR_MOVE_END:{
+    		long e=Math.max(end+dt,start);
+    		return "<html>"+Messages.getString("GanttHint.newEnd").replace("{0}",DateRenderer.formatDay(cal.adjustInsideCalendar(e,true))).replace("{1}",DurationFormat.format(cal.compare(e,start,false)))+"</html>";
+    	}
+    	case PROGRESS_BAR_MOVE:{
+    		long total=cal.compare(node.getEnd(),node.getStart(),false);
+    		long t=Math.max(node.getStart(),Math.min(node.getEnd(),(long)getCoord().toTime(x)));
+    		int percent=total<=0?0:(int)Math.round(100.0*cal.compare(t,node.getStart(),false)/total);
+    		return "<html>"+Messages.getString("GanttHint.percent").replace("{0}",String.valueOf(percent))+"</html>";
+    	}
+    	}
+    	return null;
+    }
+
+    public void mouseDragged(MouseEvent e){
+    	super.mouseDragged(e);
+    	if (isReadOnly()||!SwingUtilities.isLeftMouseButton(e)) return;
+    	DragTip.show(getGraph(),e.getX(),e.getY(),dragText(e.getX()));
+    }
+
+    public void mouseReleased(MouseEvent e){
+    	DragTip.hide();
+    	Task moved=state==BAR_MOVE||state==BAR_MOVE_START?selectedTask():null;
+    	int constraintBefore=moved==null?ConstraintType.ASAP:moved.getConstraintType();
+    	super.mouseReleased(e);
+    	if (moved!=null&&constraintBefore==ConstraintType.ASAP&&moved.getConstraintType()!=ConstraintType.ASAP)
+    		explainPin(moved);
+    }
+
+    private static boolean pinExplained=false;
+    /** Moving a bar pins its start date; say so once in full, then briefly, and offer to undo it. */
+    private void explainPin(final Task task){
+    	String date=DateRenderer.formatDay(task.getConstraintDate());
+    	String text=Messages.getString(pinExplained?"GanttHint.pinnedShort":"GanttHint.pinned").replace("{0}",task.getName()).replace("{1}",date);
+    	pinExplained=true;
+    	Toast.show(getGraph(),text,Messages.getString("GanttHint.unpin"),e->unpin(task),Messages.getString("GanttHint.undo"),e->GraphicManager.getInstance(getGraph()).doUndoRedo(true));
+    }
+
+    private void unpin(Task task){
+    	NodeModel model=((Gantt)getGraph()).getModel().getCache().getModel();
+    	com.projectlibre1.grouping.core.Node node=model.search(task);
+    	if (node==null) return;
+    	try {
+    		model.setFieldValue(Configuration.getFieldFromId("Field.constraintType"),node,this,Integer.valueOf(ConstraintType.ASAP),null,NodeModel.NORMAL);
+    	} catch (Exception ex) {
+    		Alert.error(ex.getMessage(),getGraph());
+    	}
+    }
+
+    public void mousePressed(MouseEvent e){
+    	if (SwingUtilities.isRightMouseButton(e)&&!isReadOnly()){
+    		select(e.getX(),e.getY());
+    		SpreadSheet sheet=spreadSheet();
+    		Task task=selectedTask();
+    		if (task!=null&&sheet!=null&&selectRow(sheet,task)){
+    			JPopupMenu menu=new TaskMenu(sheet).build();
+    			((GanttPopupMenu)popup).init();
+    			JMenu chart=new JMenu(Messages.getString("GanttHint.chartOptions"));
+    			for (Component c:popup.getComponents()) chart.add(c);
+    			menu.addSeparator();
+    			menu.add(chart);
+    			menu.show(getGraph(),e.getX(),e.getY());
+    			return;
+    		}
+    	}
+    	super.mousePressed(e);
+    }
+
+    private SpreadSheet spreadSheet(){
+    	GanttView view=(GanttView)SwingUtilities.getAncestorOfClass(GanttView.class,getGraph());
+    	return view==null?null:view.getSpreadSheet();
+    }
+
+    private static boolean selectRow(SpreadSheet sheet,Task task){
+    	SpreadSheetModel model=(SpreadSheetModel)sheet.getModel();
+    	for (int r=0;r<sheet.getRowCount();r++){
+    		if (model.getNode(r).getNode().getImpl()==task){
+    			sheet.finishCurrentOperations();
+    			if (!sheet.isRowSelected(r)) sheet.changeSelection(r,1,false,false);
+    			return true;
+    		}
+    	}
+    	return false;
+    }
+
     public boolean executeAction(double x,double y){
-    	if (x==x0||selected==null) return false;
+    	if ((x==x0&&state!=LINK_CREATION)||selected==null) return false; // a straight vertical drag still links
     	if (state==BAR_MOVE||state==BAR_MOVE_START||state==BAR_MOVE_END||state==PROGRESS_BAR_MOVE||state==SPLIT){
     		if (!(selected instanceof GraphicNode)) return false;
     		sourceNode=(GraphicNode)selected;
     	}
     	long t=(long)getCoord().toTime(x);
-    	long dt=(long)getCoord().toDuration(x-x0);
+    	long dt=snappedDelta(x);
     	switch (state) {
 		case BAR_MOVE:
 			ScheduleService.getInstance().setInterval(this,(Schedule)sourceNode.getNode().getImpl(),selectedInterval.getStart()+dt,selectedInterval.getEnd()+dt,selectedInterval,ui.getGraph().getProject().getUndoController().getEditSupport());

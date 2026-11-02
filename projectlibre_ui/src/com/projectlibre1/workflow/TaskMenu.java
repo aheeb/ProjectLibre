@@ -27,6 +27,7 @@ import com.projectlibre1.pm.graphic.frames.GraphicManager;
 import com.projectlibre1.pm.graphic.model.cache.GraphicNode;
 import com.projectlibre1.pm.graphic.spreadsheet.SpreadSheet;
 import com.projectlibre1.pm.graphic.spreadsheet.SpreadSheetModel;
+import com.projectlibre1.pm.scheduling.ConstraintType;
 import com.projectlibre1.pm.task.NormalTask;
 import com.projectlibre1.pm.task.Task;
 import com.projectlibre1.strings.Messages;
@@ -105,6 +106,11 @@ public class TaskMenu {
 		menu.addSeparator();
 		add(menu, milestones ? "TaskMenu.normalTask" : "TaskMenu.milestone", editable && leafs, null, () -> setMilestone(!milestonesSelected()));
 		add(menu, "TaskMenu.assign", editable && leafs, null, () -> GraphicManager.getInstance(sheet).showAssignmentDialog(GraphicManager.getInstance(sheet).getCurrentFrame()));
+		boolean pinned = false;
+		for (Task t : tasks)
+			pinned |= !t.isWbsParent() && t.getConstraintType() != ConstraintType.ASAP;
+		if (pinned)
+			add(menu, "TaskMenu.unpin", editable, null, () -> setField("Field.constraintType", Integer.valueOf(ConstraintType.ASAP)));
 		menu.addSeparator();
 		add(menu, "TaskMenu.notStarted", editable && leafs, null, () -> setPercentComplete(0));
 		add(menu, "TaskMenu.halfDone", editable && leafs, null, () -> setPercentComplete(0.5));

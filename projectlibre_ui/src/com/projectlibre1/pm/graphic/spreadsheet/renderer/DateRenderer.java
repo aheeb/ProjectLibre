@@ -69,6 +69,12 @@ public class DateRenderer extends SimpleRenderer {
 	static {
 		DAY_FORMAT.setTimeZone(DateUtils.UTC_TIME_ZONE);
 	}
+	/** A date as the day only, e.g. "Nov 2, 2026". */
+	public static String formatDay(long date) {
+		synchronized (DAY_FORMAT) {
+			return DAY_FORMAT.format(new Date(date));
+		}
+	}
 	public DateRenderer() {
 		super(); // format will be usedtor stub
 	}
