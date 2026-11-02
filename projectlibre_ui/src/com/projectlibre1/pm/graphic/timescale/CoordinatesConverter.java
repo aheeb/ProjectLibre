@@ -89,7 +89,21 @@ public class CoordinatesConverter implements ScheduleEventListener, Serializable
 	
 	
 	public CoordinatesConverter(Project project){
-		this(project,TimeScaleManager.createInstance());
+		this(project,initialTimeScales(project));
+	}
+
+	/** Starts at a zoom where the whole project fits: days for short or new projects, then weeks, then months. */
+	protected static TimeScaleManager initialTimeScales(Project project){
+		TimeScaleManager manager=TimeScaleManager.createInstance();
+		long days=(project.getEnd()-project.getStart())/(24L*60*60*1000);
+		int index;
+		if (days<=35) index=2;
+		else if (days<=120) index=3;
+		else if (days<=240) index=4;
+		else index=5;
+		manager.setDefaultIndex(index); // zoom reset comes back here too
+		manager.setCurrentScaleIndex(index);
+		return manager;
 	}
 	/**
 	 * 

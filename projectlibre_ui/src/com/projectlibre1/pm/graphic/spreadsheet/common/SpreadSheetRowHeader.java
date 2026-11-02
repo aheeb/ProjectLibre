@@ -82,6 +82,7 @@ public class SpreadSheetRowHeader extends JTable {
 		super();
 		setGridColor(ModernLaf.HAIRLINE);
 		setShowVerticalLines(false);
+		setIntercellSpacing(new java.awt.Dimension(0,1));
 		this.table=table;
 		if (table instanceof SpreadSheet){
 			final SpreadSheet spreadSheet=(SpreadSheet)table;

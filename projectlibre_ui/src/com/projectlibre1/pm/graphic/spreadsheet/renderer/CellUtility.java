@@ -79,7 +79,11 @@ import com.projectlibre1.util.Environment;
 public class CellUtility {
 	/** Horizontal padding inside grid cells; the focus ring keeps the text where it was. */
 	public static final Border CELL_BORDER=new EmptyBorder(1, 6, 1, 6);
-	public static final Border FOCUS_BORDER=new CompoundBorder(new LineBorder(ModernLaf.ACCENT, 1), new EmptyBorder(0, 5, 0, 5));
+	public static final Border FOCUS_BORDER=focusBorder(0);
+
+	public static Border focusBorder(int extraLeftInset){
+		return new CompoundBorder(new LineBorder(ModernLaf.ACCENT, 1), new EmptyBorder(0, 5+extraLeftInset, 0, 5));
+	}
 
 	public static void setAppearance(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column, JComponent component){
 		CommonSpreadSheetModel model = (CommonSpreadSheetModel) table.getModel();

@@ -55,6 +55,12 @@
  *******************************************************************************/
 package com.projectlibre1.pm.graphic.spreadsheet.common;
 import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.Container;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -108,6 +114,7 @@ import com.projectlibre1.grouping.core.Node;
 import com.projectlibre1.grouping.core.NodeFactory;
 import com.projectlibre1.grouping.core.model.NodeModel;
 import com.projectlibre1.server.access.ErrorLogger;
+import com.projectlibre1.strings.Messages;
 import com.projectlibre1.util.Alert;
 import com.projectlibre1.workspace.SavableToWorkspace;
 import com.projectlibre1.workspace.WorkspaceSetting;
@@ -134,6 +141,7 @@ public class CommonSpreadSheet extends CommonTable implements CacheListener, Sav
 	public CommonSpreadSheet() {
 		super();
 		setGridColor(ModernLaf.HAIRLINE);
+		setIntercellSpacing(new Dimension(1,1)); // FlatLaf defaults to 0, which lets opaque cells hide the grid lines
 		putClientProperty("JTable.autoStartsEdit",Boolean.TRUE);
 		//setSurrendersFocusOnKeystroke(true); //has the side effect of selecting the first character of cell after ENTER keystroke
 		setAutoCreateColumnsFromModel(false);
@@ -210,6 +218,55 @@ public class CommonSpreadSheet extends CommonTable implements CacheListener, Sav
 //			cols.getColumn(i).setWidth(fieldArray.getWidth(i));
 	}
 
+
+	protected void paintComponent(Graphics g) {
+		super.paintComponent(g);
+		paintEmptyHint(g);
+	}
+
+	/** True when the sheet has no real rows yet, only the blank rows ready for typing. */
+	public boolean isEmptySheet() {
+		NodeModelCache cache=getCache();
+		if (cache==null) return false;
+		for (ListIterator i=cache.getIterator();i.hasNext();){
+			if (!((GraphicNode)i.next()).isVoid()) return false;
+		}
+		return true;
+	}
+
+	/** Friendly hint in the first row of an empty task or resource sheet. */
+	protected void paintEmptyHint(Graphics g) {
+		String[] keys;
+		if (TASK_CATEGORY.equals(spreadSheetCategory)) keys=new String[]{"Text.emptyTaskHint","Text.emptyTaskHint2"};
+		else if (RESOURCE_CATEGORY.equals(spreadSheetCategory)) keys=new String[]{"Text.emptyResourceHint"};
+		else return;
+		if (getRowCount()<keys.length||(isEditing()&&getEditingRow()<keys.length)||!isEmptySheet()) return;
+		int nameColumn=-1;
+		for (int c=0;c<getColumnCount();c++){
+			Object id=getColumnModel().getColumn(c).getIdentifier();
+			if (id instanceof Field&&((Field)id).isNameField()){
+				nameColumn=c;
+				break;
+			}
+		}
+		if (nameColumn==-1) return;
+		Graphics2D g2=(Graphics2D)g.create();
+		g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+		g2.setFont(getFont().deriveFont(Font.ITALIC));
+		FontMetrics fm=g2.getFontMetrics();
+		for (int k=0;k<keys.length;k++){
+			Rectangle cell=getCellRect(k,nameColumn,true);
+			String text=Messages.getString(keys[k]);
+			int x=cell.x+6+NameCellComponent.ICON_WIDTH;
+			int w=fm.stringWidth(text);
+			// solid backing so the hint reads as one line across the column lines
+			g2.setColor(getBackground());
+			g2.fillRect(x-4,cell.y+1,w+8,cell.height-2);
+			g2.setColor(ModernLaf.TEXT_SECONDARY);
+			g2.drawString(text,x,cell.y+(cell.height+fm.getAscent()-fm.getDescent())/2);
+		}
+		g2.dispose();
+	}
 
 	public void setRowHeight(int rowHeight) {
 		super.setRowHeight(rowHeight);

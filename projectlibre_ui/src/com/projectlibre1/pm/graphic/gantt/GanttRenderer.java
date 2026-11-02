@@ -109,6 +109,7 @@ import com.projectlibre1.pm.dependency.Dependency;
 import com.projectlibre1.pm.dependency.DependencyType;
 import com.projectlibre1.pm.scheduling.ScheduleInterval;
 import com.projectlibre1.pm.task.Project;
+import com.projectlibre1.strings.Messages;
 import com.projectlibre1.timescale.CalendarUtil;
 import com.projectlibre1.timescale.TimeInterval;
 import com.projectlibre1.timescale.TimeIterator;
@@ -670,8 +671,9 @@ public class GanttRenderer extends GraphRenderer implements Serializable {
 			Stroke oldStroke=g2.getStroke();
 
 			//project start
+			long now=DateTime.gmt(new Date());
 			int projectStartX=(int)Math.round(coord.toX(project.getStart()));
-			if (projectStartX>=bounds.getX()&&projectStartX<=bounds.getMaxX()){
+			if (projectStartX>=bounds.getX()&&projectStartX<=bounds.getMaxX()&&Math.abs(projectStartX-coord.toX(now))>3){
 				g2.setColor(ModernLaf.TEXT_SECONDARY.brighter());
 				g2.setStroke(PROJECT_START_STROKE);
 				g2.drawLine(projectStartX,bounds.y,projectStartX,bounds.y+bounds.height);
@@ -679,7 +681,7 @@ public class GanttRenderer extends GraphRenderer implements Serializable {
 
 			//status date
 			long statusDate = project.getStatusDate();
-			if (statusDate != 0) {
+			if (statusDate != 0 && DateTime.dayFloor(statusDate)!=DateTime.dayFloor(now)) { // today has its own line
 				int statusDateX=(int)Math.round(coord.toX(statusDate));
 				if (statusDateX>=bounds.getX()&&statusDateX<=bounds.getMaxX()){
 					g2.setColor(new Color(0x2F9E6E));
@@ -689,7 +691,7 @@ public class GanttRenderer extends GraphRenderer implements Serializable {
 			}
 
 			//today
-			double todayX=coord.toX(DateTime.gmt(new Date()));
+			double todayX=coord.toX(now);
 			if (todayX>=bounds.getX()&&todayX<=bounds.getMaxX()){
 				g2.setColor(ModernLaf.TODAY);
 				g2.setStroke(TODAY_STROKE);
@@ -793,7 +795,27 @@ public class GanttRenderer extends GraphRenderer implements Serializable {
 		}
 
 		if (visibleBounds!=null) g2.setClip(svgClip);
+		else if (container!=null&&nodeList.isEmpty()&&isEmptyProject(cache)) paintEmptyHint(g2);
 
+	}
+
+	protected boolean isEmptyProject(NodeModelCache cache){
+		for (ListIterator i=cache.getIterator();i.hasNext();){
+			if (!((GraphicNode)i.next()).isVoid()) return false;
+		}
+		return true;
+	}
+
+	/** Centered hint in the chart of a project without tasks. */
+	protected void paintEmptyHint(Graphics2D g2){
+		Rectangle visible=container.getVisibleRect();
+		String text=Messages.getString("Text.emptyGanttHint");
+		Font font=container.getFont();
+		if (font==null) return;
+		g2.setFont(font.deriveFont(font.getSize2D()+1f));
+		FontMetrics fm=g2.getFontMetrics();
+		g2.setColor(ModernLaf.TEXT_SECONDARY);
+		g2.drawString(text,visible.x+(visible.width-fm.stringWidth(text))/2,visible.y+visible.height/3);
 	}
 
 

@@ -99,6 +99,7 @@ public class NameCellComponent extends JPanel {
 	protected ImageIcon fetchedLazyExpandedIcon = null;
 	protected ImageIcon fetchedLazyCollapsedIcon = null;
 	protected boolean offline;
+	public static final int ICON_WIDTH = ChevronIcon.SIZE;
 	protected static final ImageIcon BLANK_ICON = new ImageIcon(new BufferedImage(ChevronIcon.SIZE, ChevronIcon.SIZE, BufferedImage.TYPE_INT_ARGB));
 	protected static final ImageIcon COLLAPSED_ICON = new ChevronIcon(false);
 	protected static final ImageIcon EXPANDED_ICON = new ChevronIcon(true);
@@ -139,6 +140,11 @@ public class NameCellComponent extends JPanel {
 		iconLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 		add(iconLabel);
 		add(textComponent);
+		if (textComponent instanceof JLabel) {
+			// let the label fill the row height so its text centers like the other cells
+			textComponent.setMaximumSize(new Dimension(Short.MAX_VALUE, Short.MAX_VALUE));
+			((JLabel) textComponent).setVerticalAlignment(JLabel.CENTER);
+		}
 	}
 
 

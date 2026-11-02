@@ -67,7 +67,11 @@ import javax.swing.table.TableCellEditor;
 
 import com.projectlibre1.menu.MenuActionConstants;
 import com.projectlibre1.pm.graphic.spreadsheet.SpreadSheet;
+import com.projectlibre1.field.Field;
+import com.projectlibre1.pm.graphic.model.cache.GraphicNode;
+import com.projectlibre1.pm.graphic.spreadsheet.common.CommonSpreadSheetModel;
 import com.projectlibre1.pm.graphic.spreadsheet.renderer.CellUtility;
+import com.projectlibre1.pm.graphic.spreadsheet.renderer.NameCellComponent;
 /**
  * Adapter to modify defaults editors behaviour
  */
@@ -99,6 +103,7 @@ public class SpreadSheetCellEditorAdapter implements TableCellEditor {
 		
 		JComponent component=(JComponent)editor.getTableCellEditorComponent(table,value,isSelected,row,column);
 		CellUtility.setAppearance(table,value,isSelected,true,row,column,component);
+		indentNameEditor(table,row,column,component);
 		
 		if (table instanceof SpreadSheet){
 			final SpreadSheet spreadSheet=(SpreadSheet)table;
@@ -123,6 +128,19 @@ public class SpreadSheetCellEditorAdapter implements TableCellEditor {
 		
 		return component;
 	}
+	/** Keeps the text of an edited task name where the outline renderer showed it. */
+	protected void indentNameEditor(JTable table, int row, int column, JComponent component) {
+		if (table==null||!(table.getModel() instanceof CommonSpreadSheetModel)) return;
+		Object id=table.getColumnModel().getColumn(column).getIdentifier();
+		if (!(id instanceof Field)||!((Field)id).isNameField()) return;
+		CommonSpreadSheetModel model=(CommonSpreadSheetModel)table.getModel();
+		GraphicNode node=model.getNode(row);
+		if (node==null) return;
+		int level=model.getCache().getLevel(node);
+		if (node.isVoid()) level++;
+		component.setBorder(CellUtility.focusBorder(Math.max(level,1)*NameCellComponent.ICON_WIDTH+2));
+	}
+
 	/**
 	 * @see javax.swing.CellEditor#addCellEditorListener(javax.swing.event.CellEditorListener)
 	 */
