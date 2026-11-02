@@ -139,24 +139,24 @@ public class MicrosoftImporter extends ServerFileImporter{
 
 	@Override
 	public void importFile() throws Exception {
-		log.info("BEGIN: MicrosoftImporter.PrepareResources");
+		log.debug("BEGIN: MicrosoftImporter.PrepareResources");
 		parse();
-		log.info("END: MicrosoftImporter.PrepareResources");
+		log.debug("END: MicrosoftImporter.PrepareResources");
 		Environment.setImporting(false);
-		log.info("BEGIN: Finish import");
+		log.debug("BEGIN: Finish import");
 		convertToProjectLibre1();
-		log.info("END: Finish import");
+		log.debug("END: Finish import");
 	}
 
     @Override
 	public Project loadProject(InputStream in)  throws Exception{
-		log.info("BEGIN: MicrosoftImporter.PrepareResources");
+		log.debug("BEGIN: MicrosoftImporter.PrepareResources");
 		parse(in, "xml");
-		log.info("END: MicrosoftImporter.PrepareResources");
+		log.debug("END: MicrosoftImporter.PrepareResources");
 		Environment.setImporting(false);
-		log.info("BEGIN: Finish import");
+		log.debug("BEGIN: Finish import");
 		convertToProjectLibre1();
-		log.info("END: Finish import");
+		log.debug("END: Finish import");
     	return project;
 	}
     
@@ -176,7 +176,7 @@ public class MicrosoftImporter extends ServerFileImporter{
 
 	private void setProgress(float p) {
 		if (jobRunnable == null)
-			log.info("Progress " + 100 * p + "%");
+			log.debug("Progress " + 100 * p + "%");
 		else
 			jobRunnable.setProgress(p);
 	}
@@ -203,7 +203,7 @@ public class MicrosoftImporter extends ServerFileImporter{
 				
 			}
 		});
-		log.info(plProject.toString());
+		if (plProject!=null && log.isDebugEnabled()) log.debug(plProject.toString()); // full project dump: only build it when asked for
 		
 		
 		if (plProject == null) {
@@ -246,7 +246,7 @@ public class MicrosoftImporter extends ServerFileImporter{
 			}
 		});
 
-		log.info(plProject.toString());
+		if (plProject!=null && log.isDebugEnabled()) log.debug(plProject.toString()); // full project dump: only build it when asked for
 		
 		
 		if (plProject == null) {
@@ -296,17 +296,17 @@ public class MicrosoftImporter extends ServerFileImporter{
     	job.addRunnable(new JobRunnable(Messages.getString("MicrosoftImporter.PrepareResources"),1.0f){ //$NON-NLS-1$
 
 			public Object run() throws Exception{
-				log.info("BEGIN: MicrosoftImporter.PrepareResources");
+				log.debug("BEGIN: MicrosoftImporter.PrepareResources");
 				MicrosoftImporter.this.jobRunnable = this;
 				parse();
-				log.info("END: MicrosoftImporter.PrepareResources");
+				log.debug("END: MicrosoftImporter.PrepareResources");
 				return null;
 			}
     	});
     	
     	job.addSwingRunnable(new JobRunnable("Import resources",1.0f){ //$NON-NLS-1$
 			public Object run() throws Exception{
-				log.info("BEGIN: Import resources");
+				log.debug("BEGIN: Import resources");
 				ResourceMappingForm form=getResourceMapping();
 				if (form!=null&&form.isLocal()) //if form==null we are in a case were have no server access. popup not needed
 					if (!job.okCancel(Messages.getString("Message.ServerUnreacheableReadOnlyProject"),true)){ //$NON-NLS-1$
@@ -325,15 +325,15 @@ public class MicrosoftImporter extends ServerFileImporter{
 //					throw new Exception(ABORT);
 //				}
 				setProgress(1f);
-				log.info("END: Import resources");
+				log.debug("END: Import resources");
 				return null;
 	    	}
     	});
     	job.addRunnable(new JobRunnable("Finish import",1.0f){ //$NON-NLS-1$
 			public Object run() throws Exception{
-				log.info("BEGIN: Finish import");
+				log.debug("BEGIN: Finish import");
 				Object r=convertToProjectLibre1();
-				log.info("END: Finish import");
+				log.debug("END: Finish import");
 				return r;
     		}
     	});
@@ -342,36 +342,36 @@ public class MicrosoftImporter extends ServerFileImporter{
 
     private Project convertToProjectLibre1() throws Exception {
 
-		log.info("import options"); //$NON-NLS-1$
+		log.debug("import options"); //$NON-NLS-1$
 		importOptions();
 		setProgress(0.3f);
 		
-		log.info("import calendars"); //$NON-NLS-1$
+		log.debug("import calendars"); //$NON-NLS-1$
 		importCalendars();
 		setProgress(0.4f);
 		
-		log.info("import resources");		 //$NON-NLS-1$
+		log.debug("import resources");		 //$NON-NLS-1$
 		//claur - moved here because calendars must be imported first
 		importLocalResources();
 		setProgress(0.5f);
 		
-		log.info("import tasks");		 //$NON-NLS-1$
+		log.debug("import tasks");		 //$NON-NLS-1$
 		importTasks();
 		setProgress(0.6f);
 		
-		log.info("import project fields");		 //$NON-NLS-1$
+		log.debug("import project fields");		 //$NON-NLS-1$
 		importProjectFields();
 		setProgress(0.7f);
 		
-		log.info("import dependencies");		 //$NON-NLS-1$
+		log.debug("import dependencies");		 //$NON-NLS-1$
 		importDependencies();
 		setProgress(0.8f);
 		
-		log.info("import assignments"); //$NON-NLS-1$
+		log.debug("import assignments"); //$NON-NLS-1$
 		importAssignments();
 		setProgress(0.9f);
 				
-		log.info("about to initialize");		 //$NON-NLS-1$
+		log.debug("about to initialize");		 //$NON-NLS-1$
 			if (project.getName() == null)
 				project.setName("error - name not set on import"); //$NON-NLS-1$
 

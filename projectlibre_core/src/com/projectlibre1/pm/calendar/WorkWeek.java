@@ -73,7 +73,7 @@ public class WorkWeek implements Cloneable,Serializable {
 	 * @see java.lang.Object#clone()
 	 */
 	public Object clone() {
-    	log.info("WorkWeek.clone, "+this);
+    	log.debug("WorkWeek.clone, "+this);
 		WorkWeek newOne = new WorkWeek();
 		for (int i = 0; i < DAYS_IN_WEEK; i++) {
 			if (workDay[i] == null)
@@ -85,13 +85,13 @@ public class WorkWeek implements Cloneable,Serializable {
 	}
 
 	public WorkWeek(WorkDay[] days) {
-    	log.info("WorkWeek(), days="+days);
+    	log.debug("WorkWeek(), days="+days);
 		this.workDay = (WorkDay[]) days.clone();
         updateWorkingDuration();
 	}
 	
     public WorkWeek() {
-    	log.info("WorkWeek()");
+    	log.debug("WorkWeek()");
         for (int i = 0; i < DAYS_IN_WEEK; i++)
             workDay[i] = null;
     }
@@ -112,7 +112,7 @@ public class WorkWeek implements Cloneable,Serializable {
     	
     }
     public void setWeekDay(int dayNum, WorkDay day) {
-    	log.info("WorkWeek.setWeekDay, "+this+", dayNum="+dayNum+", day="+day);
+    	log.debug("WorkWeek.setWeekDay, "+this+", dayNum="+dayNum+", day="+day);
     	if (day != null)
     		day.initialize();
     	workDay[dayNum] = day;
@@ -137,7 +137,7 @@ public class WorkWeek implements Cloneable,Serializable {
     }
     
     public void addDaysFrom(WorkWeek from) {
-    	log.info("WorkWeek.addDaysFrom, "+this+", from="+from);
+    	log.debug("WorkWeek.addDaysFrom, "+this+", from="+from);
         for (int i = 0; i < DAYS_IN_WEEK; i++) {
         	if (from.workDay[i] != null)
         		workDay[i] = from.workDay[i];
