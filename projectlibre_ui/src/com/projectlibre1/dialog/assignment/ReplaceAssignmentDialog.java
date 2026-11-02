@@ -96,7 +96,8 @@ public final class ReplaceAssignmentDialog extends AbstractDialog implements Com
         spreadSheetPane = new AssignmentEntryPane(this ,documentFrame.getProject(),null,true,null);
 		spreadSheetPane.setProject(documentFrame.getProject());
 		spreadSheetPane.updateTable();
-        resourceName = new JLabel(Messages.getString("Text.Replace") + " " + resource.getName());
+        resourceName = new JLabel(Messages.getStringWithParam("ReplaceAssignmentDialog.Prompt", resource.getName()));
+        resourceName.setFont(resourceName.getFont().deriveFont(java.awt.Font.BOLD));
 	}
 
 	
@@ -117,7 +118,7 @@ public final class ReplaceAssignmentDialog extends AbstractDialog implements Com
 		initControls();
 		//TODO set minimum size
 		FormLayout layout = new FormLayout("140dlu:grow", // cols
-				"p, 3dlu, p, 3dlu, fill:200dlu:grow"); // rows
+				"p, 6dlu, fill:200dlu:grow"); // rows
 
 		// Create a builder that assists in adding components to the container.
 		// Wrap the panel with a standardized border.
@@ -125,9 +126,6 @@ public final class ReplaceAssignmentDialog extends AbstractDialog implements Com
 		builder.setDefaultDialogBorder();
 		CellConstraints cc = new CellConstraints();
 		builder.append(resourceName);
-		builder.nextLine(2);
-
-		builder.append(Messages.getString("Text.With"));
 		builder.nextLine(2);
 		builder.append(spreadSheetPane);
 		return builder.getPanel();
