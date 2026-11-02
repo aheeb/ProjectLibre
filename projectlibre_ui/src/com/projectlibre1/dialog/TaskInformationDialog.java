@@ -121,7 +121,7 @@ public class TaskInformationDialog extends InformationDialog {
 	}
 	public JComponent createContentPanel() {	
 	    	
-		FormLayout layout = new FormLayout("350dlu:grow","fill:250dlu:grow"); //$NON-NLS-1$ //$NON-NLS-2$
+		FormLayout layout = new FormLayout("max(350dlu;pref):grow","fill:max(250dlu;pref):grow"); //$NON-NLS-1$ //$NON-NLS-2$
 		DefaultFormBuilder builder = new DefaultFormBuilder(layout);
 		builder.setDefaultDialogBorder();
 		CellConstraints cc = new CellConstraints();
@@ -155,40 +155,37 @@ public class TaskInformationDialog extends InformationDialog {
 	protected JComponent createHeaderFieldsPanel(FieldComponentMap map) {
 		// Repeat of fields from general tab 
 		FormLayout layout = new FormLayout(
-		        "p,3dlu,300dlu" //$NON-NLS-1$
-				,"p,3dlu"); //$NON-NLS-1$
+		        "max(75dlu;pref),4dlu,fill:200dlu:grow" //$NON-NLS-1$
+				,"p"); //$NON-NLS-1$
 		DefaultFormBuilder builder = new DefaultFormBuilder(layout);
 		map.append(builder,"Field.name"); //$NON-NLS-1$
-		builder.nextLine(); // border at bottom
 		return builder.getPanel();
 	}
-	
+
+	// label, field, gap, label, field, filler: fields are sized for dates and durations, not stretched
+	static final String FORM_COLUMNS = "max(75dlu;pref), 4dlu, 100dlu, 16dlu, max(60dlu;pref), 4dlu, 100dlu, 0dlu:grow"; //$NON-NLS-1$
+	static final int FORM_SPAN = 8;
 
 	private JComponent createGeneralPanel(){
 		FieldComponentMap map = createMap();
-		FormLayout layout = new FormLayout(
-		        "max(50dlu;pref), 3dlu, 90dlu 10dlu, p, 3dlu,90dlu,60dlu", // extra padding on right is for estimated field //$NON-NLS-1$
-				"p, 3dlu,p, 3dlu,p, 3dlu, p, 3dlu, p, 3dlu, p,3dlu, p, 3dlu,p, 3dlu, fill:50dlu:grow"); //$NON-NLS-1$
+		FormLayout layout = new FormLayout(FORM_COLUMNS,
+				"p, 8dlu, p, 4dlu, p, 4dlu, p, 12dlu, p, 4dlu, p, 4dlu, p, 0dlu:grow"); //$NON-NLS-1$
 
 		DefaultFormBuilder builder = new DefaultFormBuilder(layout);
 		CellConstraints cc = new CellConstraints();
 		builder.setDefaultDialogBorder();
-		builder.add(createHeaderFieldsPanel(map),cc.xyw(builder.getColumn(), builder
-				.getRow(), 8));
-		
-		
+		map.append(builder,"Field.name",FORM_SPAN - 3); //$NON-NLS-1$
 		builder.nextLine(2);
 		map.appendSometimesReadOnly(builder,"Field.duration"); //$NON-NLS-1$
 		map.append(builder,"Field.estimated"); //$NON-NLS-1$
 		builder.nextLine(2);
 		map.appendSometimesReadOnly(builder,"Field.percentComplete"); //$NON-NLS-1$
 		map.append(builder,"Field.priority"); //$NON-NLS-1$
-		
 		builder.nextLine(2);
-		map.append(builder,"Field.cost"); //$NON-NLS-1$
 		map.append(builder,"Field.work"); //$NON-NLS-1$
-		builder.nextLine(4);
-		builder.addSeparator(Messages.getString("TaskInformationDialog.Dates")); //$NON-NLS-1$
+		map.append(builder,"Field.cost"); //$NON-NLS-1$
+		builder.nextLine(2);
+		builder.addSeparator(Messages.getString("TaskInformationDialog.Dates"), cc.xyw(1, builder.getRow(), FORM_SPAN)); //$NON-NLS-1$
 		builder.nextLine(2);
 		map.append(builder,"Field.start"); //$NON-NLS-1$
 		map.append(builder,"Field.finish"); //$NON-NLS-1$
@@ -197,34 +194,38 @@ public class TaskInformationDialog extends InformationDialog {
 		map.append(builder,"Field.baselineFinish"); //$NON-NLS-1$
 		return builder.getPanel();
 	}
-	
+
 	private JComponent createAdvancedPanel(){
 		FieldComponentMap map = createMap();
-		FormLayout layout = new FormLayout(
-		        "max(50dlu;pref), 3dlu, 90dlu, 10dlu, p, 3dlu,90dlu,30dlu", // extra padding on right is for estimated field //$NON-NLS-1$
-	    		  "p,3dlu,p,3dlu,p,3dlu,p,3dlu,p,3dlu,p,3dlu,p,3dlu,p,3dlu,p,3dlu,p,3dlu,p,3dlu, fill:50dlu:grow"); //$NON-NLS-1$
+		FormLayout layout = new FormLayout(FORM_COLUMNS,
+				"p, 8dlu, p, 12dlu, p, 4dlu, p, 2dlu, p, 6dlu, p, 2dlu, p, 12dlu, p, 4dlu, p, 2dlu, p, 6dlu, p, 4dlu, p, 0dlu:grow"); //$NON-NLS-1$
 
 		DefaultFormBuilder builder = new DefaultFormBuilder(layout);
 		builder.setDefaultDialogBorder();
 		CellConstraints cc = new CellConstraints();
 		
-		builder.add(createHeaderFieldsPanel(map),cc.xyw(builder.getColumn(), builder
-				.getRow(), 8));
+		map.append(builder,"Field.name",FORM_SPAN - 3); //$NON-NLS-1$
 		builder.nextLine(2);
 		map.append(builder,"Field.wbs"); //$NON-NLS-1$
 		map.append(builder,"Field.markTaskAsMilestone",3); //$NON-NLS-1$
 		builder.nextLine(2);
-		builder.addSeparator(Messages.getString("TaskInformationDialog.ConstrainTask")); //$NON-NLS-1$
+		builder.addSeparator(Messages.getString("TaskInformationDialog.ConstrainTask"), cc.xyw(1, builder.getRow(), FORM_SPAN)); //$NON-NLS-1$
 		builder.nextLine(2);
 		map.append(builder,"Field.constraintType"); //$NON-NLS-1$
 		map.appendSometimesReadOnly(builder,"Field.constraintDate"); //$NON-NLS-1$
 		builder.nextLine(2);
+		addHint(builder, cc, "Field.constraintType"); //$NON-NLS-1$
+		builder.nextLine(2);
 		map.append(builder,"Field.deadline"); //$NON-NLS-1$
-		builder.nextLine(4);
-		builder.addSeparator("	"); //$NON-NLS-1$
+		builder.nextLine(2);
+		addHint(builder, cc, "Field.deadline"); //$NON-NLS-1$
+		builder.nextLine(2);
+		builder.addSeparator(Messages.getString("TaskInformationDialog.Scheduling"), cc.xyw(1, builder.getRow(), FORM_SPAN)); //$NON-NLS-1$
 		builder.nextLine(2);
 		map.append(builder,"Field.taskType"); //$NON-NLS-1$
 		map.append(builder,"Field.effortDriven",3); //$NON-NLS-1$
+		builder.nextLine(2);
+		addHint(builder, cc, "Field.taskType"); //$NON-NLS-1$
 		builder.nextLine(2);
 		map.append(builder,"Field.taskCalendar"); //$NON-NLS-1$
 		map.append(builder,"Field.ignoreResourceCalendar",3); //$NON-NLS-1$
@@ -232,8 +233,15 @@ public class TaskInformationDialog extends InformationDialog {
 		map.append(builder,"Field.earnedValueMethod"); //$NON-NLS-1$
 
 		return builder.getPanel();
-	}	
-	
+	}
+
+	/** Puts the field's plain-language hint under the field column of the current row. */
+	private static void addHint(DefaultFormBuilder builder, CellConstraints cc, String fieldId) {
+		JLabel hint = FieldComponentMap.createHintLabel(fieldId, 210);
+		if (hint != null)
+			builder.add(hint, cc.xyw(3, builder.getRow(), 5));
+	}
+
 	public JComponent createPredecessorsPanel() {
 		FieldComponentMap map = createMap();		
 		FormLayout layout = new FormLayout("p:grow","p,3dlu,p,3dlu,fill:150dlu:grow"); //$NON-NLS-1$ //$NON-NLS-2$

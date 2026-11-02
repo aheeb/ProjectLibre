@@ -61,9 +61,11 @@ import java.util.Iterator;
 
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
+import javax.swing.JLabel;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.layout.CellConstraints;
+import com.jgoodies.forms.layout.Sizes;
 import com.projectlibre1.dialog.FieldDialog;
 import com.projectlibre1.help.HelpUtil;
 import com.projectlibre1.configuration.Configuration;
@@ -73,7 +75,9 @@ import com.projectlibre1.grouping.core.Node;
 import com.projectlibre1.grouping.core.model.NodeModel;
 import com.projectlibre1.grouping.core.model.NodeModelDataFactory;
 import com.projectlibre1.grouping.core.model.WalkersNodeModel;
+import com.projectlibre1.pm.graphic.laf.ModernLaf;
 import com.projectlibre1.pm.task.BelongsToDocument;
+import com.projectlibre1.strings.Messages;
 /**
  *
  */
@@ -161,10 +165,12 @@ public class FieldComponentMap implements ObjectRef {
 		if (field == null)
 			return null;
 		JComponent component = getComponent(fieldId, flag);
+		JLabel label = null;
 		if (component instanceof JCheckBox) // checkboxes already have a label to the right
 			builder.append(component);
 		else 
-			builder.append(getLabel(fieldId)+":",component);
+			label = builder.append(getLabel(fieldId)+":",component);
+		applyHint(fieldId, label, component);
 		String fieldDoc = field.getHelp();
 		if (fieldDoc != null)
 			HelpUtil.addDocHelp(component,fieldDoc);
@@ -178,20 +184,63 @@ public class FieldComponentMap implements ObjectRef {
 		JComponent component = getComponent(fieldId,0);
 		boolean isCheckbox = component instanceof JCheckBox;
 		CellConstraints cc = new CellConstraints().xyw(builder.getColumn() + (isCheckbox ? 0 : 2), builder.getRow(), span);
+		JLabel label = null;
 		if (component instanceof JCheckBox) {// checkboxes already have a label to the right
 			builder.add(component,cc);
 		} else {
-			builder.addLabel(getLabel(fieldId)+":");
+			label = builder.addLabel(getLabel(fieldId)+":");
 			builder.nextColumn(2);
 			builder.add(component,cc);
 			builder.nextColumn(1);
 		}
+		applyHint(fieldId, label, component);
 		String fieldDoc = field.getHelp();
 		if (fieldDoc != null)
 			HelpUtil.addDocHelp(component,fieldDoc);
 		return component;
 	}
 	
+	/**
+	 * Plain-language explanation of a field for people new to project management, read from
+	 * "FieldHint.&lt;name&gt;" in the strings bundle (e.g. FieldHint.constraintType). Null if none.
+	 */
+	public static String getHint(String fieldId) {
+		String key = "FieldHint." + fieldId.substring(fieldId.indexOf('.') + 1); //$NON-NLS-1$
+		String hint = Messages.getStringOrSelf(key);
+		return key.equals(hint) ? null : hint;
+	}
+
+	/** Shows the field's hint as tooltip on its label and on the editor (including the text part of spinners and date fields). */
+	public static void applyHint(String fieldId, JComponent label, JComponent component) {
+		String hint = getHint(fieldId);
+		if (hint == null)
+			return;
+		String tip = "<html><div style='width:240px'>" + hint + "</div></html>"; //$NON-NLS-1$ //$NON-NLS-2$
+		if (label != null)
+			label.setToolTipText(tip);
+		if (component != null) {
+			component.setToolTipText(tip);
+			JComponent inner = ComponentFactory.verifiedComponent(component);
+			if (inner != null && inner != component)
+				inner.setToolTipText(tip);
+		}
+	}
+
+	/** A short secondary-colour explanation shown under a field, wrapped at widthDlu dialog units. */
+	public static JLabel createHintLabel(String fieldId, int widthDlu) {
+		String hint = getHint(fieldId);
+		return hint == null ? null : createHintLabelText(hint, widthDlu);
+	}
+
+	public static JLabel createHintLabelText(String text, int widthDlu) {
+		JLabel label = new JLabel();
+		label.setForeground(ModernLaf.TEXT_SECONDARY);
+		label.setFont(label.getFont().deriveFont(label.getFont().getSize2D() - 1f));
+		int width = Sizes.dialogUnitXAsPixel(widthDlu, label);
+		label.setText("<html><div style='width:" + width + "px'>" + text + "</div></html>"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		return label;
+	}
+
 	public Node getNode() {
 		return node;
 	}
