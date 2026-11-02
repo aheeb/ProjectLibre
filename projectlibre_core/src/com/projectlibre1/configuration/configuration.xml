@@ -769,7 +769,7 @@
 		
 	</fieldDictionary>
 
-	<timescales defaultIndex="2">
+	<timescales defaultIndex="3">
 		<!--timescale calendarField1="12" number1="15" pattern1="m"
 			normalMinWidth="28" tableMinWidth="51" calendarField2="11" number2="1"
 			pattern2="E d MMM, H" /-->
@@ -779,12 +779,12 @@
 		<timescale calendarField1="11" number1="6" pattern1="H"
 			normalMinWidth="20" normalMinWidthChinese="28" tableMinWidth="51" calendarField2="5" number2="1"
 			pattern2="E d MMM" />
-		<timescale calendarField1="7" number1="1" pattern1="E"
-			trunc1="1" upperCase1="true" normalMinWidth="15" tableMinWidth="51"
-			calendarField2="3" number2="1" pattern2="d MMM yy" />
-		<timescale calendarField1="5" number1="3" pattern1="dd"
-			normalMinWidth="30" tableMinWidth="51" calendarField2="2" number2="1"
-			pattern2="MMM y" />
+		<timescale calendarField1="7" number1="1" pattern1="d"
+			normalMinWidth="22" tableMinWidth="51"
+			calendarField2="3" number2="1" pattern2="d MMM yyyy" />
+		<timescale calendarField1="3" number1="1" pattern1="d"
+			normalMinWidth="56" tableMinWidth="51" calendarField2="2" number2="1"
+			pattern2="MMMM yyyy" />
 		<timescale calendarField1="3" number1="1" pattern1="dd"
 			normalMinWidth="30" tableMinWidth="51" calendarField2="2" number2="1"
 			pattern2="MMM y" />
@@ -803,10 +803,10 @@
 
 	</timescales>
 
-	<graphic columnHeaderHeight="30" printFooterHeight="15"
-		rowHeaderWidth="40" rowHeight="19" ganttBarHeight="11"
-		ganttProgressBarHeight="4" ganttBarYOffset="4" baselineHeight="4"
-		ganttBarAnnotationXOffset="12" ganttBarAnnotationYOffset="1" 
+	<graphic columnHeaderHeight="40" printFooterHeight="15"
+		rowHeaderWidth="40" rowHeight="24" ganttBarHeight="14"
+		ganttProgressBarHeight="4" ganttBarYOffset="5" baselineHeight="3"
+		ganttBarAnnotationXOffset="8" ganttBarAnnotationYOffset="1" 
 		pertCellWidth="200" pertCellHeight="65" pertXOffset="50"
 		pertYOffset="30" treeCellWidth="170" treeCellHeight="50"
 		treeXOffset="50" treeYOffset="30" rowChartHeaderWidth="40"
