@@ -1173,7 +1173,7 @@ public class ProjectLibreRibbonUI extends RibbonUI {
 			ribbon.getLanguageSelector().setBounds(0, 0, 0, 0);
 
 		TaskToggleButtonsHostPanel taskToggleButtonsHostPanel = taskToggleButtonsScrollablePanel.getView();
-		int tabsWidth = taskToggleButtonsHostPanel.getPreferredSize().width;
+		int tabsWidth = taskToggleButtonsHostPanel.getLayout().preferredLayoutSize(taskToggleButtonsHostPanel).width;
 
 		JComponent fileSelector = ribbon.getFileSelector();
 		boolean showProjects = fileSelector != null && showProjectSelector(fileSelector);
