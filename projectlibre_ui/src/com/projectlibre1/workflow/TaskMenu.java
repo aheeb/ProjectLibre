@@ -31,6 +31,7 @@ import com.projectlibre1.pm.scheduling.ConstraintType;
 import com.projectlibre1.pm.task.NormalTask;
 import com.projectlibre1.pm.task.Task;
 import com.projectlibre1.strings.Messages;
+import com.projectlibre1.undo.UndoController;
 import com.projectlibre1.util.Alert;
 
 /**
@@ -155,13 +156,19 @@ public class TaskMenu {
 	}
 
 	private void setField(String fieldId, Object value) {
+		setField(fieldId, value, null);
+	}
+
+	/** Sets the field on the selected tasks (only those in {@code only}, if given) through the model, so it can be undone. */
+	private void setField(String fieldId, Object value, List<Task> only) {
 		sheet.finishCurrentOperations();
 		Field field = Configuration.getFieldFromId(fieldId);
 		NodeModel model = ((SpreadSheetModel) sheet.getModel()).getCache().getModel();
 		try {
 			for (GraphicNode n : selectedGraphicNodes()) {
 				Node node = n.getNode();
-				if (((Task) node.getImpl()).isWbsParent()) continue;
+				Task task = (Task) node.getImpl();
+				if (task.isWbsParent() || (only != null && !only.contains(task))) continue;
 				model.setFieldValue(field, node, this, value, null, NodeModel.NORMAL);
 			}
 		} catch (FieldParseException e) {
@@ -178,12 +185,20 @@ public class TaskMenu {
 		if (milestone) {
 			setField("Field.duration", "0");
 		} else {
-			for (Task t : selectedTasks())
-				if (t instanceof NormalTask && t.isMarkTaskAsMilestone()) t.setMarkTaskAsMilestone(false);
+			List<Task> marked = new ArrayList<Task>();
 			List<Task> zero = new ArrayList<Task>();
-			for (Task t : selectedTasks())
-				if (t.isMilestone()) zero.add(t);
-			if (!zero.isEmpty()) setField("Field.duration", "1");
+			for (Task t : selectedTasks()) {
+				if (t instanceof NormalTask && t.isMarkTaskAsMilestone()) marked.add(t);
+				if (t.isZeroDuration()) zero.add(t); // only tasks without a length get the default one
+			}
+			UndoController undo = GraphicManager.getInstance(sheet).getUndoController();
+			if (undo != null) undo.beginUpdate(); // one Undo step
+			try {
+				if (!marked.isEmpty()) setField("Field.markTaskAsMilestone", Boolean.FALSE, marked);
+				if (!zero.isEmpty()) setField("Field.duration", "1", zero);
+			} finally {
+				if (undo != null) undo.endUpdate();
+			}
 		}
 	}
 
