@@ -56,19 +56,26 @@
 package com.projectlibre1.dialog;
 
 import java.awt.Frame;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 
+import javax.swing.ButtonGroup;
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
+import javax.swing.UIManager;
 
 import net.sf.nachocalendar.CalendarFactory;
 import net.sf.nachocalendar.components.DateField;
@@ -83,7 +90,9 @@ import com.projectlibre1.configuration.FieldDictionary;
 import com.projectlibre1.configuration.Settings;
 import com.projectlibre1.field.HasExtraFields;
 import com.projectlibre1.field.HasExtraFieldsImpl;
+import com.formdev.flatlaf.FlatClientProperties;
 import com.projectlibre1.options.CalendarOption;
+import com.projectlibre1.pm.graphic.laf.ModernLaf;
 import com.projectlibre1.pm.resource.ResourcePool;
 import com.projectlibre1.pm.resource.ResourcePoolFactory;
 import com.projectlibre1.strings.Messages;
@@ -243,8 +252,12 @@ public final class ProjectDialog extends FieldDialog { // extends FieldDialog fo
 	JTextField manager;
 	JTextField name;
 	JComboBox resourcePool;
-	JCheckBox forward,remote;
+	JCheckBox remote;
+	JRadioButton forward,backward;
 	JLabel dateLabel;
+	JButton moreOptions;
+	String columns;
+	JPanel moreOptionsPanel;
 	JComboBox projectType;
 	JComboBox projectStatus;
 	JComboBox expenseType;
@@ -285,11 +298,29 @@ public final class ProjectDialog extends FieldDialog { // extends FieldDialog fo
 		choices.add(new String());
 		choices.addAll(ResourcePoolFactory.getInstance().getResourcePools());
 		resourcePool = new JComboBox(choices.toArray());
-		forward = new JCheckBox(Messages.getString("Field.forward")); //$NON-NLS-1$
+		forward = new JRadioButton(Messages.getString("ProjectDialog.ScheduleForward")); //$NON-NLS-1$
+		forward.setToolTipText(Messages.getString("Field.forward")); //$NON-NLS-1$
+		backward = new JRadioButton(Messages.getString("ProjectDialog.ScheduleBackward")); //$NON-NLS-1$
+		ButtonGroup scheduleFrom = new ButtonGroup();
+		scheduleFrom.add(forward);
+		scheduleFrom.add(backward);
 		dateLabel = new JLabel();
-		forward.addActionListener(new ActionListener(){
+		ActionListener scheduleListener = new ActionListener(){
 		    public void actionPerformed(ActionEvent e){
 		    	setDateLabel();
+		    }};
+		forward.addActionListener(scheduleListener);
+		backward.addActionListener(scheduleListener);
+		moreOptions = new JButton(Messages.getString("ProjectDialog.MoreOptions"), UIManager.getIcon("Tree.collapsedIcon")); //$NON-NLS-1$ //$NON-NLS-2$
+		moreOptions.putClientProperty(FlatClientProperties.BUTTON_TYPE, FlatClientProperties.BUTTON_TYPE_BORDERLESS);
+		moreOptions.setMargin(new java.awt.Insets(2, 0, 2, 4));
+		moreOptions.addActionListener(new ActionListener(){
+		    public void actionPerformed(ActionEvent e){
+		    	boolean show = !moreOptionsPanel.isVisible();
+		    	moreOptionsPanel.setVisible(show);
+		    	moreOptions.setIcon(UIManager.getIcon(show ? "Tree.expandedIcon" : "Tree.collapsedIcon")); //$NON-NLS-1$ //$NON-NLS-2$
+		    	validate();
+		    	setSize(getPreferredSize()); // not pack(): AbstractDialog.pack() rebuilds the components
 		    }});
 		
 //		remote = new JCheckBox(Messages.getString("Text.newServerProject"));
@@ -324,7 +355,7 @@ public final class ProjectDialog extends FieldDialog { // extends FieldDialog fo
 		if (get) {
 			notes.setText(form.getNotes());
 			manager.setText(form.getManager());
-			name.setText(form.getName());
+			name.setText(form.getName() == null ? Messages.getString("ProjectDialog.DefaultName") : form.getName()); //$NON-NLS-1$
 //			startDateChooser.setDate(new Date(form.getStartDate()));
 			Date d = new Date(form.getStartDate());
 			Date zz = DateTime.gmtDate(d);
@@ -332,6 +363,7 @@ public final class ProjectDialog extends FieldDialog { // extends FieldDialog fo
 //			System.out.println("zz " +zz);
 			startDateChooser.setValue(d);
 			forward.setSelected(form.isForward());
+			backward.setSelected(!form.isForward());
 //			remote.setSelected(!form.isLocal());
 			projectType.setSelectedItem(new Integer(form.getProjectType()));
 			projectStatus.setSelectedItem(new Integer(form.getProjectStatus()));
@@ -344,11 +376,11 @@ public final class ProjectDialog extends FieldDialog { // extends FieldDialog fo
 		} else {
 			form.setNotes(notes.getText());
 			form.setManager(manager.getText());
-			if (name.getText().length() == 0) {
+			if (name.getText().trim().length() == 0) {
 				Alert.error(Messages.getString("Message.projectMustHaveName"),this); //$NON-NLS-1$
 				return false;
 			}
-			form.setName(name.getText());
+			form.setName(name.getText().trim());
 			// make valid start
 //			long d = DateTime.gmt(startDateChooser.getDate()); // + startDateChooser.getDate().getTimezoneOffset() * 60000;
 			long d = DateTime.gmt((Date) startDateChooser.getValue()); // + startDateChooser.getDate().getTimezoneOffset() * 60000;
@@ -389,59 +421,85 @@ public final class ProjectDialog extends FieldDialog { // extends FieldDialog fo
 		// Separating the component initialization and configuration
 		// from the layout code makes both parts easier to read.
 		initControls();
-		//TODO set minimum size
-		FormLayout layout = new FormLayout("default, 3dlu, 220dlu, 3dlu, default:grow", // cols //$NON-NLS-1$
-	// with commented fields			"p, 3dlu,p, 3dlu, p, 3dlu, p, 3dlu,p, 3dlu, p, 3dlu,p, 3dlu,p, 3dlu,p,3dlu,p 3dlu, p, 3dlu, fill:50dlu:grow"); // rows
-				"p, 3dlu,p, 3dlu,p, 3dlu, p, 3dlu, p, 3dlu,p, 3dlu, fill:50dlu:grow"); // rows //$NON-NLS-1$
-
-		// Create a builder that assists in adding components to the container.
-		// Wrap the panel with a standardized border.
+		// both panels use the same label width so that the fields line up when "More options" is open
+		int labelWidth = 0;
+		String[] labels = {"ProjectDialog.ProjectName", "ProjectDialog.StartDate", "ProjectDialog.FinishDate", "ProjectDialog.Manager", "ProjectDialog.ScheduleFrom", "ProjectDialog.ProjectTeam", "ProjectDialog.Notes"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
+		for (String label : labels)
+			labelWidth = Math.max(labelWidth, new JLabel(Messages.getString(label)).getPreferredSize().width);
+		columns = "right:" + labelWidth + "px, 6dlu, 200dlu:grow"; //$NON-NLS-1$ //$NON-NLS-2$
+		FormLayout layout = new FormLayout(columns,
+				"p, 6dlu, p, 4dlu, p, 2dlu, p"); // rows //$NON-NLS-1$
 		DefaultFormBuilder builder = new DefaultFormBuilder(layout);
-		builder.setDefaultDialogBorder();
+		builder.setBorder(javax.swing.BorderFactory.createEmptyBorder(18, 20, 6, 20));
 		CellConstraints cc = new CellConstraints();
-		builder.append(Messages.getString("ProjectDialog.ProjectName"), name,3); //$NON-NLS-1$
-		builder.nextLine(2);
-		builder.append(Messages.getString("ProjectDialog.Manager"), manager,3); //$NON-NLS-1$
+		builder.append(Messages.getString("ProjectDialog.ProjectName"), name); //$NON-NLS-1$
 		builder.nextLine(2);
 		builder.append(dateLabel);
-		builder.append(startDateChooser);
-		builder.append(forward);
+		builder.add(startDateChooser, cc.xy(3, builder.getRow(), "left,default")); //$NON-NLS-1$
 		builder.nextLine(2);
-		
+		builder.add(moreOptions, cc.xy(3, builder.getRow(), "left,default")); //$NON-NLS-1$
+		builder.nextLine(2);
+		moreOptionsPanel = createMoreOptionsPanel();
+		moreOptionsPanel.setVisible(false);
+		builder.add(moreOptionsPanel, cc.xyw(1, builder.getRow(), 3));
+
+		addWindowListener(new WindowAdapter() {
+			public void windowOpened(WindowEvent e) {
+				name.requestFocusInWindow();
+				name.selectAll();
+			}
+		});
+		return builder.getPanel();
+	}
+
+	/**
+	 * Settings most people don't need when creating a project, hidden until "More options" is clicked.
+	 */
+	private JPanel createMoreOptionsPanel() {
+		FormLayout layout = new FormLayout(columns,
+				"p, 6dlu, p, 2dlu, p, 6dlu, p, 4dlu, p, 2dlu, fill:50dlu:grow"); // rows //$NON-NLS-1$
+		DefaultFormBuilder builder = new DefaultFormBuilder(layout);
+		builder.setBorder(javax.swing.BorderFactory.createEmptyBorder(6, 0, 0, 0));
+		CellConstraints cc = new CellConstraints();
+		builder.append(Messages.getString("ProjectDialog.Manager"), manager); //$NON-NLS-1$
+		builder.nextLine(2);
+		JPanel schedule = new JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 0, 0));
+		schedule.add(forward);
+		schedule.add(javax.swing.Box.createHorizontalStrut(16));
+		schedule.add(backward);
+		builder.append(Messages.getString("ProjectDialog.ScheduleFrom"), schedule); //$NON-NLS-1$
+		builder.nextLine(2);
+		JLabel scheduleHelp = new JLabel("<html><div style='width:300px'>" + Messages.getString("ProjectDialog.ScheduleHelp") + "</div></html>"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		scheduleHelp.putClientProperty(FlatClientProperties.STYLE_CLASS, "small"); //$NON-NLS-1$
+		scheduleHelp.setForeground(ModernLaf.TEXT_SECONDARY);
+		builder.add(scheduleHelp, cc.xy(3, builder.getRow()));
+		builder.nextLine(2);
+
 		if (!Environment.getStandAlone()) {
 			builder.append(Messages.getString("ProjectDialog.ProjectTeam")); //$NON-NLS-1$
 			builder.add(accessControl, cc.xy(builder.getColumn(), builder.getRow(),
 			"left,default")); //$NON-NLS-1$
+			HelpUtil.addDocHelp(accessControl,"Project_Team");
 		}
-		HelpUtil.addDocHelp(accessControl,"Project_Team");
-//		builder.nextLine(2);
-//		builder.append("Project Status:",projectStatus);
-//		builder.nextLine(2);
-//		builder.append("Project Type:",projectType);
-//		builder.nextLine(2);
-//		builder.append("Expense Type:",expenseType);
-//		builder.nextLine(2);
-//		builder.append("Division:",division);
-//		builder.nextLine(2);
-//		builder.append("Group:",group);
-		builder.nextLine(2);
-
 		FieldComponentMap map = createMap();
 		Collection extraFields = FieldDictionary.extractExtraFields(FieldDictionary.getInstance().getProjectFields(),true);
 		JComponent extra = createFieldsPanel(map, extraFields);
 		if (extra != null) {
-			builder.add(extra,cc.xyw(builder.getColumn(), builder
-					.getRow(), 3));
+			builder.add(extra,cc.xyw(1, builder.getRow(), 3));
 		}
 		builder.nextLine(2);
-		
-//		builder.append("Shared resource Pool:", resourcePool);
-//		builder.nextLine(2);
+
 		builder.append(Messages.getString("ProjectDialog.Notes")); //$NON-NLS-1$
 		builder.nextLine(2);
-		builder.add(new JScrollPane(notes), cc.xyw(builder.getColumn(), builder
-				.getRow(), 5)); // allow spanning 3 cols
+		builder.add(new JScrollPane(notes), cc.xyw(1, builder.getRow(), 3));
 		return builder.getPanel();
+	}
+
+	public ButtonPanel createButtonPanel() {
+		ButtonPanel panel = super.createButtonPanel();
+		ok.setText(Messages.getString("ProjectDialog.Create")); //$NON-NLS-1$
+		getRootPane().setDefaultButton(ok);
+		return panel;
 	}
 	/**
 	 * @return Returns the form.

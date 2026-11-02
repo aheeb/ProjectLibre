@@ -250,7 +250,10 @@ public class ApplicationStartupFactory extends StartupFactory {
 		}
 	}
 	public void doPostInitView(Container container) {
-		if (!Environment.isPlugin()) ((JFrame)container).pack();
+		if (!Environment.isPlugin()) {
+			((JFrame)container).pack();
+			WindowState.restore((JFrame)container);
+		}
 	}
 
 

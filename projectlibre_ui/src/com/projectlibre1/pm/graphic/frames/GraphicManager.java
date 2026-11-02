@@ -147,7 +147,6 @@ import com.projectlibre1.dialog.ResourceInformationDialog;
 import com.projectlibre1.dialog.ResourceMappingDialog;
 import com.projectlibre1.dialog.TaskInformationDialog;
 import com.projectlibre1.dialog.TipOfTheDay;
-import com.projectlibre1.dialog.WelcomeDialog;
 import com.projectlibre1.dialog.assignment.AssignmentDialog;
 import com.projectlibre1.dialog.options.CalendarDialogBox;
 import com.projectlibre1.document.Document;
@@ -518,6 +517,8 @@ public class GraphicManager implements  FrameHolder, NamedFrameListener, WindowS
 		final DocumentFrame frame = new DocumentFrame(this,project,tabId);
 		if (frame == null) // in case of out memory error
 			return null;
+		if (SampleProjects.isSample(project.getFileName())) project.setFileName(null); // saving a sample asks where to save it
+		else RecentFiles.add(project.getFileName());
 		getFrameManager().addFrame(frame);
 //		DocumentFrame newDocumentFrame = (DocumentFrame)getFrameManager().getFrame(tabId);
 
@@ -544,6 +545,13 @@ public class GraphicManager implements  FrameHolder, NamedFrameListener, WindowS
 		if (!Environment.isPlugin()) SwingUtilities.invokeLater( new Runnable() {
 			public void run() {
 			 	frame.getFilterToolBarManager().clear();
+			 	if (focusNameOfNextFrame) {
+			 		focusNameOfNextFrame=false;
+			 		SwingUtilities.invokeLater(new Runnable() {
+			 			public void run() {
+			 				focusFirstTaskName();
+			 			}});
+			 	}
 			}});
 		getMenuManager().setActionEnabled(ACTION_OPEN_PROJECT,frame==null || !frame.isEditingResourcePool()); //resource pool can not be opened at same time as another proj
 		return frame;
@@ -608,24 +616,34 @@ public class GraphicManager implements  FrameHolder, NamedFrameListener, WindowS
 			return;
 		}
 
-		WelcomeDialog instance = WelcomeDialog.getInstance(getFrame(),getMenuManager());
-		if (instance.doModal()) {
-			waitInitialization();
-			if (instance.getForm().isCreateProject())
-				doNewProjectDialog();
-			else if (instance.getForm().isOpenProject()){
-				if(Environment.getStandAlone()) openLocalProject();
-				else doOpenProjectDialog();
-			}else if (instance.getForm().isManageResources()) {
-				loadMasterProject();
-			}
-		}
+		// no dialog: the start panel is shown in the main window while no project is open
 	}
 
 	public boolean doNewProjectDialog() {
 		ProjectDialog.Form form=doNewProjectDialog1();
 		if (form==null) return false;
-		else return doNewProjectDialog2(form);
+		focusNameOfNextFrame=true; // the frame is added asynchronously, see addProjectFrame
+		return doNewProjectDialog2(form);
+	}
+	private boolean focusNameOfNextFrame=false;
+	/**
+	 * Selects the Name cell of the first row of the Gantt spreadsheet so the user can type the first task.
+	 */
+	void focusFirstTaskName() {
+		if (currentFrame==null||currentFrame.getGanttView()==null) return;
+		currentFrame.activateView(ACTION_GANTT);
+		SpreadSheet spreadSheet=currentFrame.getGanttView().getSpreadSheet();
+		if (spreadSheet==null||spreadSheet.getRowCount()==0) return;
+		int column=0;
+		for (int i=0;i<spreadSheet.getColumnCount();i++){
+			Object field=spreadSheet.getColumnModel().getColumn(i).getIdentifier();
+			if (field instanceof Field&&"Field.name".equals(((Field)field).getId())){
+				column=i;
+				break;
+			}
+		}
+		spreadSheet.changeSelection(0,column,false,false);
+		spreadSheet.requestFocusInWindow();
 	}
 	public boolean doNewProjectNoDialog(HashMap opts) {
 		ProjectDialog.Form form=doNewProjectNoDialog1();
@@ -700,6 +718,7 @@ public class GraphicManager implements  FrameHolder, NamedFrameListener, WindowS
 				project.setFinishDate(form.getStartDate());
 			// copy any extra fields to the project
 			project.getExtraFields().putAll(form.getExtra().getExtraFields());
+			project.setGroupDirty(false); // closing a new project that wasn't edited shouldn't ask to save it
 
 //			PropertyUtils.copyProperties(project, projectDialog.getForm());
 		} catch (Exception propertyException) {
@@ -1930,6 +1949,11 @@ protected boolean loadLocalDocument(String fileName,boolean merge){ //uses serve
 		SaveOptions opt=new SaveOptions();
 		opt.setLocal(true);
 		final Project project=getCurrentFrame().getProject();
+		opt.setPostSaving(new Closure(){
+			public void execute(Object arg0) {
+				RecentFiles.add(project.getFileName());
+			}
+		});
 		if (project.getFileName()!=fileName){
 			final DocumentFrame frame=getCurrentFrame();
 			if (saveAs) opt.setSaveAs(true);
@@ -1937,6 +1961,7 @@ protected boolean loadLocalDocument(String fileName,boolean merge){ //uses serve
 				public void execute(Object arg0) {
 					if (saveAs) frame.setId(project.getUniqueId()+""); //$NON-NLS-1$
 					refreshSaveStatus(true);
+					RecentFiles.add(project.getFileName());
 				}
 			});
 		}
@@ -2912,7 +2937,7 @@ protected boolean loadLocalDocument(String fileName,boolean merge){ //uses serve
 			c=((RootPaneContainer)container).getContentPane();
 		}
         if (!Environment.isRibbonUI()) c.setLayout(new BorderLayout());
-        JPanel panel = new JPanel();
+        JPanel panel = Environment.isPlugin() ? new JPanel() : new StartPanel(this); // shown whenever no project is open
         c.add(panel, "Center"); //$NON-NLS-1$
         setFrameManager(new DefaultFrameManager(container, panel,this));
 

@@ -75,12 +75,8 @@ import com.projectlibre1.configuration.ConfigurationReader;
 import com.projectlibre1.configuration.Dictionary;
 import com.projectlibre1.configuration.Settings;
 import com.projectlibre1.contrib.ClassLoaderUtils;
-import com.projectlibre1.dialog.LicenseDialog;
 import com.projectlibre1.dialog.LoginDialog;
 import com.projectlibre1.dialog.LoginForm;
-import com.projectlibre1.dialog.TipOfTheDay;
-import com.projectlibre1.dialog.UserInfoDialog;
-import com.projectlibre1.pm.graphic.laf.LafManagerImpl;
 import com.projectlibre1.pm.task.Project;
 import com.projectlibre1.pm.task.ProjectFactory;
 import com.projectlibre1.server.access.PartnerInfo;
@@ -441,27 +437,14 @@ public abstract class StartupFactory {
 			else if (projectUrls!=null && projectUrls.length > 0) {
 				gm.loadLocalDocument(projectUrls[0],!Environment.getStandAlone());
 			}else{
+				// No startup dialogs: the start panel in the main window offers new/open/recent/samples.
+				// The CPAL doesn't require click-through acceptance; the license is shown from the About dialog.
 				SwingUtilities.invokeLater(new Runnable() {
 					public void run() {
-						if (Environment.isProjectLibre()&&!Environment.isPlugin()) {
-							LicenseDialog.showDialog(gm.getFrame(),false);
-							UserInfoDialog.showDialog(gm.getFrame(),false);
-//							DonateDialog.maybeShow(gm.getFrame(),false);
+						if (Environment.isProjectLibre()&&!Environment.isPlugin())
 							UpdateChecker.checkForUpdateInBackground();
-						}
-						if (welcome&&!Environment.isPlugin()) {
-							if (Environment.isProjectLibre()) {
-								//LicenseDialog.showDialog(gm.getFrame(),false);
-								TipOfTheDay.showDialog(gm.getFrame(), false);
-							} else {
-								if (Environment.isNeedToRestart())
-									return;
-								if (!LafManagerImpl.isLafOk()) // for startup glitch - we don't want people to work until restarting.
-									return;
-
-							}
+						if (welcome&&!Environment.isPlugin())
 							gm.doWelcomeDialog();
-						}
 						if (Environment.isPlugin()) gm.doNewProjectNoDialog(opts);
 					}
 				});

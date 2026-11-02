@@ -62,21 +62,16 @@ import com.l2fprod.common.swing.JTipOfTheDay;
 import com.l2fprod.common.swing.tips.TipLoader;
 import com.projectlibre1.strings.Messages;
 
+/**
+ * Tips, shown on request from the Help menu only (never at startup), so there is no "show on startup" choice.
+ */
 public class TipOfTheDay {
 	private static JTipOfTheDay tipOfTheDayInstance = null;
 
-	private static JTipOfTheDay.ShowOnStartupChoice tipOfTheDayChoiceInstance = null;
-	private static boolean showTip = JTipOfTheDay.isShowingOnStartup(Preferences.userNodeForPackage(TipOfTheDay.class));
 	public static void showDialog(Component owner, boolean forceShow) {
+		if (!forceShow)
+			return;
 		if (tipOfTheDayInstance == null) {
-			tipOfTheDayChoiceInstance = new JTipOfTheDay.ShowOnStartupChoice() {
-				public boolean isShowingOnStartup() {
-					return showTip;
-				}
-				public void setShowingOnStartup(boolean showOnStartup) {
-					showTip = showOnStartup;
-				}
-			};
 			tipOfTheDayInstance = new JTipOfTheDay(TipLoader.load(Messages.getTipProperties()));
 			int tipNumber=Preferences.userNodeForPackage(TipOfTheDay.class).getInt("tipNumber",1);
 			try {
@@ -87,24 +82,16 @@ public class TipOfTheDay {
 				tipOfTheDayInstance.setCurrentTip(tipNumber);
 			}
 		}
-		if (forceShow || tipOfTheDayChoiceInstance.isShowingOnStartup()) {
-			tipOfTheDayInstance.showDialog(owner, tipOfTheDayChoiceInstance,forceShow);
-			tipOfTheDayInstance.nextTip(); // move to the next tip
-			
-			//ignore emptyTip
-			int tipNumber;
-			String tipName;
-			do{
-				tipOfTheDayInstance.nextTip();
-				tipNumber=tipOfTheDayInstance.getCurrentTip();
-				tipName=tipOfTheDayInstance.getModel().getTipAt(tipNumber).getTipName();
-			} while (tipName==null||tipName.length()==0);
-			Preferences.userNodeForPackage(TipOfTheDay.class).putInt("tipNumber",tipNumber); // store off tip to show next time
+		tipOfTheDayInstance.showDialog(owner, (JTipOfTheDay.ShowOnStartupChoice) null, true);
 
-					
-//			Preferences.userNodeForPackage(TipOfTheDay.class).putInt("tipNumber",tipOfTheDayInstance.getCurrentTip()); // store off tip to show next time
-			Preferences.userNodeForPackage(TipOfTheDay.class).putBoolean(JTipOfTheDay.PREFERENCE_KEY,showTip); // JTipOfTheDay doesn't handle setting properly
-
-		}
+		//move to the next tip for next time, ignoring empty tips
+		int tipNumber;
+		String tipName;
+		do{
+			tipOfTheDayInstance.nextTip();
+			tipNumber=tipOfTheDayInstance.getCurrentTip();
+			tipName=tipOfTheDayInstance.getModel().getTipAt(tipNumber).getTipName();
+		} while (tipName==null||tipName.length()==0);
+		Preferences.userNodeForPackage(TipOfTheDay.class).putInt("tipNumber",tipNumber); // store off tip to show next time
 	}
 }
