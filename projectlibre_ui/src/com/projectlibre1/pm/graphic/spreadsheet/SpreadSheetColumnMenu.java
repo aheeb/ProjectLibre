@@ -65,6 +65,7 @@ import javax.swing.border.BevelBorder;
 import com.projectlibre1.dialog.ColumnDialog;
 import com.projectlibre1.dialog.FieldAliasDialog;
 import com.projectlibre1.pm.graphic.IconManager;
+import com.projectlibre1.pm.graphic.frames.DocumentFrame;
 import com.projectlibre1.pm.graphic.frames.GraphicManager;
 import com.projectlibre1.pm.graphic.spreadsheet.common.CommonSpreadSheet;
 import com.projectlibre1.field.Field;
@@ -81,7 +82,7 @@ public class SpreadSheetColumnMenu extends JPopupMenu {
 	private JMenuItem insert = new JMenuItem(Messages.getString("SpreadSheetColumnMenu.InsertColumn")); //$NON-NLS-1$
 
 	private JMenuItem hide = new JMenuItem(Messages.getString("SpreadSheetColumnMenu.HideColumn")); //$NON-NLS-1$
-	private JMenuItem rename = new JMenuItem(Messages.getString("RenameDialog.Rename")); //$NON-NLS-1$
+	private JMenuItem rename = new JMenuItem(Messages.getString("SpreadSheetColumnMenu.RenameColumn")); //$NON-NLS-1$
 	private JMenuItem find = new JMenuItem(Messages.getString("LookupDialog.Find")); //$NON-NLS-1$
 
 	/**
@@ -124,11 +125,13 @@ public class SpreadSheetColumnMenu extends JPopupMenu {
 		rename.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				
-				if (fields.size() > 2 ) { // there is always the hidden Id field, so only allow delete if more than one other field
-					FieldAliasDialog.doRename(f);
+				String name = FieldAliasDialog.getValue(f);
+				if (name != null && !name.equals(f.getName())) {
+					f.setAlias(name);
 					sp.setFieldArray(fields);
-				} else {
-					Alert.warn(Messages.getString("Message.cantEmptySpreadsheet"),sp); //$NON-NLS-1$
+					DocumentFrame frame = GraphicManager.getInstance(sp).getCurrentFrame();
+					if (frame != null && frame.getProject() != null)
+						frame.getProject().setGroupDirty(true); // the column names are saved with the project
 				}
 			}
 		});		

@@ -56,12 +56,14 @@
 package com.projectlibre1.dialog;
 
 import java.awt.Component;
+import java.text.MessageFormat;
 
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
+import com.projectlibre1.dialog.util.FieldComponentMap;
 import com.jgoodies.forms.layout.FormLayout;
 import com.projectlibre1.pm.graphic.frames.GraphicManager;
 import com.projectlibre1.configuration.Dictionary;
@@ -100,7 +102,7 @@ public final class FieldAliasDialog extends AbstractDialog {
 	}
 	
 	private FieldAliasDialog(Field field) {
-		super(GraphicManager.getFrameInstance(), Messages.getString("RenameDialog.Rename"), true); //$NON-NLS-1$
+		super(GraphicManager.getFrameInstance(), Messages.getString("RenameDialog.RenameColumn"), true); //$NON-NLS-1$
 		this.field = field;
 		defaultName = new JLabel();
 		oldName = new JLabel();
@@ -125,7 +127,7 @@ public final class FieldAliasDialog extends AbstractDialog {
 			newName.setText(field.getName());
 		} else {
 			result =newName.getText().trim();
-			if (result.equals(oldName))
+			if (result.equals(oldName.getText()))
 				return true; // no change
 			if (result.length() == 0) {
 				Alert.warn(Messages.getString("RenameDialog.TheNameCannotBeEmpty"),this); //$NON-NLS-1$
@@ -150,18 +152,14 @@ public final class FieldAliasDialog extends AbstractDialog {
 		// from the layout code makes both parts easier to read.
 		initControls();
 		//TODO set minimum size
-		FormLayout layout = new FormLayout("default, 3dlu, 120dlu:grow", // cols //$NON-NLS-1$
-				"p, 3dlu,p,3dlu,p,3dlu,p"); // rows //$NON-NLS-1$
+		FormLayout layout = new FormLayout("default, 4dlu, 140dlu:grow", // cols //$NON-NLS-1$
+				"p, 3dlu, p"); // rows //$NON-NLS-1$
 
-		// Create a builder that assists in adding components to the container.
-		// Wrap the panel with a standardized border.
 		DefaultFormBuilder builder = new DefaultFormBuilder(layout);
-		builder.setDefaultDialogBorder();
-		builder.append(Messages.getString("Field.name"), defaultName); //$NON-NLS-1$
-		builder.nextLine(2);
-		builder.append(Messages.getString("RenameDialog.CurrentName"), oldName); //$NON-NLS-1$
-		builder.nextLine(2);
 		builder.append(Messages.getString("RenameDialog.NewName"), newName); //$NON-NLS-1$
+		builder.nextLine(2);
+		builder.nextColumn(2);
+		builder.append(FieldComponentMap.createHintLabelText(MessageFormat.format(Messages.getString("RenameDialog.ColumnHint"), field.getDefaultName()), 140)); //$NON-NLS-1$
 		return builder.getPanel();
 	}
 

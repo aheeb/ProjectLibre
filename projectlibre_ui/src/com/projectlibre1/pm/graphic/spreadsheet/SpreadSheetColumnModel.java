@@ -200,6 +200,7 @@ public class SpreadSheetColumnModel extends DefaultTableColumnModel {
 				}
 				Integer compact = COMPACT_WIDTHS.get(field.getId());
 				if (compact != null) tc.setPreferredWidth(compact);
+				else if (field.isCustom()) tc.setPreferredWidth(110); // the user's own columns, e.g. a short profile name
 			}
 			Integer size=colWidthMap.get(field.getId());
 			if (size==null||size<=0) colWidthMap.put(field.getId(),tc.getPreferredWidth());

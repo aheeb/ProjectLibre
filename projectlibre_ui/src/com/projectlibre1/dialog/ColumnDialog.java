@@ -58,26 +58,53 @@ package com.projectlibre1.dialog;
 import com.projectlibre1.dialog.util.FieldComponentMap;
 
 import java.awt.Component;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
+import javax.swing.ButtonGroup;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
+import javax.swing.JRadioButton;
+import javax.swing.JTextField;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
+import com.jgoodies.forms.layout.CellConstraints;
 import com.jgoodies.forms.layout.FormLayout;
-import com.projectlibre1.pm.graphic.frames.GraphicManager;
+import com.projectlibre1.configuration.Configuration;
 import com.projectlibre1.field.Field;
+import com.projectlibre1.pm.graphic.frames.DocumentFrame;
+import com.projectlibre1.pm.graphic.frames.GraphicManager;
+import com.projectlibre1.pm.task.Project;
 import com.projectlibre1.strings.Messages;
+import com.projectlibre1.util.Alert;
 
+/**
+ * Insert Column: either show existing information, or create a column of your own by giving it a name.
+ * A column of your own is the first unused custom field of the chosen kind (Text1, Text2...) renamed with
+ * an alias, which is saved with the project and exported to Microsoft Project.
+ */
 public final class ColumnDialog extends AbstractDialog {
 	private static final long serialVersionUID = 1L;
+	/** custom field id prefixes and how many of each exist, in the order of the kind choice */
+	private static final String[] KIND_IDS = {"Field.customText", "Field.customNumber", "Field.customDate", "Field.customFlag", "Field.customCost"};
+	private static final String[] KIND_KEYS = {"ColumnDialog.KindText", "ColumnDialog.KindNumber", "ColumnDialog.KindDate", "ColumnDialog.KindFlag", "ColumnDialog.KindCost"};
+
 	JComboBox combo = null;
+	JRadioButton existing;
+	JRadioButton own;
+	JTextField ownName;
+	JComboBox ownKind;
 	List fieldList;
 	ArrayList currentFields;
 	Field field;
+	Project project;
 	public static Field getFieldFromDialog(Component component, List fieldList, ArrayList currentFields) {
 		ColumnDialog dlg = new ColumnDialog(component,fieldList,currentFields);
 		if (dlg.doModal())
@@ -90,6 +117,8 @@ public final class ColumnDialog extends AbstractDialog {
 		super(GraphicManager.getInstance(component).getFrame(), Messages.getString("ColumnDialog.InsertColumn"), true); //$NON-NLS-1$
 		this.fieldList = fieldList;
 		this.currentFields = currentFields;
+		DocumentFrame frame = GraphicManager.getInstance(component).getCurrentFrame();
+		project = frame == null ? null : frame.getProject();
 		addDocHelp("Spreadsheet");
 	}
 
@@ -100,7 +129,29 @@ public final class ColumnDialog extends AbstractDialog {
 	 * may further bind the components to underlying models.
 	 */
 	protected void initControls() {
+		existing = new JRadioButton(Messages.getString("ColumnDialog.Existing")); //$NON-NLS-1$
+		own = new JRadioButton(Messages.getString("ColumnDialog.Own")); //$NON-NLS-1$
+		ButtonGroup group = new ButtonGroup();
+		group.add(existing);
+		group.add(own);
+		existing.setSelected(true);
+		ownName = new JTextField();
+		ownName.getDocument().addDocumentListener(new DocumentListener() {
+			public void insertUpdate(DocumentEvent e) { own.setSelected(true); }
+			public void removeUpdate(DocumentEvent e) {}
+			public void changedUpdate(DocumentEvent e) {}
+		});
+		String[] kinds = new String[KIND_KEYS.length];
+		for (int i = 0; i < kinds.length; i++)
+			kinds[i] = Messages.getString(KIND_KEYS[i]);
+		ownKind = new JComboBox(kinds);
+		ownKind.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) { own.setSelected(true); }
+		});
 		bind(true);
+		combo.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) { existing.setSelected(true); }
+		});
 	}
 
 	protected boolean bind(boolean get) {
@@ -109,10 +160,49 @@ public final class ColumnDialog extends AbstractDialog {
 			l.addAll(fieldList);
 			Collections.sort(l);
 			combo = new JComboBox(new DefaultComboBoxModel(l.toArray()));
+		} else if (own.isSelected()) {
+			String name = ownName.getText().trim();
+			if (name.length() == 0) {
+				Alert.warn(Messages.getString("ColumnDialog.NameMissing"), this); //$NON-NLS-1$
+				ownName.requestFocusInWindow();
+				return false;
+			}
+			field = findFreeField(KIND_IDS[ownKind.getSelectedIndex()]);
+			if (field == null) {
+				Alert.warn(Messages.getString("ColumnDialog.NoneFree"), this); //$NON-NLS-1$
+				return false;
+			}
+			field.setAlias(name);
+			if (project != null)
+				project.setGroupDirty(true);
 		} else {
 			field = (Field)combo.getSelectedItem();
 		}
 		return true;
+	}
+
+	/** The first custom field of the kind that has no name of its own, is not shown and holds no task values. */
+	private Field findFreeField(String idPrefix) {
+		for (int i = 1; ; i++) {
+			Field f = Configuration.getFieldFromId(idPrefix + i);
+			if (f == null)
+				return null;
+			if (f.getAlias() == null && !currentFields.contains(f) && !hasValues(f, project))
+				return f;
+		}
+	}
+
+	/** Whether any task of the project has a value (not blank, No or 0) in the field. */
+	public static boolean hasValues(Field f, Project project) {
+		if (project == null)
+			return false;
+		for (Iterator i = project.getTaskOutlineIterator(); i.hasNext();) {
+			Object value = f.getValue(i.next(), null);
+			if (value != null && !"".equals(value) && !Boolean.FALSE.equals(value) //$NON-NLS-1$
+					&& !(value instanceof Number && ((Number) value).doubleValue() == 0))
+				return true;
+		}
+		return false;
 	}
 
 	// Building *************************************************************
@@ -129,15 +219,19 @@ public final class ColumnDialog extends AbstractDialog {
 		// Separating the component initialization and configuration
 		// from the layout code makes both parts easier to read.
 		initControls();
-		//TODO set minimum size
-		FormLayout layout = new FormLayout("default, 4dlu, 140dlu:grow", // cols //$NON-NLS-1$
-				"p, 4dlu, p"); // rows //$NON-NLS-1$
+		FormLayout layout = new FormLayout("12dlu, default, 4dlu, 110dlu:grow, 4dlu, default", // cols //$NON-NLS-1$
+				"p, 3dlu, p, 3dlu, p, 10dlu, p, 3dlu, p, 3dlu, p"); // rows //$NON-NLS-1$
 
 		DefaultFormBuilder builder = new DefaultFormBuilder(layout);
-		builder.append(Messages.getString("ColumnDialog.Show"), combo); //$NON-NLS-1$
-		builder.nextLine(2);
-		builder.nextColumn(2);
-		builder.append(FieldComponentMap.createHintLabelText(Messages.getString("ColumnDialog.Hint"), 140)); //$NON-NLS-1$
+		CellConstraints cc = new CellConstraints();
+		builder.add(existing, cc.xyw(1, 1, 6));
+		builder.add(combo, cc.xyw(2, 3, 5));
+		builder.add(FieldComponentMap.createHintLabelText(Messages.getString("ColumnDialog.Hint"), 180), cc.xyw(2, 5, 5)); //$NON-NLS-1$
+		builder.add(own, cc.xyw(1, 7, 6));
+		builder.addLabel(Messages.getString("ColumnDialog.OwnName"), cc.xy(2, 9)); //$NON-NLS-1$
+		builder.add(ownName, cc.xy(4, 9));
+		builder.add(ownKind, cc.xy(6, 9));
+		builder.add(FieldComponentMap.createHintLabelText(Messages.getString("ColumnDialog.OwnHint"), 180), cc.xyw(2, 11, 5)); //$NON-NLS-1$
 		return builder.getPanel();
 	}
 
