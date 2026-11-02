@@ -462,10 +462,10 @@ public class SpreadSheet extends CommonSpreadSheet implements Cloneable {
 					e.consume();
 					executeAction(MenuActionConstants.ACTION_DELETE);
 				}
-				else if (e.getKeyCode() == KeyEvent.VK_F3)
+				else if (e.getKeyCode() == KeyEvent.VK_F3 || (e.getKeyCode() == KeyEvent.VK_F && e.getModifiers()== KeyEvent.CTRL_MASK)) {
+					e.consume();
 					GraphicManager.getInstance().doFind(SpreadSheet.this,null);
-				else if (e.getKeyCode() == KeyEvent.VK_F && e.getModifiers()== KeyEvent.CTRL_MASK)
-					GraphicManager.getInstance().doFind(SpreadSheet.this,null);
+				}
 
 
 			}
