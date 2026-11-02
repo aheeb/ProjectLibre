@@ -110,7 +110,7 @@ public class PredefinedShape {
 					path.lineTo(x, y);
 			}
 		}
-		path.closePath();
+		if (path.getCurrentPoint() != null) path.closePath(); // a zero-size rounded bar has no segments to close
 		return path;
 	}
 
