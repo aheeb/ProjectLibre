@@ -158,6 +158,12 @@
 				<zipgroupfileset file="lib/exchange/jaxb-core.jar" /> 
 				<zipgroupfileset file="lib/exchange/jaxb-impl.jar" /> 
 				<zipgroupfileset file="lib/exchange/javax.activation-api.jar" /> 
+				<zipfileset src="lib/ui/flatlaf-3.7.2.jar" excludes="module-info.class,META-INF/MANIFEST.MF" />
+				<zipfileset src="lib/ui/flatlaf-extras-3.7.2.jar" excludes="module-info.class,META-INF/MANIFEST.MF" />
+				<zipfileset src="lib/ui/jsvg-2.1.0.jar" excludes="module-info.class,META-INF/MANIFEST.MF" />
+				<manifest>
+					<attribute name="Multi-Release" value="true"/>
+				</manifest>
 			</jar>
 		</else>
 	  </if>

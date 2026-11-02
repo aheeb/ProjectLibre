@@ -229,6 +229,7 @@
 			</zipfileset>
 			<manifest>
 				<attribute name="Main-Class" value="com.projectlibre1.main.Main"/>
+				<attribute name="Multi-Release" value="true"/>
 			</manifest>
 
 			<metainf dir="license">

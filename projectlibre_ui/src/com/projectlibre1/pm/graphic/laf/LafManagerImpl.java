@@ -112,22 +112,8 @@ public class LafManagerImpl implements LafManager {
 	 */
     public LookAndFeel getPlaf() {
     	if (plaf == null) {
-			try {
-						int os=Environment.getOs();
-						if (os==Environment.LINUX/*||os==Environment.MAC*/) //$NON-NLS-1$ //$NON-NLS-2$
-								UIManager.setLookAndFeel("javax.swing.plaf.metal.MetalLookAndFeel"); //$NON-NLS-1$
-								//UIManager.setLookAndFeel("com.sun.java.swing.plaf.gtk.GTKLookAndFeel");
-						else {
-							UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-							plaf = UIManager.getLookAndFeel();
-							return plaf;
-						}
-		    			plaf = UIManager.getLookAndFeel();
-
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-			if (graphicManager!=null) SwingUtilities.updateComponentTreeUI(graphicManager.getContainer());
+    		ModernLaf.install();
+    		plaf = UIManager.getLookAndFeel();
     	}
     	return plaf;
     }

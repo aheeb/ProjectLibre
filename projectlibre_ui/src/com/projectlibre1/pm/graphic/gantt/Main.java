@@ -75,6 +75,7 @@ public class Main {
 		System.setProperty("apple.awt.application.name","ProjectLibre");
 		System.setProperty("apple.laf.useScreenMenuBar","true");
 		Locale.setDefault(ConfigurationFile.getLocale());
+		com.projectlibre1.pm.graphic.laf.ModernLaf.install();
 		HashMap opts=ApplicationStartupFactory.extractOpts(args);
 		String osName=System.getProperty("os.name").toLowerCase();
 		if (osName.startsWith("linux")){

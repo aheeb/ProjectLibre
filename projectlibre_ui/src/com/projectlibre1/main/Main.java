@@ -71,6 +71,7 @@ import com.projectlibre1.util.Environment;
  */
 public class Main {
 	public static void main(String[] args) {
+		DevControl.startIfEnabled();
 		int runNumber=getRunNumber()+1;
 		long firstRun=getFirstRun();
 		Preferences.userNodeForPackage(Main.class).putInt("projectlibreRunNumber",runNumber);
