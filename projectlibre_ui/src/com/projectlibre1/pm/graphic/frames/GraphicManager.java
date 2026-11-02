@@ -1612,7 +1612,7 @@ public class GraphicManager implements  FrameHolder, NamedFrameListener, WindowS
 		}
 	}
 	
-	public class LocaleAction extends MenuActionsMap.DocumentMenuAction {
+	public class LocaleAction extends MenuActionsMap.GlobalMenuAction {
 		private static final long serialVersionUID = 1L;
 		public void actionPerformed(ActionEvent arg0) {
 			setMeAsLastGraphicManager();

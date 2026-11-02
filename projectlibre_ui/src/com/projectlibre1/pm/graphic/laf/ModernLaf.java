@@ -23,6 +23,7 @@ public class ModernLaf {
 	public static final Color CHROME = new Color(0xF6F7F9);
 	public static final Color TEXT_SECONDARY = new Color(0x6B7280);
 	public static final Color TEXT_PRIMARY = new Color(0x1F2328);
+	public static final Color TEXT_DISABLED = new Color(0xA8ADB4);
 	/** Translucent fills for flat buttons and tabs (hover, pressed, selected). */
 	public static final Color HOVER = new Color(0, 0, 0, 13);
 	public static final Color PRESSED = new Color(0, 0, 0, 26);

@@ -238,6 +238,7 @@ public class MenuManager {
 	}
 
 	public void setActionEnabled(String id, boolean enable) {
+		setRibbonActionEnabled(id, enable);
 		Collection buttons = getToolButtonsFromId(id);
 		if (buttons != null) {
 			Iterator i = buttons.iterator();
@@ -251,6 +252,28 @@ public class MenuManager {
 		if (menuItem != null)
 			menuItem.setEnabled(enable);
 	}
+	/**
+	 * Ribbon buttons, the menu bar, the view switcher and keyboard shortcuts all follow the Action, so disable
+	 * the Action itself and the ribbon buttons calling it. id is a menu id ("Undo") or an action name ("UndoAction").
+	 */
+	private void setRibbonActionEnabled(String id, boolean enable) {
+		if (ribbonFactory == null)
+			return;
+		String actionName = menuFactory.getActionStringFromId(id);
+		if (actionName == null)
+			actionName = id;
+		actionName = actionName.trim();
+		for (AbstractCommandButton b : ribbonFactory.getCommandButtons(actionName))
+			b.setEnabled(enable);
+		try {
+			Action action = rootActionMap.getAction(actionName);
+			if (action != null)
+				action.setEnabled(enable);
+		} catch (RuntimeException e) {
+			// not a registered action
+		}
+	}
+
 	public void setActionVisible(String id, boolean enable) {
 		Collection buttons = getToolButtonsFromId(id);
 		if (buttons != null) {

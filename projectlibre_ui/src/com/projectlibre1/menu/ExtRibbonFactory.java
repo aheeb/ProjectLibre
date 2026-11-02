@@ -56,6 +56,8 @@
 package com.projectlibre1.menu;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
@@ -103,6 +105,25 @@ public class ExtRibbonFactory extends RibbonFactory {
 		return button;
 	}
 	
+
+	/** Ribbon buttons by action name (e.g. "SaveProjectAction"), so their enabled state can follow the action. */
+	private MultiHashMap commandButtons = new MultiHashMap();
+
+	@Override
+	public AbstractCommandButton createCommandButton(String name) throws MissingResourceException,
+			ResourceFormatException, MissingListenerException {
+		AbstractCommandButton button = super.createCommandButton(name);
+		String actionName = getActionStringFromId(name);
+		if (actionName != null && button != null)
+			commandButtons.put(actionName.trim(), button);
+		return button;
+	}
+
+	public Collection<AbstractCommandButton> getCommandButtons(String actionName) {
+		@SuppressWarnings("unchecked")
+		Collection<AbstractCommandButton> result = (Collection<AbstractCommandButton>) commandButtons.get(actionName);
+		return result == null ? Collections.<AbstractCommandButton>emptyList() : result;
+	}
 
     public ArrayList getButtonsFromId(String id) {
     	String buttonId = getActionStringFromId(id);

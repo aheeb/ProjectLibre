@@ -92,7 +92,7 @@ public class AppMenuBar implements MenuActionConstants {
 		bar.add(edit);
 
 		JMenu task = menu("MacMenu.Task");
-		item(task, ACTION_INSERT_TASK, "RibbonInsert", false);
+		item(task, "NewTask", "RibbonInsert", false);
 		item(task, "NewResource", "RibbonNewResource", false);
 		task.addSeparator();
 		item(task, ACTION_INDENT, "RibbonIndent", false);
@@ -319,13 +319,15 @@ public class AppMenuBar implements MenuActionConstants {
 		inputMap.remove(KeyStroke.getKeyStroke(KeyEvent.VK_PERIOD, mask));
 	}
 
-	/** Without a menu bar, put every shortcut of the table on the window unless the key is already used. */
+	/**
+	 * Without a menu bar, put every shortcut of the table on the window. The table is the reference, so it
+	 * replaces older bindings of the same keys (they point to the same commands, except Ctrl+I which now adds
+	 * a task even without a selection).
+	 */
 	private void addMissingRootBindings(JRootPane root) {
 		InputMap inputMap = root.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
 		ActionMap actionMap = root.getActionMap();
 		for (Map.Entry<String, KeyStroke> e : MenuShortcuts.getAll().entrySet()) {
-			if (inputMap.get(e.getValue()) != null)
-				continue;
 			final String actionName = e.getKey();
 			inputMap.put(e.getValue(), actionName);
 			actionMap.put(actionName, new AbstractAction() {

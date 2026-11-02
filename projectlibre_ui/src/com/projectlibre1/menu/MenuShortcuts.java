@@ -38,7 +38,7 @@ public class MenuShortcuts {
 		put("CopyAction", KeyEvent.VK_C, 0);
 		put("PasteAction", KeyEvent.VK_V, 0);
 		put("FindAction", KeyEvent.VK_F, 0);
-		put("InsertTaskAction", KeyEvent.VK_I, 0);
+		put("NewTaskAction", KeyEvent.VK_I, 0);
 		if (mac) {
 			// Cmd+, is Settings and Cmd+. is Cancel on the Mac, so use the outliner convention
 			put("IndentAction", KeyEvent.VK_CLOSE_BRACKET, 0);

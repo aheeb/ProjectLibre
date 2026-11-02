@@ -624,6 +624,8 @@ public class BasicCommandButtonUI extends CommandButtonUI {
 	}
 
 	protected Color getForegroundColor(boolean isTextPaintedEnabled) {
+		if (FlatRibbonStyle.isActive())
+			return isTextPaintedEnabled ? FlatRibbonStyle.text() : FlatRibbonStyle.disabledText();
 		if (isTextPaintedEnabled) {
 			return FlamingoUtilities.getColor(Color.black, "Button.foreground");
 		} else {

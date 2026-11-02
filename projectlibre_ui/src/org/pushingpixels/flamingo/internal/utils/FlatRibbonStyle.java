@@ -28,6 +28,14 @@ public class FlatRibbonStyle {
 		return ModernLaf.HAIRLINE;
 	}
 
+	public static Color text() {
+		return ModernLaf.TEXT_PRIMARY;
+	}
+
+	public static Color disabledText() {
+		return ModernLaf.TEXT_DISABLED;
+	}
+
 	/** Font for band titles: one step smaller than the button font. */
 	public static Font smallFont(Font base) {
 		return base.deriveFont(Math.max(10f, base.getSize2D() - 2f));
