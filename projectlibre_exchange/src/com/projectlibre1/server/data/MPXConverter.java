@@ -68,7 +68,6 @@ import net.sf.mpxj.Day;
 import net.sf.mpxj.DayType;
 import net.sf.mpxj.EarnedValueMethod;
 import net.sf.mpxj.FieldContainer;
-import net.sf.mpxj.MPXJException;
 import net.sf.mpxj.Priority;
 import net.sf.mpxj.ProjectCalendar;
 import net.sf.mpxj.ProjectCalendarException;
@@ -170,8 +169,8 @@ public class MPXConverter {
 					continue;
 				Date start = new Date(workDays[i].getStart());
 				GregorianCalendar cal = DateTime.calendarInstance();
-				// days go from 00:00 to 23:59
-				cal.setTime(start);
+				// days go from 00:00 to 23:59; an exception can span several days (e.g. a week of vacation)
+				cal.setTime(new Date(Math.max(workDays[i].getStart(),workDays[i].getEnd())));
 				cal.set(Calendar.HOUR,23);
 				cal.set(Calendar.MINUTE,59);
 				ProjectCalendarException exception=mpx.addCalendarException(start,DateTime.fromGmt(cal.getTime())); //claur
@@ -248,14 +247,11 @@ public class MPXConverter {
 
 		WorkingCalendar projectlibreCalendar = (WorkingCalendar)projectlibreResource.getWorkCalendar();
 		if (projectlibreCalendar != null) { // there should be a calendar, except for the unassigned instance
-			ProjectCalendar mpxCalendar = null;
-			try {
-				mpxCalendar = mpxResource.addResourceCalendar();
-			} catch (MPXJException e) {
-				e.printStackTrace();
-				return;
-			}
-				toMpxCalendar(projectlibreCalendar,mpxCalendar);
+			// added to the file's calendars (Resource.addResourceCalendar() doesn't), else the writer leaves it out
+			// and the resource refers to a calendar the file doesn't have: no vacations, no personal working hours
+			ProjectCalendar mpxCalendar = mpxResource.getParentFile().addCalendar();
+			mpxResource.setResourceCalendar(mpxCalendar);
+			toMpxCalendar(projectlibreCalendar,mpxCalendar);
 		}
 		//TODO The follwing only work because the UID of the resource is the id and not the unique id. A big unique id value  overflows the UID element of the custom field.  It works
 		// here because the id is small
