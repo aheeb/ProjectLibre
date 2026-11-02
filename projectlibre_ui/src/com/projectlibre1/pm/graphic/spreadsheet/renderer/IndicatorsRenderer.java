@@ -74,6 +74,18 @@ public class IndicatorsRenderer extends DefaultTableCellRenderer implements Offl
 	private static final long serialVersionUID = 190987129201L;
 	protected static JLabel cellHeader; //TODO static OK?
 	protected IndicatorsComponent indicatorsComponent;
+	protected JPanel tablePanel;
+
+	/** Like DefaultTableCellRenderer: no repaint or scroll-pane revalidation queued for every painted cell. */
+	static class RendererPanel extends JPanel {
+		public void revalidate() {
+			invalidate();
+		}
+		public void repaint(long tm, int x, int y, int width, int height) {
+		}
+		public void repaint(java.awt.Rectangle r) {
+		}
+	}
 	
 	public IndicatorsRenderer() {
 		super();
@@ -88,11 +100,18 @@ public class IndicatorsRenderer extends DefaultTableCellRenderer implements Offl
 		}
 		if (indicatorsComponent!=null&&indicatorsComponent.acceptValue(value)) {
 			JComponent label;
-			label = new JPanel();
-			//label=(JComponent)super.getTableCellRendererComponent(table,"",isSelected,hasFocus,row,column);
-			//indicatorsComponent.setLook(label,isSelected,hasFocus);
-			if (table!=null) label.setBackground(table.getBackground());
-			label.setLayout(new BoxLayout(label, BoxLayout.X_AXIS));
+			if (table!=null){ // on screen: one panel, stamped by the table's CellRendererPane
+				if (tablePanel==null){
+					tablePanel=new RendererPanel();
+					tablePanel.setLayout(new BoxLayout(tablePanel, BoxLayout.X_AXIS));
+				}
+				label=tablePanel;
+				label.removeAll();
+				label.setBackground(table.getBackground());
+			}else{
+				label = new JPanel();
+				label.setLayout(new BoxLayout(label, BoxLayout.X_AXIS));
+			}
 			StringBuffer text = new StringBuffer();
 			
 			// I would like to also show a gif next to the text as MS does.  unfortunately, this is not doable
