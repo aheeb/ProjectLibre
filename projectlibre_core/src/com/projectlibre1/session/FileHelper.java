@@ -211,6 +211,7 @@ public class FileHelper {
 		String fileName=file.toString();
 		FileFilter currentFilter=fileChooser.getFileFilter();
 		if (save){
+			fileName=microsoftProjectName(fileName);
 			if (currentFilter==microsoftXMLFilter){
 				if(!fileName.endsWith(".xml")) fileName+=".xml";
 			}
@@ -246,9 +247,16 @@ public class FileHelper {
     	if (dialog.getFile() == null) return null;
     	File file = new File(dialog.getDirectory(), dialog.getFile());
     	String fileName = file.getPath();
+    	if (save) fileName = microsoftProjectName(fileName);
     	if (save && !isFileNameAllowed(fileName, true)) fileName += "." + DEFAULT_FILE_EXTENSION;
     	Preferences.userNodeForPackage(FileHelper.class).put("lastDirectory", file.getParent());
     	return fileName;
+    }
+
+    /** Microsoft Project's own .mpp/.mpx can only be read: a name typed with them is saved as Microsoft Project XML, which Microsoft Project opens. */
+    private static String microsoftProjectName(String fileName) {
+    	String n = fileName.toLowerCase();
+    	return n.endsWith(".mpp") || n.endsWith(".mpx") ? changeFileExtension(fileName, "xml") : fileName; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
     public static boolean isFileNameAllowed(String fileName,boolean save) {
