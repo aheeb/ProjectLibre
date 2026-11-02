@@ -343,33 +343,45 @@ public class ClassUtils {
 		}
 
 		private static Class[] getterParams = new Class[] {};
+		// The read-only checks run for every painted cell; looking the method up each time (and throwing
+		// NoSuchMethodException when it is missing) dominated grid painting. Cache the lookup per class.
+		private static ClassValue<Method[]> readOnlyGetter = methodCache("isReadOnly", getterParams);
+		private static ClassValue<Method[]> fieldReadOnlyGetter = methodCache("isReadOnly", new Class[] {Field.class});
+		private static ClassValue<Method[]> methodCache(final String name,final Class[] params){
+			return new ClassValue<Method[]>() {
+				protected Method[] computeValue(Class<?> type) {
+					try {
+						return new Method[] {type.getMethod(name, params)};
+					} catch (NoSuchMethodException e) {
+						return new Method[] {null};
+					}
+				}
+			};
+		}
 		public static boolean isObjectReadOnly(Object object){
 			if (object==null) return false;
 			Boolean value=null;
 			try {
-				Method m=object.getClass().getMethod("isReadOnly", getterParams);
+				Method m=readOnlyGetter.get(object.getClass())[0];
 				if (m!=null) value=(Boolean)m.invoke(object,null);
 			}
 			catch (IllegalArgumentException e) {}
 			catch (IllegalAccessException e) {}
 			catch (InvocationTargetException e) {}
-			catch (NoSuchMethodException e) {}
 			return value != null&&value.booleanValue();
 			
 		}
-		private static Class[] fieldGetterParams = new Class[] {Field.class};
 		public static boolean isObjectFieldReadOnly(Object object,Field field){
 			if (object==null) return false;
 			Boolean value=null;
 			try {
-				Method m=object.getClass().getMethod("isReadOnly", fieldGetterParams);
+				Method m=fieldReadOnlyGetter.get(object.getClass())[0];
 				if (m!=null)
 					value=(Boolean)m.invoke(object,new Object[] {field});
 			}
 			catch (IllegalArgumentException e) {}
 			catch (IllegalAccessException e) {}
 			catch (InvocationTargetException e) {}
-			catch (NoSuchMethodException e) {}
 			return value != null&&value.booleanValue();
 			
 		}
