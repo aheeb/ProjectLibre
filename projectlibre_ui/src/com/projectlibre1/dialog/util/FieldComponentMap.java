@@ -236,7 +236,8 @@ public class FieldComponentMap implements ObjectRef {
 		JLabel label = new JLabel();
 		label.setForeground(ModernLaf.TEXT_SECONDARY);
 		label.setFont(label.getFont().deriveFont(label.getFont().getSize2D() - 1f));
-		int width = Sizes.dialogUnitXAsPixel(widthDlu, label);
+		// Swing's HTML renderer scales CSS px by 1.3, so divide to get real pixels
+		int width = Math.round(Sizes.dialogUnitXAsPixel(widthDlu, label) / 1.3f);
 		label.setText("<html><div style='width:" + width + "px'>" + text + "</div></html>"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		return label;
 	}

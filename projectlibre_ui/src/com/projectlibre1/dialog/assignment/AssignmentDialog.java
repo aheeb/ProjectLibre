@@ -314,7 +314,7 @@ public final class AssignmentDialog extends AbstractDialog implements DocumentSe
 		taskNames.setFont(taskNames.getFont().deriveFont(Font.BOLD));
 		builder.add(taskNames,cc.xyw(1, builder.getRow(), 3));
 		builder.nextLine(2);
-		builder.add(FieldComponentMap.createHintLabelText(Messages.getString("AssignmentDialog.Hint"), 240),cc.xyw(1, builder.getRow(), 3)); //$NON-NLS-1$
+		builder.add(FieldComponentMap.createHintLabelText(Messages.getString("AssignmentDialog.Hint"), 300),cc.xyw(1, builder.getRow(), 3)); //$NON-NLS-1$
 		builder.nextLine(2);
 		if (teamLabel) {
 			builder.add(getTeamOrAllLabel(),cc.xyw(1, builder.getRow(), 3));

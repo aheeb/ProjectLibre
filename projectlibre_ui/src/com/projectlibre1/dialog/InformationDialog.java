@@ -94,7 +94,7 @@ public abstract class InformationDialog extends FieldDialog {
 
 	/** Puts the field's plain-language hint under the field column of the current row. */
 	protected static void addHint(DefaultFormBuilder builder, String fieldId) {
-		JLabel hint = FieldComponentMap.createHintLabel(fieldId, 210);
+		JLabel hint = FieldComponentMap.createHintLabel(fieldId, 270);
 		if (hint != null)
 			builder.add(hint, new CellConstraints().xyw(3, builder.getRow(), 5));
 	}

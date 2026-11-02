@@ -56,6 +56,7 @@
 package com.projectlibre1.dialog.calendar;
 
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Frame;
 import java.awt.GridLayout;
@@ -71,6 +72,7 @@ import java.util.GregorianCalendar;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.ComboBoxModel;
 import javax.swing.DefaultComboBoxModel;
@@ -86,6 +88,8 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JSplitPane;
 import javax.swing.JTextField;
+import javax.swing.SwingConstants;
+import javax.swing.UIManager;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.undo.UndoableEditSupport;
@@ -93,10 +97,14 @@ import javax.swing.undo.UndoableEditSupport;
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.layout.CellConstraints;
 import com.jgoodies.forms.layout.FormLayout;
+import com.jgoodies.forms.layout.RowSpec;
+import com.formdev.flatlaf.ui.FlatArrowButton;
 import com.projectlibre1.contrib.calendar.ContribIntervals;
 import com.projectlibre1.dialog.AbstractDialog;
 import com.projectlibre1.dialog.ButtonPanel;
 import com.projectlibre1.dialog.options.CalendarDialogBox;
+import com.projectlibre1.dialog.util.FieldComponentMap;
+import com.projectlibre1.pm.graphic.laf.ModernLaf;
 import com.projectlibre1.pm.graphic.IconManager;
 import com.projectlibre1.pm.graphic.frames.GraphicManager;
 import com.projectlibre1.configuration.Settings;
@@ -608,18 +616,22 @@ public class ChangeWorkingTimeDialogBox extends AbstractDialog{
 	}
 
 	private JComponent createSettingsPanel() {
-		FormLayout settingsLayout = new FormLayout("100dlu", //$NON-NLS-1$
-		"p,0dlu ,p,3dlu ,p,3dlu p,3dlu,p,0dlu ,p,0dlu ,p,3dlu ,p,3dlu ,p,3dlu ,p,3dlu ,p,3dlu ,p,3dlu ,p,3dlu ,p,3dlu ,p"); //$NON-NLS-1$
+		FormLayout settingsLayout = new FormLayout("110dlu", //$NON-NLS-1$
+		"p,2dlu,p,2dlu,p,2dlu,p,p,12dlu,p,6dlu,p,2dlu,p,2dlu,p,8dlu,p"); //$NON-NLS-1$
 		DefaultFormBuilder settingBuilder = new DefaultFormBuilder(settingsLayout);
 
 		settingBuilder.addLabel(Messages.getString("ChangeWorkingTimeDialogBox.For")); //$NON-NLS-1$
 		settingBuilder.nextLine(2);
 		settingBuilder.add(calendarType);
 		settingBuilder.nextLine(2);
+		basedOnText.setForeground(ModernLaf.TEXT_SECONDARY);
 		settingBuilder.add(basedOnText);
 		settingBuilder.nextLine(2);
 		settingBuilder.add(notEditable);
+		settingBuilder.nextLine();
 		settingBuilder.add(caution);
+		settingBuilder.nextLine(2);
+		settingBuilder.add(FieldComponentMap.createHintLabelText(Messages.getString("ChangeWorkingTimeDialogBox.Instructions"), 108)); //$NON-NLS-1$
 		settingBuilder.nextLine(2);
 		settingBuilder.add(defaultWorkingTime);
 		settingBuilder.nextLine(2);
@@ -628,21 +640,22 @@ public class ChangeWorkingTimeDialogBox extends AbstractDialog{
 		settingBuilder.add(working);
 		settingBuilder.nextLine(2);
 
-		JPanel time = new JPanel();
-		time.setLayout(new GridLayout(1,2));
-		time.add(new JLabel(Messages.getString("ChangeWorkingTimeDialogBox.From"))); //$NON-NLS-1$
-		time.add(new JLabel(Messages.getString("ChangeWorkingTimeDialogBox.To"))); //$NON-NLS-1$
-		settingBuilder.add(time);
-
-
-		for (int i=0;i<timeStart.length;i++){
-			JPanel timePanel = new JPanel();
-			timePanel.setLayout(new GridLayout(1,2));
-			timePanel.add(timeStart[i]);
-			timePanel.add(timeEnd[i]);
-			settingBuilder.nextLine(2);
-			settingBuilder.add(timePanel);
+		FormLayout timeLayout = new FormLayout("16dlu, fill:p:grow, 4dlu, fill:p:grow", "p"); //$NON-NLS-1$ //$NON-NLS-2$
+		for (int i=0;i<timeStart.length;i++) {
+			timeLayout.appendRow(new RowSpec("2dlu")); //$NON-NLS-1$
+			timeLayout.appendRow(new RowSpec("p")); //$NON-NLS-1$
 		}
+		DefaultFormBuilder timeBuilder = new DefaultFormBuilder(timeLayout);
+		CellConstraints cc = new CellConstraints();
+		timeBuilder.addLabel(Messages.getString("ChangeWorkingTimeDialogBox.From").trim(), cc.xy(2, 1)); //$NON-NLS-1$
+		timeBuilder.addLabel(Messages.getString("ChangeWorkingTimeDialogBox.To").trim(), cc.xy(4, 1)); //$NON-NLS-1$
+		for (int i=0;i<timeStart.length;i++){
+			timeStart[i].setColumns(5);
+			timeEnd[i].setColumns(5);
+			timeBuilder.add(timeStart[i], cc.xy(2, 3 + 2 * i));
+			timeBuilder.add(timeEnd[i], cc.xy(4, 3 + 2 * i));
+		}
+		settingBuilder.add(timeBuilder.getPanel());
 		return settingBuilder.getPanel();
 }
 
@@ -651,28 +664,13 @@ public class ChangeWorkingTimeDialogBox extends AbstractDialog{
 		initControls();
 
 		FormLayout layout = new FormLayout(
-		        "300dlu:grow", //$NON-NLS-1$
-	    		  "p,p,fill:260dlu:grow"); //$NON-NLS-1$
+		        "p, 16dlu, fill:200dlu:grow", //$NON-NLS-1$
+	    		  "p, 4dlu, fill:240dlu:grow, 6dlu, p"); //$NON-NLS-1$
 
 		DefaultFormBuilder builder = new DefaultFormBuilder(layout);
-		builder.setDefaultDialogBorder();
 		CellConstraints cc = new CellConstraints();
 
-
-
-//	    JSplitPane settingsPanel=new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-//	    settingsPanel.setTopComponent(createSettingsPanel());
-//	    settingsPanel.setBottomComponent(new JPanel());
-//	    settingsPanel.setDividerSize(0);
-	    JSplitPane panel=new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-//		panel.setLeftComponent(settingsPanel);
-		panel.setLeftComponent(createSettingsPanel());
-
-		panel.setRightComponent(sdCalendar);
-
-		JPanel buttonPanel=new JPanel();
-		buttonPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
-		JButton backButton=new JButton(IconManager.getIcon("calendar.back")); //$NON-NLS-1$
+		JButton backButton=navigationButton(SwingConstants.WEST);
 		backButton.addActionListener(new ActionListener(){
 	        public void actionPerformed(ActionEvent e) {
 	            long first=sdCalendar.getFirstDisplayedDate();
@@ -688,7 +686,8 @@ public class ChangeWorkingTimeDialogBox extends AbstractDialog{
 	    	    sdCalendar.setFirstDisplayedDate(calendar.getTimeInMillis());
 	        }
         });
-		JButton todayButton=new JButton(IconManager.getIcon("calendar.today")); //$NON-NLS-1$
+		JButton todayButton=new JButton(Messages.getString("ChangeWorkingTimeDialogBox.Today")); //$NON-NLS-1$
+		todayButton.putClientProperty("JButton.buttonType", "toolBarButton"); //$NON-NLS-1$ //$NON-NLS-2$
 		todayButton.addActionListener(new ActionListener(){
 	        public void actionPerformed(ActionEvent e) {
 	            Calendar calendar=DateTime.calendarInstance();
@@ -697,7 +696,7 @@ public class ChangeWorkingTimeDialogBox extends AbstractDialog{
 	    	    sdCalendar.setFirstDisplayedDate(calendar.getTimeInMillis());
 	        }
         });
-		JButton forwardButton=new JButton(IconManager.getIcon("calendar.forward")); //$NON-NLS-1$
+		JButton forwardButton=navigationButton(SwingConstants.EAST);
 		forwardButton.addActionListener(new ActionListener(){
 	        public void actionPerformed(ActionEvent e) {
 	            Calendar calendar=DateTime.calendarInstance();
@@ -706,25 +705,28 @@ public class ChangeWorkingTimeDialogBox extends AbstractDialog{
 	    	    sdCalendar.setFirstDisplayedDate(calendar.getTimeInMillis());
 	        }
         });
-		buttonPanel.add(backButton);
-		buttonPanel.add(todayButton);
-		buttonPanel.add(forwardButton);
-		builder.nextLine();
-		builder.append(buttonPanel);
-		builder.nextLine();
-		builder.append(panel);
+		JPanel navigation=new JPanel(new FlowLayout(FlowLayout.RIGHT, 2, 0));
+		navigation.add(backButton);
+		navigation.add(todayButton);
+		navigation.add(forwardButton);
 
-//		builder.append(newCalendar);
-
+		sdCalendar.setBorder(BorderFactory.createLineBorder(ModernLaf.HAIRLINE));
+		builder.add(createSettingsPanel(), cc.xywh(1, 1, 1, 5, "fill, top")); //$NON-NLS-1$
+		builder.add(navigation, cc.xy(3, 1));
+		builder.add(sdCalendar, cc.xy(3, 3));
+		builder.add(FieldComponentMap.createHintLabelText(Messages.getString("ChangeWorkingTimeDialogBox.Legend"), 200), cc.xy(3, 5)); //$NON-NLS-1$
 
 		return builder.getPanel();
 	}
 
-
-	public Object getBean(){
-		return form;
+	private static JButton navigationButton(int direction) {
+		JButton b = new FlatArrowButton(direction, "chevron", //$NON-NLS-1$
+				ModernLaf.TEXT_SECONDARY, UIManager.getColor("Label.disabledForeground"), //$NON-NLS-1$
+				null, UIManager.getColor("Button.toolbar.hoverBackground"), //$NON-NLS-1$
+				null, UIManager.getColor("Button.toolbar.pressedBackground")); //$NON-NLS-1$
+		b.setPreferredSize(new Dimension(28, 28));
+		return b;
 	}
-
 	public ButtonPanel createButtonPanel() {
 		createOkCancelButtons();
 	    newCalendar.addActionListener(new ActionListener(){

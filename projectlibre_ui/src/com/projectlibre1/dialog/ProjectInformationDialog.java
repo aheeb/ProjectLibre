@@ -192,7 +192,7 @@ public class ProjectInformationDialog extends InformationDialog {
 		builder.setDefaultDialogBorder();
 		CellConstraints cc = new CellConstraints();
 		builder.add(createHeaderFieldsPanel(map),cc.xyw(1, 1, 10));
-		builder.add(FieldComponentMap.createHintLabelText(Messages.getString("ProjectInformationDialog.StatisticsHint"), 300), cc.xyw(1, 3, 10)); //$NON-NLS-1$
+		builder.add(FieldComponentMap.createHintLabelText(Messages.getString("ProjectInformationDialog.StatisticsHint"), 370), cc.xyw(1, 3, 10)); //$NON-NLS-1$
 		int row = 5;
 		for (int c = 0; c < headers.length; c++) {
 			JLabel header = new JLabel(Messages.getString(headers[c]));

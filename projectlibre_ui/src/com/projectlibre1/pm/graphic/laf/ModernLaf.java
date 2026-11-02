@@ -26,6 +26,8 @@ public class ModernLaf {
 	public static final Color ACCENT_SOFT = new Color(0xE4EDFD);
 	/** Soft amber tint for rows that are partly on (e.g. assigned to only some selected tasks). */
 	public static final Color WARNING_SOFT = new Color(0xFFF1CC);
+	/** Selection fill behind dark text where ACCENT would be too strong (e.g. selected calendar days). */
+	public static final Color SELECTION_SOFT = new Color(0xC7D9FB);
 
 	private static boolean installed = false;
 

@@ -181,7 +181,7 @@ public class ResourceInformationDialog extends InformationDialog {
 		builder.add(createHeaderFieldsPanel(map),cc.xyw(builder.getColumn(), builder
 				.getRow(), 1));
 		builder.nextLine(2);
-		builder.add(FieldComponentMap.createHintLabelText(Messages.getString("ResourceInformationDialog.AvailabilityHint"), 300), cc.xy(1, builder.getRow())); //$NON-NLS-1$
+		builder.add(FieldComponentMap.createHintLabelText(Messages.getString("ResourceInformationDialog.AvailabilityHint"), 380), cc.xy(1, builder.getRow())); //$NON-NLS-1$
 		builder.nextLine(2);
 		builder.add(createAvailabilitySpreadsheet(),cc.xyw(builder.getColumn(), builder
 				.getRow(), 1));
@@ -371,14 +371,14 @@ public class ResourceInformationDialog extends InformationDialog {
 		builder.nextLine(2);
 		builder.addSeparator(Messages.getString("Text.CostRateTables")); //$NON-NLS-1$
 		builder.nextLine(2);
-		builder.add(FieldComponentMap.createHintLabelText(Messages.getString("ResourceInformationDialog.CostRateTablesHint"), 300), cc.xyw(1, builder.getRow(), 5)); //$NON-NLS-1$
+		builder.add(FieldComponentMap.createHintLabelText(Messages.getString("ResourceInformationDialog.CostRateTablesHint"), 380), cc.xyw(1, builder.getRow(), 5)); //$NON-NLS-1$
 		builder.nextLine(2);
 		builder.add(costTabbedPane,cc.xyw(builder.getColumn(), builder
 				.getRow(), 5));
 		builder.nextLine(2);
 		map.append(builder,"Field.accrueAt"); //$NON-NLS-1$
 		builder.nextLine(2);
-		builder.add(FieldComponentMap.createHintLabel("Field.accrueAt", 210), cc.xyw(3, builder.getRow(), 3)); //$NON-NLS-1$
+		builder.add(FieldComponentMap.createHintLabel("Field.accrueAt", 270), cc.xyw(3, builder.getRow(), 3)); //$NON-NLS-1$
 	   	return builder.getPanel();
 		  
 	}
