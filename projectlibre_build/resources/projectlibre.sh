@@ -65,11 +65,14 @@ JAVA_INSTALL_DIR2="/usr/lib/jvm"
 JAVA_INSTALL_DIR_EXE2="bin/java"
 JAVA_INSTALL_DIR3="/opt/ibm"
 JAVA_INSTALL_DIR_EXE3="jre/bin/java"
-MIN_JAVA_VERSION="6"
+MIN_JAVA_VERSION="21"
 
 #Default conf values
 JAVA_EXE="java"
-JAVA_OPTS="-Xms128m -Xmx768m"
+# Small initial heap, up to half of RAM, G1 for short pauses (same as the macOS app)
+DEFAULT_JAVA_OPTS="-Xms64m -XX:MaxRAMPercentage=50 -XX:+UseG1GC"
+JAVA_OPTS="$DEFAULT_JAVA_OPTS"
+OLD_DEFAULT_JAVA_OPTS="-Xms128m -Xmx768m"
 #PROJECTLIBRE_HOME0="/usr/share/projectlibre"
 PROJECTLIBRE_HOME0=`(dirname $0)`
 PROJECTLIBRE_HOME="$PROJECTLIBRE_HOME0"
@@ -176,10 +179,12 @@ check_java() {
 }
 
 run_projectlibre() { # call function with parameters to hand over
+	# Class data sharing: the first run writes an archive of the loaded classes, later runs start faster.
+	# The JVM recreates it when projectlibre.jar changes.
 	if [ "$LOG_LEVEL" ] && [ "x$LOG_LEVEL" = "xDEBUG" ]; then
-		"$JAVA_EXE" $JAVA_OPTS -jar "$PROJECTLIBRE_HOME/projectlibre.jar" "$@" > "$LOG_FILE"
+		"$JAVA_EXE" $JAVA_OPTS "-XX:+AutoCreateSharedArchive" "-XX:SharedArchiveFile=$CONF_DIR/projectlibre.jsa" -jar "$PROJECTLIBRE_HOME/projectlibre.jar" "$@" > "$LOG_FILE"
 	else
-		"$JAVA_EXE" $JAVA_OPTS -jar "$PROJECTLIBRE_HOME/projectlibre.jar" "$@" > /dev/null 2>&1
+		"$JAVA_EXE" $JAVA_OPTS "-XX:+AutoCreateSharedArchive" "-XX:SharedArchiveFile=$CONF_DIR/projectlibre.jsa" -jar "$PROJECTLIBRE_HOME/projectlibre.jar" "$@" > /dev/null 2>&1
 	fi
 }
 
@@ -196,6 +201,10 @@ fi
 
 if [ -f "$RUN_CONF" ]; then
 	. "$RUN_CONF"
+	# run.conf saved the old defaults (768 MB max heap); move those installs to the current ones
+	if [ "x$JAVA_OPTS" = "x$OLD_DEFAULT_JAVA_OPTS" ]; then
+		JAVA_OPTS="$DEFAULT_JAVA_OPTS"
+	fi
 	PROJECTLIBRE_HOME="$PROJECTLIBRE_HOME0"
 	#PROJECTLIBRE_HOME can be harmful with multiple versions. disable
 	JAVA_OK="1"
