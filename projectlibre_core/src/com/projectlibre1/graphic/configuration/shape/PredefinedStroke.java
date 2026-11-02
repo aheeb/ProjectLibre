@@ -69,6 +69,7 @@ public class PredefinedStroke {
             BasicStroke.JOIN_ROUND, 0, new float[]{1,2}, 0);	
 	public static final BasicStroke FRAMED = new BasicStroke(); // Default
 	public static final BasicStroke LARGE_FRAMED = new BasicStroke(3f); // Default
+	public static final BasicStroke MEDIUM_FRAMED = new BasicStroke(1.5f);
 	public static final BasicStroke SOLID = null; // is always null - means no stroke
 	
 	private static HashMap predefinedStrokeMap = null;
@@ -77,6 +78,7 @@ public class PredefinedStroke {
 		predefinedStrokeMap.put("DASHED", DASHED);
 		predefinedStrokeMap.put("FRAMED", FRAMED);
 		predefinedStrokeMap.put("LARGE_FRAMED", LARGE_FRAMED);
+		predefinedStrokeMap.put("MEDIUM_FRAMED", MEDIUM_FRAMED);
 		predefinedStrokeMap.put("SOLID", SOLID);
 	}
 	

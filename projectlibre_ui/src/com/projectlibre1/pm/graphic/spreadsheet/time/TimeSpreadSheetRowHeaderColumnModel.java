@@ -72,8 +72,8 @@ public class TimeSpreadSheetRowHeaderColumnModel extends DefaultTableColumnModel
 	
 	public void addColumn(TableColumn tc){
 		if (columnIndex==0){
-			tc.setMinWidth(40);
-			tc.setMaxWidth(40);
+			tc.setMinWidth(64);
+			tc.setMaxWidth(64);
 			tc.setResizable(false);
 			tc.setCellRenderer(new TimeSpreadSheetRowHeaderRenderer());
 			tc.setCellEditor(null);

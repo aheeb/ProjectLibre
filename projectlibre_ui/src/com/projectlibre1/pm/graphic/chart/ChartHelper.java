@@ -55,6 +55,10 @@
  *******************************************************************************/
 package com.projectlibre1.pm.graphic.chart;
 
+import com.projectlibre1.pm.graphic.laf.ModernLaf;
+
+import java.awt.BasicStroke;
+
 /**
  * 
  */
@@ -95,8 +99,14 @@ public class ChartHelper implements TimeDistributedConstants {
 			chart = createBarLineChart(dataset,secondDataset);
 		else
 			chart = bar ? createBarChart(dataset) : createLineChart(dataset);
-		chart.setAntiAlias(false);// faster
+		chart.setAntiAlias(true);
 		chart.setBorderVisible(false);
+		chart.setBackgroundPaint(Color.WHITE);
+		XYPlot plot = chart.getXYPlot();
+		plot.setBackgroundPaint(Color.WHITE);
+		plot.setOutlinePaint(null);
+		plot.setRangeGridlinePaint(ModernLaf.HAIRLINE);
+		plot.setRangeGridlineStroke(new BasicStroke(1f));
 		return chart;
 	}
 
@@ -166,25 +176,26 @@ public class ChartHelper implements TimeDistributedConstants {
 	private static HashMap getMap() {
 		if (map == null) {
 			map = new HashMap();
-			map.put(PERCENT_ALLOC, Colors.RED);
-			map.put(OVERALLOCATED, Colors.RED);
-			if (!Environment.getStandAlone()) map.put(OTHER_PROJECTS, Colors.GRAY);
-			map.put(AVAILABILITY, Colors.BLACK);
-			map.put(SELECTED, Colors.BLUE);
-			map.put(THIS_PROJECT, Colors.GREEN);
-			map.put(WORK, Colors.RED);
-			map.put(ACTUAL_WORK, Colors.BROWN);
-			map.put(REMAINING_WORK, Colors.PURPLE);
-			map.put(BASELINE_WORK, Colors.DARK_SLATE_GRAY);
-			map.put(COST, Colors.RED);
-			map.put(ACTUAL_COST, Colors.BROWN);
-			map.put(FIXED_COST, Colors.CORAL);
-			map.put(ACTUAL_FIXED_COST, Colors.BURLY_WOOD);
-			map.put(REMAINING_COST, Colors.PURPLE);
-			map.put(BASELINE_COST, Colors.DARK_SLATE_GRAY);
-			map.put(ACWP, Colors.RED);
-			map.put(BCWP, Colors.OLIVE_DRAB);
-			map.put(BCWS, Colors.GOLD);
+			// calm palette matching the Gantt bars
+			map.put(PERCENT_ALLOC, new Color(0xE8686E));
+			map.put(OVERALLOCATED, new Color(0xE8686E));
+			if (!Environment.getStandAlone()) map.put(OTHER_PROJECTS, new Color(0xB3BAC5));
+			map.put(AVAILABILITY, new Color(0x3D4553));
+			map.put(SELECTED, ModernLaf.ACCENT);
+			map.put(THIS_PROJECT, new Color(0x9DBDF6));
+			map.put(WORK, new Color(0x6E9AF0));
+			map.put(ACTUAL_WORK, new Color(0x3D4553));
+			map.put(REMAINING_WORK, new Color(0xA78BFA));
+			map.put(BASELINE_WORK, new Color(0xB3BAC5));
+			map.put(COST, new Color(0x6E9AF0));
+			map.put(ACTUAL_COST, new Color(0x3D4553));
+			map.put(FIXED_COST, new Color(0xF0A45B));
+			map.put(ACTUAL_FIXED_COST, new Color(0xE8C07D));
+			map.put(REMAINING_COST, new Color(0xA78BFA));
+			map.put(BASELINE_COST, new Color(0xB3BAC5));
+			map.put(ACWP, new Color(0xE8686E));
+			map.put(BCWP, new Color(0x4FB59A));
+			map.put(BCWS, new Color(0xE8A317));
 			map.put(BASELINE1_WORK, Colors.MAGENTA);
 			map.put(BASELINE2_WORK, Colors.KHAKI);
 			map.put(BASELINE3_WORK, Colors.TAN);

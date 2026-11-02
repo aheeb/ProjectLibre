@@ -78,6 +78,7 @@ import com.projectlibre1.graphic.configuration.ActionList;
 import com.projectlibre1.graphic.configuration.CellStyle;
 import com.projectlibre1.graphic.configuration.GraphicConfiguration;
 import com.projectlibre1.graphic.configuration.shape.Colors;
+import com.projectlibre1.pm.graphic.laf.ModernLaf;
 import com.projectlibre1.pm.task.Project;
 import com.projectlibre1.timescale.TimeScaleListener;
 
@@ -218,8 +219,8 @@ public class TimeSpreadSheet extends CommonSpreadSheet implements ScaledComponen
  	public Component prepareRenderer(TableCellRenderer renderer, int row,
 			int column) {
 		Component component =  super.prepareRenderer(renderer, row, column);
-		if (!getModel().isCellEditable(row, column+1))
-			component.setBackground(Colors.LIGHT_GRAY);						
+		if (!getModel().isCellEditable(row, column+1)&&!isCellSelected(row, column))
+			component.setBackground(ModernLaf.CHROME); // read-only (summary) rows						
 		return component;
 	}
 	          

@@ -85,7 +85,7 @@ public class MainView extends JSplitPane implements TimeScaleListener, SavableTo
      */
     public MainView() {
         super(JSplitPane.VERTICAL_SPLIT);
-        setOneTouchExpandable(true);
+        setOneTouchExpandable(false);
         defaultDividerSize = getDividerSize();
         setDividerSize(0);
         

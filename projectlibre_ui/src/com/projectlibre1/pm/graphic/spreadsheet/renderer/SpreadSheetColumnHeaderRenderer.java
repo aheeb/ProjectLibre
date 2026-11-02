@@ -121,7 +121,7 @@ public class SpreadSheetColumnHeaderRenderer extends DefaultTableCellRenderer im
 	/** Header labels line up with the cell contents: numbers to the right, text to the left. */
 	protected static int alignment(Field field){
 		if (field==null) return CENTER;
-		if (field.isNameField()) return LEADING;
+		if (field.isNameField()||field.hasOptions()||field.getLookupTypes()!=null) return LEADING;
 		if (field.isNumber()||field.isDurationOrWork()||field.isMoney()||field.isPercent()) return TRAILING;
 		return LEADING;
 	}

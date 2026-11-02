@@ -70,7 +70,7 @@ public class ResourceCellStyle extends DefaultCellStyle {
 		Object impl=node.getNode().getImpl();
 		if (impl instanceof ResourceImpl) {
 			if (((ResourceImpl)impl).getAssignments().size()>0) // make assigned resources have a special color
-				format.setBackground("PALE_GREEN");
+				format.setBackground("#EAF5EC");
 		}
 
 		return format;

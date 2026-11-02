@@ -176,6 +176,9 @@ public class PredefinedShape {
 
 	public static final PredefinedShape ROUNDED_HALF_HEIGHT_BOTTOM = new PredefinedShape("ROUNDED_HALF_HEIGHT_BOTTOM", rectPoints, 1, .5, 0, .25, .5);
 
+	// cards in the network, WBS and RBS charts
+	public static final PredefinedShape ROUNDED_BOX = new PredefinedShape("ROUNDED_BOX", rectPoints, 1, 1, 0, 0, .12);
+
 	// slim summary bracket: a thin bar along the top with hooks at both ends
 	public static final PredefinedShape BRACKET = new PredefinedShape("BRACKET", rectPoints, 1, .4, 0, -.3);
 
@@ -238,6 +241,7 @@ public class PredefinedShape {
 		add(ROUNDED);
 		add(ROUNDED_HALF_HEIGHT_CENTER);
 		add(ROUNDED_HALF_HEIGHT_BOTTOM);
+		add(ROUNDED_BOX);
 		add(BRACKET);
 		add(BRACKET_START);
 		add(BRACKET_END);

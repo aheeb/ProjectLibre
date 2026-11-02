@@ -57,11 +57,13 @@ package com.projectlibre1.pm.graphic.spreadsheet.renderer;
 
 import java.awt.Component;
 
+import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
 
 import com.projectlibre1.graphic.configuration.shape.Colors;
+import com.projectlibre1.pm.graphic.laf.ModernLaf;
 
 /**
  *
@@ -77,12 +79,11 @@ public class TimeSpreadSheetRowHeaderRenderer extends DefaultTableCellRenderer {
 	Component last=null;
 	public Component getTableCellRendererComponent (JTable table, Object value,boolean isSelected, boolean hasFocus, int row, int column){
 		JLabel component=(JLabel)super.getTableCellRendererComponent(table,value,isSelected,hasFocus,row,column);
-		component.setForeground (table.getTableHeader().getForeground());
-		
-		component.setBackground(Colors.findColor("NORMAL_YELLOW")/*table.getTableHeader ().getBackground()*/);
-		
-		component.setFont (table.getTableHeader ().getFont());
-		component.setHorizontalAlignment (CENTER);
+		component.setForeground (ModernLaf.TEXT_SECONDARY);
+		component.setBackground(isSelected ? ModernLaf.SELECTION_CHROME : ModernLaf.CHROME);
+		component.setFont (table.getTableHeader ().getFont().deriveFont(table.getTableHeader().getFont().getSize2D()-1f));
+		component.setHorizontalAlignment (LEADING);
+		component.setBorder(BorderFactory.createEmptyBorder(0, 6, 0, 6));
 		component.setText (value == null ? "" : value.toString ());
 		//component.setBorder (UIManager.getBorder ("TableHeader.cellBorder"));
 		//component.setBorder (BorderFactory.createEtchedBorder());

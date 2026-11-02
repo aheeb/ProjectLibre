@@ -73,10 +73,10 @@ public class AssignmentCellStyle implements CellStyle {
 		format.setItalic(node.isAssignment());
 		format.setCompositeIcon(node.isSummary()||node.isValidLazyParent());
 		if (node.isGroup()){
-			if (node.getLevel()==1) format.setBackground("TAN");
-			else format.setBackground("LINEN");
+			if (node.getLevel()==1) format.setBackground("#E9EDF3");
+			else format.setBackground("#F3F5F8");
 		}
-		else format.setBackground("NORMAL_YELLOW");
+		else if (node.isAssignment()) format.setBackground("#FAFAF7");
 		return format;
 	}
 }

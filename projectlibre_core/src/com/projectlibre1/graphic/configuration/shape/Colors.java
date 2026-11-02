@@ -362,6 +362,7 @@ public class Colors {
 		if (found == null && key != null && key.startsWith("#")) { // hex color, e.g. #5B8DEF
 			try {
 				found = Color.decode(key);
+				getColors().put(key, found); // cell styles ask for the same colours on every paint
 			} catch (NumberFormatException e) {
 			}
 		}

@@ -58,6 +58,7 @@ package com.projectlibre1.pm.graphic.network;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.Rectangle;
 import java.awt.Stroke;
 import java.awt.geom.AffineTransform;
@@ -296,6 +297,7 @@ public abstract class NetworkRenderer extends GraphRenderer{
     }
     public void paint(Graphics g,Rectangle visibleBounds) {
 	    	Graphics2D g2=(Graphics2D)g;
+			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,RenderingHints.VALUE_ANTIALIAS_ON);
 
 			Rectangle clipBounds = g2.getClipBounds();
 			Rectangle svgClip=clipBounds;
