@@ -131,6 +131,7 @@ import org.pushingpixels.flamingo.api.ribbon.RibbonTask;
 import com.projectlibre.ui.ribbon.CustomRibbonBandGenerator;
 import com.projectlibre.ui.ribbon.ProjectLibreRibbonUI;
 import com.projectlibre.ui.ribbon.RibbonActions;
+import com.projectlibre.ui.toolbar.MainToolBar;
 import com.projectlibre.ui.ribbon.ViewSwitcher;
 import com.projectlibre1.menu.AppMenuBar;
 import com.projectlibre1.configuration.Configuration;
@@ -2558,7 +2559,10 @@ protected boolean loadLocalDocument(String fileName,boolean merge){ //uses serve
 			}
 
 
-			setRibbon((JRibbonFrame)container,getMenuManager());
+			// one toolbar row; every other command is in the menu bar (AppMenuBar, installed below)
+			filterToolBarManager = FilterToolBarManager.create(getMenuManager());
+			filterToolBarManager.connect();
+			contentPane.add(MainToolBar.create(this, (JFrame)container), BorderLayout.NORTH);
 
 			
 			
@@ -2690,7 +2694,7 @@ protected boolean loadLocalDocument(String fileName,boolean merge){ //uses serve
 		    addCtrlAccel(KeyEvent.VK_R, ACTION_RECALCULATE, new RecalculateAction());
 
 		    if (Environment.isRibbonUI() && container instanceof JFrame)
-		    	AppMenuBar.install((JFrame)container, getMenuManager(), getMenuManager().getActionFromId(ACTION_CALENDAR_OPTIONS));
+		    	projectListMenu = AppMenuBar.install((JFrame)container, getMenuManager(), getMenuManager().getActionFromId(ACTION_CALENDAR_OPTIONS), filterToolBarManager);
     }
 
     private void addCtrlAccel(int vk, String actionConstant, Action action) {

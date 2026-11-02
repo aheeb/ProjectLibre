@@ -131,6 +131,25 @@ public class FilterToolBarManager implements MenuActionConstants{
 		groupersComboBox.addActionListener(menuManager.getActionFromId(groupersComboBox.getActionCommand()));
 	}
 
+	/** Makes the combo boxes apply their choice without showing them (the menu bar offers the choices). */
+	public void connect() {
+		filtersComboBox.addActionListener(menuManager.getActionFromId(filtersComboBox.getActionCommand()));
+		sortersComboBox.addActionListener(menuManager.getActionFromId(sortersComboBox.getActionCommand()));
+		groupersComboBox.addActionListener(menuManager.getActionFromId(groupersComboBox.getActionCommand()));
+	}
+
+	public TransformComboBox getFiltersComboBox() {
+		return filtersComboBox;
+	}
+
+	public TransformComboBox getSortersComboBox() {
+		return sortersComboBox;
+	}
+
+	public TransformComboBox getGroupersComboBox() {
+		return groupersComboBox;
+	}
+
 	public void removeButtons(JComponent bar) {
 		if (bar != null) {
 			bar.remove(filler);
