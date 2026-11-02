@@ -136,8 +136,8 @@ public class ViewSwitcher extends JPanel implements MenuManager.ViewSelectionLis
 			setFocusPainted(false);
 			setRolloverEnabled(true);
 			setIconTextGap(6);
-			setMargin(new Insets(0, 10, 0, 12));
-			setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 12));
+			setMargin(new Insets(0, 8, 0, 10));
+			setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 10));
 			setEnabled(action.isEnabled());
 			action.addPropertyChangeListener(new PropertyChangeListener() {
 				public void propertyChange(PropertyChangeEvent evt) {

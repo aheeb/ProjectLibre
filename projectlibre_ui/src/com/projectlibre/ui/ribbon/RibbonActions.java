@@ -1,6 +1,7 @@
 package com.projectlibre.ui.ribbon;
 
 import java.awt.event.ActionEvent;
+import java.util.Date;
 
 import javax.swing.Action;
 
@@ -11,6 +12,9 @@ import com.projectlibre1.pm.graphic.frames.GraphicManager;
 import com.projectlibre1.pm.graphic.model.cache.GraphicNode;
 import com.projectlibre1.pm.graphic.spreadsheet.SpreadSheetModel;
 import com.projectlibre1.pm.graphic.spreadsheet.common.CommonSpreadSheet;
+import com.projectlibre1.pm.graphic.views.GanttView;
+import com.projectlibre1.pm.time.HasStartAndEnd;
+import com.projectlibre1.util.DateTime;
 
 /**
  * Commands that only exist in the ribbon.
@@ -18,10 +22,12 @@ import com.projectlibre1.pm.graphic.spreadsheet.common.CommonSpreadSheet;
 public class RibbonActions {
 	public static final String ACTION_NEW_TASK = "NewTask";
 	public static final String ACTION_NEW_RESOURCE = "NewResource";
+	public static final String ACTION_TODAY = "Today";
 
 	public static void register(final GraphicManager graphicManager, MenuActionsMap actionsMap) {
 		actionsMap.addHandler(ACTION_NEW_RESOURCE, new NewResourceAction(graphicManager));
 		actionsMap.addHandler(ACTION_NEW_TASK, new NewTaskAction(graphicManager));
+		actionsMap.addHandler(ACTION_TODAY, new TodayAction(graphicManager));
 		// "New task" is available exactly when the plain insert command is
 		Action insert = actionsMap.getActionFromMenuId(MenuActionConstants.ACTION_INSERT_TASK);
 		if (insert != null)
@@ -107,6 +113,34 @@ public class RibbonActions {
 			if (enable == false)
 				return true;
 			return graphicManager.isDocumentWritable();
+		}
+	}
+
+	/** Scrolls the Gantt chart to today. */
+	public static class TodayAction extends MenuActionsMap.DocumentMenuAction {
+		private static final long serialVersionUID = 1L;
+		private final GraphicManager graphicManager;
+
+		TodayAction(GraphicManager graphicManager) {
+			this.graphicManager = graphicManager;
+		}
+
+		public void actionPerformed(ActionEvent e) {
+			DocumentFrame frame = graphicManager.getCurrentFrame();
+			if (!graphicManager.isDocumentActive() || frame == null || frame.getMainView() == null)
+				return;
+			Object top = frame.getMainView().getTopComponent();
+			if (!(top instanceof GanttView))
+				return;
+			final long today = DateTime.dayFloor(DateTime.gmt(new Date()));
+			((GanttView) top).getGantt().scrollToTask(new HasStartAndEnd() {
+				public long getStart() {
+					return today;
+				}
+				public long getEnd() {
+					return today;
+				}
+			}, false);
 		}
 	}
 }

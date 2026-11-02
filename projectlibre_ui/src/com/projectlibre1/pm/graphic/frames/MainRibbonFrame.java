@@ -60,32 +60,54 @@ import java.awt.HeadlessException;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
-import javax.swing.JMenuBar;
+import javax.swing.JFrame;
+import javax.swing.JRootPane;
 import javax.swing.WindowConstants;
 
-import org.pushingpixels.flamingo.api.common.icon.ResizableIcon;
-import org.pushingpixels.flamingo.api.ribbon.JRibbonFrame;
-
-import com.projectlibre.ui.ribbon.ProjectLibreRibbonUI;
+import com.formdev.flatlaf.FlatClientProperties;
+import com.formdev.flatlaf.util.SystemInfo;
 import com.projectlibre1.pm.graphic.IconManager;
+import com.projectlibre1.pm.graphic.laf.ModernLaf;
 import com.projectlibre1.pm.graphic.frames.workspace.FrameHolder;
 import com.projectlibre1.pm.graphic.frames.workspace.FrameManager;
 
-public class MainRibbonFrame extends JRibbonFrame implements FrameHolder{
+/**
+ * The main window of the modern UI: a toolbar (see com.projectlibre.ui.toolbar.MainToolBar) above the views,
+ * with the commands in the menu bar. On the Mac the toolbar shares one band with the title bar.
+ */
+public class MainRibbonFrame extends JFrame implements FrameHolder{
 	private static final long serialVersionUID = -5161903673269959353L;
 	protected GraphicManager graphicManager;
-	private ResizableIcon appMenuIcon;
 
 	public MainRibbonFrame(String name, String projectUrl, String server) throws HeadlessException {
 		super(name);
 		setIconImage(IconManager.getImage("application.icon"));
-		appMenuIcon=IconManager.getRibbonIcon("logo.ProjectLibre",144,31);
-		setApplicationIcon(IconManager.getRibbonIcon("application.icon",128,128));
+		if (isUnifiedTitleBar()) {
+			JRootPane root = getRootPane();
+			root.putClientProperty("apple.awt.fullWindowContent", true);
+			root.putClientProperty("apple.awt.transparentTitleBar", true);
+			root.putClientProperty("apple.awt.windowTitleVisible", false);
+			root.putClientProperty(FlatClientProperties.MACOS_WINDOW_BUTTONS_SPACING, FlatClientProperties.MACOS_WINDOW_BUTTONS_SPACING_MEDIUM);
+		}
 		init();
 	}
 
-	public synchronized ResizableIcon getApplicationIcon() {
-		return appMenuIcon;
+	/**
+	 * On macOS 11+ with FlatLaf the toolbar is drawn in the title bar, like native document apps. The project
+	 * name is then shown in the toolbar.
+	 */
+	public static boolean isUnifiedTitleBar() {
+		return SystemInfo.isMacOS && SystemInfo.isMacFullWindowContentSupported && SystemInfo.isJava_17_orLater
+				&& isMacOS11OrLater() && ModernLaf.isFlat() && !Boolean.getBoolean("projectlibre.standardTitleBar");
+	}
+
+	/** The window button spacing around the toolbar needs macOS 11. */
+	private static boolean isMacOS11OrLater() {
+		try {
+			return Integer.parseInt(System.getProperty("os.version", "0").split("\\.")[0]) >= 11;
+		} catch (NumberFormatException e) {
+			return false;
+		}
 	}
 
 	public GraphicManager getGraphicManager() {

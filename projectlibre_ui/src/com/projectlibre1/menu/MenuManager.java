@@ -207,6 +207,14 @@ public class MenuManager {
     public Action getActionFromId(String id) {
 		return menuFactory.getActionFromId(id);
     }
+    /** Action registered under an action name such as "SaveProjectAction", or null. */
+    public Action getActionFromName(String actionName) {
+    	try {
+    		return rootActionMap.getAction(actionName);
+    	} catch (RuntimeException e) {
+    		return null;
+    	}
+    }
     public String getStringFromAction(Action action) {
 		return menuFactory.getStringFromAction(action);
     }
