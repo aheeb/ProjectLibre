@@ -94,6 +94,21 @@ public class ModernLaf {
 		}
 	}
 
+	/**
+	 * Scroll pane border without the accent focus ring: for the main grids, where the focused cell
+	 * already shows where the keyboard is and a ring around the whole sheet only adds noise.
+	 */
+	public static javax.swing.border.Border quietScrollPaneBorder() {
+		if (!isFlat()) return UIManager.getBorder("ScrollPane.border");
+		// wrapped so it isn't a UIResource: JTable and the look and feel replace UIResource borders with their own
+		return new javax.swing.border.CompoundBorder(new com.formdev.flatlaf.ui.FlatScrollPaneBorder() {
+			@Override
+			protected boolean isFocused(java.awt.Component c) {
+				return false;
+			}
+		}, null);
+	}
+
 	public static boolean isFlat() {
 		return UIManager.getLookAndFeel() instanceof FlatLaf;
 	}
