@@ -770,6 +770,8 @@
 				<include name="license/**"/>
 			</fileset>
 		</copy>
+		<!-- opened by the class-data-sharing training run in make.sh -->
+		<copy tofile="${packages}/jpackage-dmg/source/sample.mpp" file="${resources}/samples/Commercial construction project plan.mpp" />
 
 
 
@@ -782,6 +784,21 @@
 			<arg value="a+x"/>
 			<arg value="${packages}/jpackage-dmg/make.sh"/>
 		</exec>
+
+		<!-- Optionally build the apps right away, one per architecture, each with a JDK of that
+		     architecture: ant jpackage-dmg -Djdk.arm64=/path/to/arm64/Contents/Home -Djdk.x86_64=/path/to/x64/Contents/Home
+		     See make.sh for signing (APPLE_TEAM_ID) and how to get an x86_64 JDK on Apple Silicon. -->
+		<if>
+			<or><isset property="jdk.arm64"/><isset property="jdk.x86_64"/></or>
+			<then>
+				<condition property="jdk.arm64.arg" value="'arm64=${jdk.arm64}'" else=""><isset property="jdk.arm64"/></condition>
+				<condition property="jdk.x86_64.arg" value="'x86_64=${jdk.x86_64}'" else=""><isset property="jdk.x86_64"/></condition>
+				<exec executable="/bin/bash" dir="${packages}/jpackage-dmg" failonerror="true">
+					<arg value="-c"/>
+					<arg value="./make.sh ${jdk.arm64.arg} ${jdk.x86_64.arg}"/>
+				</exec>
+			</then>
+		</if>
 
 	</target>
 
