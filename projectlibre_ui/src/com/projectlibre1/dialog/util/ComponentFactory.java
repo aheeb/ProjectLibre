@@ -184,7 +184,8 @@ public class ComponentFactory {
 			
 		}
 		
-		component.setEnabled(!readOnly);
+		// read-only values are plain labels: keep them enabled so they read as values, not as greyed-out controls
+		component.setEnabled(!readOnly || component instanceof JLabel);
 		markComponentAsUnmodified(component);
 	}
 	

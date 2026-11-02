@@ -22,6 +22,10 @@ public class ModernLaf {
 	/** App chrome background (ribbon, headers). */
 	public static final Color CHROME = new Color(0xF6F7F9);
 	public static final Color TEXT_SECONDARY = new Color(0x6B7280);
+	/** Soft accent tint for rows that are "on" (e.g. resources already assigned). */
+	public static final Color ACCENT_SOFT = new Color(0xE4EDFD);
+	/** Soft amber tint for rows that are partly on (e.g. assigned to only some selected tasks). */
+	public static final Color WARNING_SOFT = new Color(0xFFF1CC);
 
 	private static boolean installed = false;
 

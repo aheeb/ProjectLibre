@@ -56,6 +56,8 @@
 package com.projectlibre1.dialog.assignment;
 
 import java.awt.Component;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -67,6 +69,8 @@ import javax.swing.JViewport;
 import javax.swing.event.ChangeEvent;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumn;
+import javax.swing.table.TableColumnModel;
 
 import org.apache.commons.collections.Closure;
 import org.apache.commons.collections.Transformer;
@@ -83,6 +87,7 @@ import com.projectlibre1.field.Field;
 import com.projectlibre1.graphic.configuration.GraphicConfiguration;
 import com.projectlibre1.graphic.configuration.SpreadSheetFieldArray;
 import com.projectlibre1.graphic.configuration.shape.Colors;
+import com.projectlibre1.pm.graphic.laf.ModernLaf;
 import com.projectlibre1.grouping.core.Node;
 import com.projectlibre1.grouping.core.NodeList;
 import com.projectlibre1.grouping.core.event.HierarchyEvent;
@@ -224,10 +229,10 @@ public class AssignmentEntryPane extends JScrollPane implements HierarchyListene
 				if (entry.isAssigned()) {
 					if (taskList.size() == entry.getAssignmentCount()) { // if all selected tasks are assigned to this resource, show it green
 						//if (column == 0)
-							component.setBackground(Colors.PALE_GREEN);						
+							component.setBackground(ModernLaf.ACCENT_SOFT);						
 					} else {
 						//if (column == 0)
-							component.setBackground(Colors.PALE_YELLOW);
+							component.setBackground(ModernLaf.WARNING_SOFT);
 						if (column!=0)  {
 							Field field = ((SpreadSheetModel)getModel()).getFieldInColumn(column);
 							if (field == Assignment.getRequestDemandTypeField() || field == AssignmentEntry.getRateField()) {
@@ -327,6 +332,10 @@ public class AssignmentEntryPane extends JScrollPane implements HierarchyListene
 		JViewport viewport = createViewport();
 		viewport.setView(spreadSheet);
 		setViewport(viewport);
+		viewport.addComponentListener(new ComponentAdapter() {
+			public void componentResized(ComponentEvent e) {
+				fitNameColumn();
+			}});
 		
 		setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		
@@ -347,6 +356,23 @@ public class AssignmentEntryPane extends JScrollPane implements HierarchyListene
 		updateTable();
 	}
 	
+	/** Lets the name column take the width the other columns leave, so the table has no empty area on the right. */
+	private void fitNameColumn() {
+		TableColumnModel columns = spreadSheet.getColumnModel();
+		if (columns.getColumnCount() == 0 || getViewport() == null)
+			return;
+		int others = 0;
+		for (int i = 1; i < columns.getColumnCount(); i++)
+			others += columns.getColumn(i).getWidth();
+		TableColumn name = columns.getColumn(0);
+		int width = Math.max(150, getViewport().getWidth() - others);
+		if (width != name.getWidth()) {
+			name.setPreferredWidth(width);
+			name.setWidth(width);
+			spreadSheet.revalidate();
+		}
+	}
+
 	/**
 	 * @param project The project to set.
 	 */

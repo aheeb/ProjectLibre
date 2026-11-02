@@ -160,10 +160,16 @@ public abstract class AbstractDialog extends JDialog {
 		KeyStroke escapeStroke = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0);
 		rootPane.registerKeyboardAction(escapeListener, escapeStroke, JComponent.WHEN_IN_FOCUSED_WINDOW);
 		KeyStroke enterStroke = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0);
-		rootPane.registerKeyboardAction(enterListener, enterStroke, JComponent.WHEN_IN_FOCUSED_WINDOW);
+		if (enterConfirms())
+			rootPane.registerKeyboardAction(enterListener, enterStroke, JComponent.WHEN_IN_FOCUSED_WINDOW);
 		KeyStroke f1Stroke = KeyStroke.getKeyStroke(KeyEvent.VK_F1, 0);
 		rootPane.registerKeyboardAction(helpListener, f1Stroke, JComponent.WHEN_IN_FOCUSED_WINDOW);
 		return rootPane;
+	}
+
+	/** Whether Enter anywhere in the dialog runs onOk. Return false to let the root pane's default button handle Enter. */
+	protected boolean enterConfirms() {
+		return true;
 	}
 
 	protected boolean hasHelp() {

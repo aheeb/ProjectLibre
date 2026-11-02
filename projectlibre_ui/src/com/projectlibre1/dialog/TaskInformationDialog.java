@@ -155,16 +155,12 @@ public class TaskInformationDialog extends InformationDialog {
 	protected JComponent createHeaderFieldsPanel(FieldComponentMap map) {
 		// Repeat of fields from general tab 
 		FormLayout layout = new FormLayout(
-		        "max(75dlu;pref),4dlu,fill:200dlu:grow" //$NON-NLS-1$
+		        NAME_COLUMNS
 				,"p"); //$NON-NLS-1$
 		DefaultFormBuilder builder = new DefaultFormBuilder(layout);
 		map.append(builder,"Field.name"); //$NON-NLS-1$
 		return builder.getPanel();
 	}
-
-	// label, field, gap, label, field, filler: fields are sized for dates and durations, not stretched
-	static final String FORM_COLUMNS = "max(75dlu;pref), 4dlu, 100dlu, 16dlu, max(60dlu;pref), 4dlu, 100dlu, 0dlu:grow"; //$NON-NLS-1$
-	static final int FORM_SPAN = 8;
 
 	private JComponent createGeneralPanel(){
 		FieldComponentMap map = createMap();
@@ -214,18 +210,18 @@ public class TaskInformationDialog extends InformationDialog {
 		map.append(builder,"Field.constraintType"); //$NON-NLS-1$
 		map.appendSometimesReadOnly(builder,"Field.constraintDate"); //$NON-NLS-1$
 		builder.nextLine(2);
-		addHint(builder, cc, "Field.constraintType"); //$NON-NLS-1$
+		addHint(builder, "Field.constraintType"); //$NON-NLS-1$
 		builder.nextLine(2);
 		map.append(builder,"Field.deadline"); //$NON-NLS-1$
 		builder.nextLine(2);
-		addHint(builder, cc, "Field.deadline"); //$NON-NLS-1$
+		addHint(builder, "Field.deadline"); //$NON-NLS-1$
 		builder.nextLine(2);
 		builder.addSeparator(Messages.getString("TaskInformationDialog.Scheduling"), cc.xyw(1, builder.getRow(), FORM_SPAN)); //$NON-NLS-1$
 		builder.nextLine(2);
 		map.append(builder,"Field.taskType"); //$NON-NLS-1$
 		map.append(builder,"Field.effortDriven",3); //$NON-NLS-1$
 		builder.nextLine(2);
-		addHint(builder, cc, "Field.taskType"); //$NON-NLS-1$
+		addHint(builder, "Field.taskType"); //$NON-NLS-1$
 		builder.nextLine(2);
 		map.append(builder,"Field.taskCalendar"); //$NON-NLS-1$
 		map.append(builder,"Field.ignoreResourceCalendar",3); //$NON-NLS-1$
@@ -233,13 +229,6 @@ public class TaskInformationDialog extends InformationDialog {
 		map.append(builder,"Field.earnedValueMethod"); //$NON-NLS-1$
 
 		return builder.getPanel();
-	}
-
-	/** Puts the field's plain-language hint under the field column of the current row. */
-	private static void addHint(DefaultFormBuilder builder, CellConstraints cc, String fieldId) {
-		JLabel hint = FieldComponentMap.createHintLabel(fieldId, 210);
-		if (hint != null)
-			builder.add(hint, cc.xyw(3, builder.getRow(), 5));
 	}
 
 	public JComponent createPredecessorsPanel() {
