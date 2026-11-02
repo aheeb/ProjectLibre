@@ -72,6 +72,7 @@ import com.projectlibre1.datatype.TimeUnit;
 import com.projectlibre1.field.FieldParseException;
 import com.projectlibre1.options.GeneralOption;
 import com.projectlibre1.pm.resource.Resource;
+import com.projectlibre1.pm.task.NormalTask;
 import com.projectlibre1.pm.task.Task;
 import com.projectlibre1.strings.Messages;
 
@@ -138,8 +139,11 @@ public class AssignmentFormat extends AssociationFormat {
 			}
 		}
 		
-		double percent = 1.0D;
 		Resource resource = (Resource)(parameters.isLeftAssociation() ? found : parameters.getThisObject());
+		Task task = (Task) (parameters.isLeftAssociation() ? parameters.getThisObject() : found);
+		// no units typed: someone already on the task keeps their share, a newcomer gets their availability
+		Assignment existing = task instanceof NormalTask ? ((NormalTask) task).findAssignment(resource) : null;
+		double percent = existing != null ? existing.getUnits() : AssignmentService.defaultUnits(resource);
 		Rate rate = null;
 		if (matcher.group(2) != null) { // if text was empty use default
 			if (!getParameters().isAllowDetailsEntry())
@@ -159,7 +163,7 @@ public class AssignmentFormat extends AssociationFormat {
 		} else if (resource.isMaterial()) {
 			rate = new Rate(1,TimeUnit.NON_TEMPORAL);
 		}
-		Assignment ass = Assignment.getInstance((Task) (parameters.isLeftAssociation() ? parameters.getThisObject() : found),
+		Assignment ass = Assignment.getInstance(task,
 										resource,
 									  	percent,
 										0);
@@ -203,6 +207,11 @@ public class AssignmentFormat extends AssociationFormat {
 	/* (non-Javadoc)
 	 * @see com.projectlibre1.association.AssociationFormat#getContainer(boolean)
 	 */
+	/** A task whose people are all replaced would otherwise keep its duration instead of its work. */
+	public boolean addsBeforeRemoving() {
+		return true;
+	}
+
 	protected Collection getContainer(boolean left) {
 		if (left)
 			return ((Task) parameters.getThisObject()).getProject().getResourcePool().getResourceList();

@@ -91,6 +91,18 @@ public class AssignmentService {
 	}
 	
 	
+	/**
+	 * The share of their time a person gets on a task when nobody said how much: what they are
+	 * available for (Max. Units), at most full time. Someone available 50% thus takes twice as
+	 * long for the same work.
+	 */
+	public static double defaultUnits(Resource resource) {
+		if (resource == null || !resource.isLabor())
+			return 1.0D;
+		double max = resource.getMaximumUnits();
+		return (max > 0 && max < 1.0D) ? max : 1.0D;
+	}
+
 	public void newAssignments(Collection tasks, Collection resources, double units, long delay, Object eventSource,boolean undo) {
 		if (tasks.size()==0||resources.size()==0) return;
 		int transactionId = 0;
