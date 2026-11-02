@@ -41,6 +41,7 @@ import javax.swing.plaf.*;
 
 import org.pushingpixels.flamingo.api.common.RichTooltip;
 import org.pushingpixels.flamingo.internal.utils.FlamingoUtilities;
+import org.pushingpixels.flamingo.internal.utils.FlatRibbonStyle;
 
 /**
  * Basic UI for rich tooltip panel {@link JRichTooltipPanel}.
@@ -116,6 +117,10 @@ public class BasicRichTooltipPanelUI extends RichTooltipPanelUI {
 		Border b = this.richTooltipPanel.getBorder();
 		if (b == null || b instanceof UIResource) {
 			Border toSet = UIManager.getBorder("RichTooltipPanel.border");
+			if (toSet == null && FlatRibbonStyle.isActive())
+				toSet = new BorderUIResource.CompoundBorderUIResource(
+						new LineBorder(new Color(0xD0D4DA)),
+						new EmptyBorder(6, 8, 8, 10));
 			if (toSet == null)
 				toSet = new BorderUIResource.CompoundBorderUIResource(
 						new LineBorder(FlamingoUtilities.getBorderColor()),
@@ -165,6 +170,11 @@ public class BasicRichTooltipPanelUI extends RichTooltipPanelUI {
 	}
 
 	protected void paintBackground(Graphics g) {
+		if (FlatRibbonStyle.isActive()) {
+			g.setColor(Color.WHITE);
+			g.fillRect(0, 0, this.richTooltipPanel.getWidth(), this.richTooltipPanel.getHeight());
+			return;
+		}
 		Color main = FlamingoUtilities.getColor(Color.gray,
 				"Label.disabledForeground").brighter();
 		Graphics2D g2d = (Graphics2D) g.create();
