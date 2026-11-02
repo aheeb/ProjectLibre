@@ -229,7 +229,7 @@ public class TexturedShape {
 	protected void applyPaint(Graphics2D g2, boolean texture) {
 		// if ("SVGGraphics2D".equals(g2.getClass().getSimpleName()))
 		if (texture)
-			g2.setPaint(paint); // the paint already has the color set
+			g2.setPaint(paint instanceof PredefinedPaint ? ((PredefinedPaint) paint).getTexturePaint() : paint); // the paint already has the color set
 		else {
 			if (paint instanceof PredefinedPaint) {
 				PredefinedPaint p = (PredefinedPaint) paint;

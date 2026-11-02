@@ -301,7 +301,7 @@ public class GanttRenderer extends GraphRenderer implements Serializable {
 			config=((GanttParams)graphInfo).getConfiguration();
 			yrow=node.getRow()*rowHeight;
 
-			if (container!=null){
+			if (container!=null&&rendererPane==null){ // one pane per renderer: adding one per painted row grew the container without bound
 				rendererPane=new CellRendererPane();
 				container.add(rendererPane);
 			}
@@ -599,7 +599,7 @@ public class GanttRenderer extends GraphRenderer implements Serializable {
 			//project start
 			int projectStartX=(int)Math.round(coord.toX(project.getStart()));
 			if (projectStartX>=bounds.getX()&&projectStartX<=bounds.getMaxX()){
-				g2.setPaint(new PredefinedPaint(PredefinedPaint.DASH_LINE,Color.GRAY,g2.getBackground()));
+				g2.setPaint(new PredefinedPaint(PredefinedPaint.DASH_LINE,Color.GRAY,g2.getBackground()).getTexturePaint());
 				g2.drawLine(projectStartX,bounds.y,projectStartX,bounds.y+bounds.height);
 			}
 
@@ -608,7 +608,7 @@ public class GanttRenderer extends GraphRenderer implements Serializable {
 			if (statusDate != 0) {
 				int statusDateX=(int)Math.round(coord.toX(statusDate));
 				if (statusDateX>=bounds.getX()&&statusDateX<=bounds.getMaxX()){
-					g2.setPaint(new PredefinedPaint(PredefinedPaint.DOT_LINE2,Color.GREEN,g2.getBackground()));
+					g2.setPaint(new PredefinedPaint(PredefinedPaint.DOT_LINE2,Color.GREEN,g2.getBackground()).getTexturePaint());
 					g2.drawLine(statusDateX,bounds.y,statusDateX,bounds.y+bounds.height);
 				}
 			}
