@@ -33,6 +33,15 @@ public class People {
 		return r instanceof ResourceImpl && ((ResourceImpl) r).isDefault();
 	}
 
+	/** Removes the people {@link #resolve} just added, e.g. because the text they came with didn't parse. */
+	public static void discard(ResourcePool pool, List<String> created) {
+		if (pool == null || created == null) return;
+		for (String name : created) {
+			Resource r = find(pool, name);
+			if (r != null) pool.removeScriptedResource(r);
+		}
+		created.clear();
+	}
 	static Resource find(ResourcePool pool, String name) {
 		for (Iterator i = pool.getResourceList().iterator(); i.hasNext();) {
 			Resource r = (Resource) i.next();

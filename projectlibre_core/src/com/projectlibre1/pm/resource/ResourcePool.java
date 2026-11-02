@@ -161,6 +161,11 @@ public class ResourcePool implements Document, NodeModelDataFactory {
 		resourceOutlines.addToAll(res,null); // update all node models 
 		return res;
 	}
+	/** Undoes {@link #createScriptedResource()} for a resource nothing refers to yet. */
+	public void removeScriptedResource(Resource res) {
+		resourceOutlines.removeFromAll(res,null);
+		remove(res);
+	}
 	/**
 	 * @return Returns the resourceList.
 	 */

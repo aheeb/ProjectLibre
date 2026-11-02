@@ -158,8 +158,10 @@ public class SpreadSheetModel extends CommonSpreadSheetModel {
 		Node rowNode = getNodeInRow(row);
 		//Field field = getFieldInColumn(col);
 		List<String> newPeople = null;
+		Project peopleProject = null;
 		if (value instanceof String && "Field.resourceNames".equals(field.getId()) && !(rowNode.getImpl() instanceof Dependency)) {
 			Project project = getCache().getModel().getDataFactory() instanceof Project ? (Project) getCache().getModel().getDataFactory() : null;
+			peopleProject = project;
 			if (project != null) {
 				newPeople = new ArrayList<String>();
 				value = People.resolve(project.getResourcePool(), (String) value, newPeople);
@@ -222,7 +224,11 @@ public class SpreadSheetModel extends CommonSpreadSheetModel {
 			if (note != null)
 				Toast.show(null, note);
 		} catch (FieldParseException e) {
+			if (peopleProject != null) People.discard(peopleProject.getResourcePool(), newPeople); // the text was rejected: don't keep the people it named
 			throw new RuntimeException(e); // exceptions will be treated by the spreadsheet, not the model, because there is a popup.  Because this method doesn't have an exception, a runtime exception will be caught by the spreadsheet
+		} catch (RuntimeException e) {
+			if (peopleProject != null) People.discard(peopleProject.getResourcePool(), newPeople);
+			throw e;
 		}
 	}
 
