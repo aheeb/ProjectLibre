@@ -311,7 +311,7 @@ public class MainToolBar extends JPanel implements MenuManager.ViewSelectionList
 		String tip = MenuManager.getMenuStringOrNull(key + ".tooltip");
 		String name = MenuManager.getMenuStringOrNull(key + ".text");
 		String shortcut = MenuShortcuts.getDisplayString(actionName.trim());
-		StringBuilder t = new StringBuilder("<html>");
+		StringBuilder t = new StringBuilder("<html><body style='width:240px'>");
 		if (name != null)
 			t.append("<b>").append(name).append("</b>");
 		if (shortcut != null)
