@@ -126,8 +126,6 @@ public abstract class StartupFactory {
 	public GraphicManager instanceFromExistingSession(Container container) {
 
 
-		System.gc(); // hope to avoid out of memory problems
-
 		DebugUtils.isMemoryOk(true);
 
 

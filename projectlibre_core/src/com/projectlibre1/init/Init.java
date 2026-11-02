@@ -58,6 +58,7 @@ import com.projectlibre1.configuration.Dictionary;
 import com.projectlibre1.configuration.ScriptConfiguration;
 import com.projectlibre1.contrib.ClassResolverFilter;
 import com.projectlibre1.field.FieldConverter;
+import com.projectlibre1.graphic.configuration.ActionLists;
 import com.projectlibre1.util.Environment;
 /**
  * Class to perform static initializations
@@ -72,6 +73,7 @@ public class Init {
 
 		if (loadConfiguration) loadConfiguration();
 		FieldConverter.getInstance();
+		if (loadConfiguration && Environment.isClientSide()) warmUpScripts();
 		if (!Environment.getStandAlone()){
 			try {
 				Class.forName("org.codehaus.groovy.control.ResolveVisitor").getMethod("setClassResolverFilter", new Class[]{ClassResolverFilter.class}).invoke(null,new Object[]{ScriptConfiguration.getInstance()});
@@ -82,6 +84,22 @@ public class Init {
 	/**
 	 *
 	 */
+	/**
+	 * Compiles the Groovy action list in the background. Otherwise the first grid compiles it on the
+	 * event thread, loading several hundred Groovy classes while the user waits for the project to show.
+	 */
+	private static void warmUpScripts() {
+		Thread t = new Thread("warmUpScripts") {
+			public void run() {
+				try {
+					ActionLists.getInstance().getDefaultActionList();
+				} catch (Throwable e) {
+				}
+			}
+		};
+		t.setDaemon(true);
+		t.start();
+	}
 	private void loadConfiguration() {
 		//Dictionary.getInstance(); //claur fix to avoid Digester3 failure
 		com.projectlibre1.configuration.Configuration.getInstance();

@@ -388,7 +388,7 @@ public class GanttRenderer extends GraphRenderer implements Serializable {
 			config=((GanttParams)graphInfo).getConfiguration();
 			yrow=node.getRow()*rowHeight;
 
-			if (container!=null){
+			if (container!=null&&rendererPane==null){ // one pane per renderer: adding one per painted row grew the container without bound
 				rendererPane=new CellRendererPane();
 				container.add(rendererPane);
 			}

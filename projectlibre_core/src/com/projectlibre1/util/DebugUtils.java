@@ -97,12 +97,16 @@ public class DebugUtils {
 		}
 	}
 private static long LOW_MEMORY_LIMIT = 1000000L;
+	/** Heap the JVM can still use: freeMemory() alone only covers the currently committed part. */
+	private static long availableMemory() {
+		Runtime rt = Runtime.getRuntime();
+		return rt.maxMemory() - (rt.totalMemory() - rt.freeMemory());
+	}
 	public static boolean isMemoryOk(boolean popup) {
-		long mem = Runtime.getRuntime().freeMemory();
-		System.out.println("Free Memory" + mem);
+		long mem = availableMemory();
 		if (mem < LOW_MEMORY_LIMIT) {
 			System.gc();
-			mem = Runtime.getRuntime().freeMemory();
+			mem = availableMemory();
 			if (mem < LOW_MEMORY_LIMIT) {
 				Environment.setOutOfMemory(true);
 				if (popup)

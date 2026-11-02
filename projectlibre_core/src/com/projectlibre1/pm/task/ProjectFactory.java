@@ -565,7 +565,6 @@ public class ProjectFactory {
 
 					removeClosingProject(project.getUniqueId());
 				}
-				System.gc(); // clean up memory used by projects
    	    	return null; //return not used anyway
 			}
 		},/*!calledFromSwing*/false,false,calledFromSwing,false);

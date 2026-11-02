@@ -31,6 +31,9 @@ if (-not (Test-Path $OutputDir)) {
     --win-menu `
     --win-shortcut `
     --win-dir-chooser `
+    --java-options "-Xms64m" `
+    --java-options "-XX:MaxRAMPercentage=50" `
+    --java-options "-XX:+UseG1GC" `
     --verbose
 
 Write-Host "MSI installer created in '$OutputDir'" -ForegroundColor Green

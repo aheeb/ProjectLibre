@@ -200,7 +200,7 @@ public class MenuManager {
 	public String getActionStringFromId(String id) {
 		String result = menuFactory.getActionStringFromId(id);
 		if (result == null)
-			System.err.println("Invalid item: " + id + " it must be a menu item in the menu properties, even if it's only shown in a toolbar");
+			java.util.logging.Logger.getLogger(MenuManager.class.getName()).fine("Invalid item: " + id + " it must be a menu item in the menu properties, even if it's only shown in a toolbar");
 		return result;
 	}
 

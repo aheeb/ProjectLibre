@@ -72,6 +72,7 @@ public class PredefinedPaint extends TexturePaint {
 	private int height;
 	private int[] points;
 	private float alphaValue=1.0f;
+	private TexturePaint texturePaint;
 
 
 	public PredefinedPaint(int width, int height, int[] array) {
@@ -166,10 +167,20 @@ public class PredefinedPaint extends TexturePaint {
 	}
 
 
+	/**
+	 * Same texture as this paint, as a plain TexturePaint. Java2D only accelerates paints whose class is
+	 * exactly TexturePaint; a subclass takes the generic software path, which on Metal and OpenGL flushes
+	 * the render queue once per scanline and made every Gantt repaint take hundreds of milliseconds.
+	 */
+	public TexturePaint getTexturePaint() {
+		if (texturePaint==null) texturePaint=new TexturePaint(getImage(),getAnchorRect());
+		return texturePaint;
+	}
+
 	public void applyPaint(Graphics2D g2,boolean texture){
 		//if ("SVGGraphics2D".equals(g2.getClass().getSimpleName()))
 		if (texture) {
-			g2.setPaint(this); // the paint already has the color set
+			g2.setPaint(getTexturePaint()); // the paint already has the color set
 		} else {
 			g2.setColor(new Color(bar(foreground.getRed(),background.getRed(),alphaValue),bar(foreground.getGreen(),background.getGreen(),alphaValue),bar(foreground.getBlue(),background.getBlue(),alphaValue)));
 		}
