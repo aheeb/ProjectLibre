@@ -170,7 +170,25 @@ public class SpreadSheet extends CommonSpreadSheet implements Cloneable {
 	}
 	public boolean editCellAt(int row, int column, java.util.EventObject e) {
 		int target = row < 0 ? row : toNextTaskRow(row);
+		// a new task (or person) starts with its name: typing into another cell of the "+ Add a task" row
+		// would create one without a name, so the typing goes into the name instead
+		if (target >= 0 && target == getNextTaskRow() && !isReadOnly()) {
+			int name = getNameColumn();
+			if (name >= 0 && name != column) {
+				changeSelection(target, name, false, false);
+				return super.editCellAt(target, name, null);
+			}
+		}
 		return super.editCellAt(target, column, target == row ? e : null); // the click was elsewhere: edit as if from the keyboard
+	}
+
+	/** View index of the name column, or -1. */
+	private int getNameColumn() {
+		for (int c = 0; c < getColumnCount(); c++) {
+			Object id = getColumnModel().getColumn(c).getIdentifier();
+			if (id instanceof Field && ((Field) id).isNameField()) return c;
+		}
+		return -1;
 	}
 
 	protected void paintComponent(java.awt.Graphics g) {
@@ -181,11 +199,7 @@ public class SpreadSheet extends CommonSpreadSheet implements Cloneable {
 	private void paintAddTaskHint(java.awt.Graphics g) {
 		int row = getNextTaskRow();
 		if (row <= 0 || isReadOnly() || (isEditing() && getEditingRow() == row) || isEmptySheet()) return;
-		int nameColumn = -1;
-		for (int c = 0; c < getColumnCount(); c++) {
-			Object id = getColumnModel().getColumn(c).getIdentifier();
-			if (id instanceof Field && ((Field) id).isNameField()) nameColumn = c;
-		}
+		int nameColumn = getNameColumn();
 		if (nameColumn < 0) return;
 		Rectangle cell = getCellRect(row, nameColumn, true);
 		if (!g.getClipBounds().intersects(cell)) return;
