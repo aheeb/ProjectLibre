@@ -30,13 +30,6 @@ public class RibbonActions {
 		actionsMap.addHandler(ACTION_NEW_RESOURCE, new NewResourceAction(graphicManager));
 		actionsMap.addHandler(ACTION_NEW_TASK, new NewTaskAction(graphicManager));
 		actionsMap.addHandler(ACTION_TODAY, new TodayAction(graphicManager));
-		// "New task" is available exactly when the plain insert command is
-		Action insert = actionsMap.getActionFromMenuId(MenuActionConstants.ACTION_INSERT_TASK);
-		if (insert != null)
-			insert.addPropertyChangeListener(evt -> {
-				if ("enabled".equals(evt.getPropertyName()))
-					graphicManager.getMenuManager().setActionEnabled(ACTION_NEW_TASK, Boolean.TRUE.equals(evt.getNewValue()));
-			});
 	}
 
 	/**
@@ -105,6 +98,11 @@ public class RibbonActions {
 		public void actionPerformed(ActionEvent e) {
 			if (!graphicManager.isDocumentActive())
 				return;
+			// views without a task sheet (network, resources, reports) switch to the Gantt chart first
+			String top = graphicManager.getTopViewId();
+			if (!MenuActionConstants.ACTION_GANTT.equals(top) && !MenuActionConstants.ACTION_TRACKING_GANTT.equals(top)
+					&& !MenuActionConstants.ACTION_TASK_USAGE_DETAIL.equals(top))
+				perform(graphicManager, MenuActionConstants.ACTION_GANTT, e);
 			selectFirstEmptyRowIfNone(graphicManager);
 			insertAndEditName(graphicManager);
 		}
