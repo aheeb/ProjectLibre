@@ -709,7 +709,7 @@ public class GanttRenderer extends GraphRenderer implements Serializable {
 			//project start
 			long now=DateTime.gmt(new Date());
 			int projectStartX=(int)Math.round(coord.toX(project.getStart()));
-			if (projectStartX>=bounds.getX()&&projectStartX<=bounds.getMaxX()&&Math.abs(projectStartX-coord.toX(now))>3){
+			if (projectStartX>=bounds.getX()&&projectStartX<=bounds.getMaxX()&&Math.abs(projectStartX-coord.toX(now))>8){
 				g2.setColor(ModernLaf.TEXT_SECONDARY.brighter());
 				g2.setStroke(PROJECT_START_STROKE);
 				g2.drawLine(projectStartX,bounds.y,projectStartX,bounds.y+bounds.height);
