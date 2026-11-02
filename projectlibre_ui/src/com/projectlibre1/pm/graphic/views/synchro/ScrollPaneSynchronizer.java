@@ -57,11 +57,15 @@ package com.projectlibre1.pm.graphic.views.synchro;
 
 import java.awt.Dimension;
 import java.awt.Point;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 
 import javax.swing.JComponent;
+import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JViewport;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -145,7 +149,6 @@ public class ScrollPaneSynchronizer {
 						Point p2 = vp2.getViewPosition();
 						p2.setLocation((int) p2.getX(), (int) p1.getY());
 						vp2.setViewPosition(p2);
-						vp2.revalidate();
 					}
 				});
 
@@ -157,9 +160,9 @@ public class ScrollPaneSynchronizer {
 						Point p2 = vp2.getViewPosition();
 						p1.setLocation((int) p1.getX(), (int) p2.getY());
 						vp1.setViewPosition(p1);
-						vp1.revalidate();
 					}
 				});
+				redirectVerticalWheel();
 
 			} else if (orientation == VERTICAL) {
 				defaultScrollBarPolicy1 = scrollPane1
@@ -197,6 +200,35 @@ public class ScrollPaneSynchronizer {
 
 			}
 		}
+	}
+
+	/**
+	 * scrollPane1 has no vertical scroll bar (scrollPane2 shows the shared one), so the default wheel
+	 * handling would scroll it sideways. Vertical wheel/trackpad scrolling over it goes to scrollPane2
+	 * instead; horizontal (shift or sideways trackpad) still scrolls scrollPane1's columns.
+	 */
+	private void redirectVerticalWheel() {
+		scrollPane1.setWheelScrollingEnabled(false);
+		scrollPane1.addMouseWheelListener(new MouseWheelListener() {
+			private double pendingPixels;
+			public void mouseWheelMoved(MouseWheelEvent e) {
+				if (!e.isShiftDown()) {
+					scrollPane2.dispatchEvent(SwingUtilities.convertMouseEvent(scrollPane1, e, scrollPane2));
+					return;
+				}
+				JScrollBar bar = scrollPane1.getHorizontalScrollBar();
+				if (bar == null || !bar.isVisible()) return;
+				// a table's own unit increment jumps a whole column; step by a row height like vertical scrolling
+				int increment = (e.getScrollType() == MouseWheelEvent.WHEEL_BLOCK_SCROLL)
+						? bar.getVisibleAmount()
+						: scrollPane2.getVerticalScrollBar().getUnitIncrement() * e.getScrollAmount();
+				pendingPixels += e.getPreciseWheelRotation() * increment;
+				int delta = (int) pendingPixels; // keep the fraction so fine trackpad deltas add up
+				pendingPixels -= delta;
+				if (delta != 0) bar.setValue(bar.getValue() + delta);
+				e.consume();
+			}
+		});
 	}
 
 	public void deactivateSynchro() {
