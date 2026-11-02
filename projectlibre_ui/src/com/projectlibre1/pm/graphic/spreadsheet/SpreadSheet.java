@@ -98,7 +98,9 @@ import com.projectlibre1.pm.graphic.spreadsheet.common.CommonSpreadSheetAction;
 import com.projectlibre1.pm.graphic.spreadsheet.common.CommonSpreadSheetModel;
 import com.projectlibre1.pm.graphic.spreadsheet.common.transfer.NodeListTransferHandler;
 import com.projectlibre1.pm.graphic.spreadsheet.editor.SimpleComboBoxEditor;
+import com.projectlibre1.grouping.core.model.NodeModel;
 import com.projectlibre1.workflow.PeopleMenu;
+import com.projectlibre1.workflow.Toast;
 import com.projectlibre1.workflow.TaskMenu;
 import com.projectlibre1.pm.graphic.spreadsheet.renderer.NameCellComponent;
 import com.projectlibre1.pm.graphic.spreadsheet.selection.SpreadSheetListSelectionModel;
@@ -834,12 +836,18 @@ public class SpreadSheet extends CommonSpreadSheet implements Cloneable {
 			List l = getSelectedDeletableRows();
 			if (l.isEmpty())
 				return;
-			if (!GeneralOption.getInstance().isConfirmDeletes() || Alert.okCancel(Messages.getString("Message.confirmDeleteRows"))) {
+			// a deletion that can be undone needs no confirmation; say what happened and offer Undo instead
+			NodeModel model = getCache() == null ? null : getCache().getModel();
+			boolean undoable = model != null && model.getUndoController() != null;
+			if (undoable || !GeneralOption.getInstance().isConfirmDeletes() || Alert.okCancel(Messages.getString("Message.confirmDeleteRows"))) {
 				int row = getSelectedRow(), column = getSelectedColumn();
 				getCache().deleteNodes(l);
 				// keep a cell selected where the deleted rows were, so Delete can be pressed again or typing continues
 				if (row >= 0 && getSelectedRow() < 0 && getRowCount() > 0)
 					changeSelection(Math.min(row, getRowCount() - 1), Math.max(column, 0), false, false);
+				if (undoable)
+					Toast.show(SpreadSheet.this, Messages.getStringWithParam("Spreadsheet.deleted", new Object[] {Integer.valueOf(l.size())}),
+							Messages.getString("GanttHint.undo"), e -> GraphicManager.getInstance(SpreadSheet.this).doUndoRedo(true));
 			}
 		}
 	};
