@@ -223,7 +223,7 @@ public class TaskMenu {
 	}
 
 	/**
-	 * One task: it starts after the task in the row above (skipping the group it is in).
+	 * One task: it starts after the task above it (skipping the group it is in; a phase after the phase above).
 	 * Several tasks: each starts after the one above it.
 	 */
 	public void linkToPrevious() {
@@ -248,7 +248,7 @@ public class TaskMenu {
 		}
 	}
 
-	/** The nearest task above {@code task} in the grid that is not one of its parents. */
+	/** The nearest task above {@code task} in the grid that is not one of its parents nor nested deeper than it. */
 	private Task previousTask(Task task) {
 		SpreadSheetModel model = (SpreadSheetModel) sheet.getModel();
 		int row = -1;
@@ -263,6 +263,8 @@ public class TaskMenu {
 			if (!(impl instanceof Task)) continue;
 			Task candidate = (Task) impl;
 			if (isAncestor(candidate, task)) continue;
+			// a phase starts after the phase above, not after the last task inside it
+			if (candidate.getOutlineLevel() > task.getOutlineLevel()) continue;
 			return candidate;
 		}
 		return null;
