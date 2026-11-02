@@ -57,6 +57,7 @@ package com.projectlibre1.pm.graphic.spreadsheet;
 
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Toolkit;
 import java.awt.KeyboardFocusManager;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -139,6 +140,13 @@ public class SpreadSheet extends CommonSpreadSheet implements Cloneable {
 
 	protected void finalize() {
 		System.out.println("SpreadSheet.finalize()" + this);
+	}
+
+	/** Wide enough to show every column at first, but never more than half of the screen. */
+	public Dimension getPreferredScrollableViewportSize() {
+		Dimension d = super.getPreferredScrollableViewportSize();
+		int max = Toolkit.getDefaultToolkit().getScreenSize().width / 2;
+		return new Dimension(Math.max(d.width, Math.min(getColumnModel().getTotalColumnWidth(), max)), d.height);
 	}
 	public void cleanUp() {
 		if (getModel() instanceof CommonSpreadSheetModel)

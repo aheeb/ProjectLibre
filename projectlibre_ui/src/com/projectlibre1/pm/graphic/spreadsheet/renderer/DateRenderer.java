@@ -56,13 +56,19 @@
 package com.projectlibre1.pm.graphic.spreadsheet.renderer;
 
 import java.awt.Component;
+import java.text.DateFormat;
 import java.util.Date;
 
 import javax.swing.JTable;
 
-import com.projectlibre1.options.EditOption;
+import org.apache.commons.lang.time.DateUtils;
+
 
 public class DateRenderer extends SimpleRenderer {
+	private static final DateFormat DAY_FORMAT = DateFormat.getDateInstance(DateFormat.MEDIUM);
+	static {
+		DAY_FORMAT.setTimeZone(DateUtils.UTC_TIME_ZONE);
+	}
 	public DateRenderer() {
 		super(); // format will be usedtor stub
 	}
@@ -70,7 +76,7 @@ public class DateRenderer extends SimpleRenderer {
     public Component getTableCellRendererComponent(JTable table, Object value,
             boolean isSelected, boolean isEnabled, int row, int col) {
         if ((value != null) && (value instanceof Date)) 
-        	value = EditOption.getInstance().getDateFormat().format((Date) value); 
+        	value = DAY_FORMAT.format((Date) value); // the day is what matters in a plan; the time shows when editing
         Component retorno = super.getTableCellRendererComponent(table, value, isSelected, isEnabled, row, col);
         return retorno;
     }

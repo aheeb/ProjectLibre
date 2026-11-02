@@ -55,7 +55,9 @@
  *******************************************************************************/
 package com.projectlibre1.pm.graphic.spreadsheet;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 
 import com.projectlibre1.pm.graphic.model.cache.NodeModelCache;
 import com.projectlibre1.pm.graphic.spreadsheet.common.CommonSpreadSheetModel;
@@ -70,7 +72,11 @@ import com.projectlibre1.grouping.core.model.NodeModel;
 import com.projectlibre1.pm.dependency.Dependency;
 import com.projectlibre1.pm.dependency.DependencyService;
 import com.projectlibre1.pm.dependency.DependencyType;
+import com.projectlibre1.pm.task.Project;
+import com.projectlibre1.strings.Messages;
 import com.projectlibre1.util.ClassUtils;
+import com.projectlibre1.workflow.People;
+import com.projectlibre1.workflow.Toast;
 import com.projectlibre1.util.Environment;
 
 /**
@@ -105,7 +111,10 @@ public class SpreadSheetModel extends CommonSpreadSheetModel {
 	public String getColumnName(int col) {
 		if (col == 0)
 			return "";
-		return getFieldInColumn(col).getName();
+		Field field = getFieldInColumn(col);
+		String key = "Column." + field.getId(); // plain grid headers, e.g. "Depends on" for Predecessors
+		String header = Messages.getStringOrSelf(key);
+		return key.equals(header) ? field.getName() : header;
 
 	}
 
@@ -129,6 +138,14 @@ public class SpreadSheetModel extends CommonSpreadSheetModel {
 
 		Node rowNode = getNodeInRow(row);
 		//Field field = getFieldInColumn(col);
+		List<String> newPeople = null;
+		if (value instanceof String && "Field.resourceNames".equals(field.getId()) && !(rowNode.getImpl() instanceof Dependency)) {
+			Project project = getCache().getModel().getDataFactory() instanceof Project ? (Project) getCache().getModel().getDataFactory() : null;
+			if (project != null) {
+				newPeople = new ArrayList<String>();
+				value = People.resolve(project.getResourcePool(), (String) value, newPeople);
+			}
+		}
 
 		try {
 			if (rowNode.isVoid()) {
@@ -172,6 +189,8 @@ public class SpreadSheetModel extends CommonSpreadSheetModel {
 			} else {
 				getCache().getModel().setFieldValue(field, rowNode, this, value, fieldContext, NodeModel.NORMAL);
 			}
+			if (newPeople != null && !newPeople.isEmpty())
+				Toast.show(null, Messages.getStringWithParam("Assignee.added", String.join(", ", newPeople)));
 		} catch (FieldParseException e) {
 			throw new RuntimeException(e); // exceptions will be treated by the spreadsheet, not the model, because there is a popup.  Because this method doesn't have an exception, a runtime exception will be caught by the spreadsheet
 		}
