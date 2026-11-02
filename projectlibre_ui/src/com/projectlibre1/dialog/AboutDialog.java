@@ -55,80 +55,110 @@
  *******************************************************************************/
 package com.projectlibre1.dialog;
 
+import java.awt.Component;
 import java.awt.Cursor;
+import java.awt.FlowLayout;
 import java.awt.Frame;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.Locale;
-import java.util.ResourceBundle;
+import java.text.MessageFormat;
 
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 
-import com.jgoodies.forms.builder.DefaultFormBuilder;
-import com.jgoodies.forms.layout.CellConstraints;
-import com.jgoodies.forms.layout.FormLayout;
-import com.projectlibre1.main.Main;
+import com.formdev.flatlaf.FlatClientProperties;
 import com.projectlibre1.pm.graphic.IconManager;
+import com.projectlibre1.pm.graphic.laf.ModernLaf;
 import com.projectlibre1.strings.Messages;
 import com.projectlibre1.util.BrowserControl;
-import com.projectlibre1.util.ClassLoaderUtils;
-import com.projectlibre1.util.Environment;
 import com.projectlibre1.util.VersionUtils;
 
 public final class AboutDialog extends AbstractDialog {
 	private static final long serialVersionUID = 1L;
+	private static final String WEBSITE = "http://www.projectlibre.com"; //$NON-NLS-1$
+
 	public static AboutDialog getInstance(Frame owner) {
 		return new AboutDialog(owner);
 	}
 
 	private AboutDialog(Frame owner) {
 		super(owner, Messages.getString("AboutDialog.About") + " " + Messages.getContextString("Text.ApplicationTitle"), true); //$NON-NLS-1$ //$NON-NLS-2$
+		setResizable(false);
 	}
-
-
-	// Building *************************************************************
-
-	/**
-	 * Builds the panel. Initializes and configures components first, then
-	 * creates a FormLayout, configures the layout, creates a builder, sets a
-	 * border, and finally adds the components.
-	 * 
-	 * @return the built panel
-	 */
 
 	public JComponent createContentPanel() {
-		// Separating the component initialization and configuration
-		// from the layout code makes both parts easier to read.
-		//TODO set minimum size
-		FormLayout layout = new FormLayout("default", // cols //$NON-NLS-1$
-				"p, 3dlu,p, 3dlu, p, 3dlu, p, 10dlu,p"); // rows //$NON-NLS-1$
+		JPanel panel = new JPanel();
+		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+		panel.setBorder(BorderFactory.createEmptyBorder(28, 40, 12, 40));
 
-		// Create a builder that assists in adding components to the container.
-		// Wrap the panel with a standardized border.
-		DefaultFormBuilder builder = new DefaultFormBuilder(layout);
-		builder.setDefaultDialogBorder();
-		CellConstraints cc = new CellConstraints();
 		JLabel logo = new JLabel(IconManager.getIcon("logo.ProjectLibre"));
 		logo.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+		logo.setToolTipText(WEBSITE);
 		logo.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent arg0) {
-				BrowserControl.displayURL("http://www.projectlibre.com");//$NON-NLS-1$
+				BrowserControl.displayURL(WEBSITE);
 			}});
-		builder.append(logo); 
-		builder.nextLine(2);
-		builder.append(Messages.getContextString("Text.ShortTitle")); //$NON-NLS-1$
-		builder.nextLine(2);
-		String version=VersionUtils.getVersion();
-		builder.append("Version "+(version==null?"Unknown":version)); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$		
-		builder.nextLine(2);
-		builder.append(Messages.getString("AboutDialog.copyright")); //$NON-NLS-1$
-//		if (Environment.isProjectLibre()) {
-//			builder.nextLine(2);
-//			builder.append(Main.getRunSinceMessage()); //$NON-NLS-1$
-//		}
-		return builder.getPanel();
+		append(panel, logo, 0);
+
+		JLabel tagline = new JLabel(Messages.getString("AboutDialog.tagline")); //$NON-NLS-1$
+		tagline.putClientProperty(FlatClientProperties.STYLE_CLASS, "h4"); //$NON-NLS-1$
+		append(panel, tagline, 16);
+
+		String version = VersionUtils.getVersion();
+		JLabel versionLabel = new JLabel(MessageFormat.format(Messages.getString("AboutDialog.version"), version == null ? "?" : version)); //$NON-NLS-1$ //$NON-NLS-2$
+		append(panel, versionLabel, 6);
+
+		JLabel runtime = new JLabel(MessageFormat.format(Messages.getString("AboutDialog.runtime"), //$NON-NLS-1$
+				System.getProperty("java.version"), System.getProperty("os.name"), System.getProperty("os.version"), System.getProperty("os.arch"))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+		runtime.putClientProperty(FlatClientProperties.STYLE_CLASS, "small"); //$NON-NLS-1$
+		runtime.setForeground(ModernLaf.TEXT_SECONDARY);
+		append(panel, runtime, 4);
+
+		JLabel license = new JLabel(Messages.getString("AboutDialog.licenseSummary")); //$NON-NLS-1$
+		append(panel, license, 18);
+
+		JPanel links = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 0));
+		JButton website = new JButton(Messages.getString("AboutDialog.website")); //$NON-NLS-1$
+		website.setToolTipText(WEBSITE);
+		website.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				BrowserControl.displayURL(WEBSITE);
+			}});
+		JButton viewLicense = new JButton(Messages.getString("AboutDialog.license")); //$NON-NLS-1$
+		viewLicense.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				LicenseDialog.showDialog(owner, true);
+			}});
+		links.add(website);
+		links.add(viewLicense);
+		append(panel, links, 12);
+
+		JLabel copyright = new JLabel(Messages.getString("AboutDialog.copyright")); //$NON-NLS-1$
+		copyright.putClientProperty(FlatClientProperties.STYLE_CLASS, "small"); //$NON-NLS-1$
+		copyright.setForeground(ModernLaf.TEXT_SECONDARY);
+		append(panel, copyright, 20);
+		return panel;
 	}
+
+	private static void append(JPanel panel, JComponent component, int gapAbove) {
+		if (gapAbove > 0) panel.add(Box.createVerticalStrut(gapAbove));
+		component.setAlignmentX(Component.CENTER_ALIGNMENT);
+		panel.add(component);
+	}
+
+	public ButtonPanel createButtonPanel() {
+		ButtonPanel panel = super.createButtonPanel();
+		getRootPane().setDefaultButton(ok);
+		return panel;
+	}
+
 	protected boolean hasCloseButton() {
 		return true;
 	}
