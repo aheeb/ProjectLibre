@@ -1,10 +1,12 @@
 package com.projectlibre.ui.ribbon;
 
+import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.util.Date;
 
 import javax.swing.Action;
 
+import com.projectlibre1.configuration.Configuration;
 import com.projectlibre1.menu.MenuActionConstants;
 import com.projectlibre1.menu.MenuActionsMap;
 import com.projectlibre1.pm.graphic.frames.DocumentFrame;
@@ -57,6 +59,34 @@ public class RibbonActions {
 		sheet.changeSelection(row, 1, false, false);
 	}
 
+	/**
+	 * Inserts a blank row above the selected row (unless the selected row is blank already, like the rows after
+	 * the last task) and starts editing its name, so the new task or resource can be typed right away.
+	 * The menu's InsertTask action does nothing by itself; the sheet's own insert action does the work.
+	 */
+	static void insertAndEditName(GraphicManager graphicManager) {
+		DocumentFrame frame = graphicManager.getCurrentFrame();
+		CommonSpreadSheet sheet = frame == null ? null : frame.getTopSpreadSheet();
+		if (sheet == null)
+			return;
+		int row = sheet.getCurrentRow();
+		if (row < 0)
+			return;
+		GraphicNode node = ((SpreadSheetModel) sheet.getModel()).getNode(row);
+		if (node != null && node.getNode() != null && !node.getNode().isVoid())
+			frame.addNodeForImpl(null);
+		row = sheet.getCurrentRow();
+		int column = sheet.getFieldArray().indexOf(Configuration.getFieldFromId("Field.name")) - 1;
+		if (row < 0 || column < 0)
+			return;
+		sheet.changeSelection(row, column, false, false);
+		if (sheet.editCellAt(row, column)) {
+			Component editor = sheet.getEditorComponent();
+			if (editor != null)
+				editor.requestFocusInWindow();
+		}
+	}
+
 	static void perform(GraphicManager graphicManager, String id, ActionEvent e) {
 		Action action = graphicManager.getMenuManager().getActionFromId(id);
 		if (action != null)
@@ -76,7 +106,7 @@ public class RibbonActions {
 			if (!graphicManager.isDocumentActive())
 				return;
 			selectFirstEmptyRowIfNone(graphicManager);
-			perform(graphicManager, MenuActionConstants.ACTION_INSERT_TASK, e);
+			insertAndEditName(graphicManager);
 		}
 
 		protected boolean allowed(boolean enable) {
@@ -106,7 +136,7 @@ public class RibbonActions {
 					&& !MenuActionConstants.ACTION_RESOURCE_USAGE_DETAIL.equals(top))
 				perform(graphicManager, MenuActionConstants.ACTION_RESOURCES, e);
 			selectFirstEmptyRowIfNone(graphicManager);
-			perform(graphicManager, MenuActionConstants.ACTION_INSERT_TASK, e);
+			insertAndEditName(graphicManager);
 		}
 
 		protected boolean allowed(boolean enable) {
