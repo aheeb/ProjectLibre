@@ -59,15 +59,19 @@ import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Container;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.RenderingHints;
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.lang.reflect.Method;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.Calendar;
@@ -77,12 +81,17 @@ import java.util.Locale;
 import javax.swing.BorderFactory;
 import javax.swing.Icon;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.RootPaneContainer;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.text.DateFormatter;
 
+import com.formdev.flatlaf.ui.FlatArrowButton;
 import com.projectlibre1.pm.graphic.laf.ModernLaf;
 import com.projectlibre1.strings.Messages;
 
@@ -92,9 +101,12 @@ import net.sf.nachocalendar.components.DayPanel;
 import net.sf.nachocalendar.components.DayRenderer;
 import net.sf.nachocalendar.components.HeaderPanel;
 import net.sf.nachocalendar.components.HeaderRenderer;
+import net.sf.nachocalendar.components.MonthScroller;
+import net.sf.nachocalendar.components.YearScroller;
 
 public class ExtDateField extends DateField {
 	private JButton pickButton;
+	private boolean popupStyled = false;
 
 	public ExtDateField(boolean showWeekNumbers) {
 		super(showWeekNumbers);
@@ -172,6 +184,92 @@ public class ExtDateField extends DateField {
 		if (pickButton != null)
 			d.height = Math.max(d.height, new JTextField().getPreferredSize().height);
 		return d;
+	}
+
+	public void actionPerformed(ActionEvent e) {
+		if (!popupStyled) {
+			popupStyled = true;
+			stylePopup();
+		}
+		super.actionPerformed(e);
+	}
+
+	/**
+	 * Creates nachocalendar's popup early and restyles it before it is first shown: white
+	 * surface with a hairline frame, roomier day cells, FlatLaf arrow buttons.
+	 */
+	private void stylePopup() {
+		try {
+			Method create = DateField.class.getDeclaredMethod("createWindow"); //$NON-NLS-1$
+			create.setAccessible(true);
+			create.invoke(this);
+			java.lang.reflect.Field f = DateField.class.getDeclaredField("windowpanel"); //$NON-NLS-1$
+			f.setAccessible(true);
+			Window popup = (Window) f.get(this);
+			if (!(popup instanceof RootPaneContainer))
+				return;
+			Container content = ((RootPaneContainer) popup).getContentPane();
+			Color surface = UIManager.getColor("TextField.background"); //$NON-NLS-1$
+			stylePopupComponent(content, surface);
+			if (content.getComponentCount() > 0 && content.getComponent(0) instanceof JComponent)
+				((JComponent) content.getComponent(0)).setBorder(BorderFactory.createCompoundBorder(
+						BorderFactory.createLineBorder(ModernLaf.HAIRLINE.darker()), BorderFactory.createEmptyBorder(6, 6, 6, 6)));
+			popup.pack();
+		} catch (Exception ex) {
+			// keep nachocalendar's own look
+		}
+	}
+
+	private static void stylePopupComponent(Component c, Color surface) {
+		if (c instanceof DayPanel || c instanceof HeaderPanel) {
+			c.setPreferredSize(new Dimension(30, c instanceof DayPanel ? 24 : 20));
+			return;
+		}
+		if (c instanceof MonthScroller || c instanceof YearScroller)
+			((JComponent) c).setBorder(BorderFactory.createEmptyBorder(0, 0, 4, 0));
+		if (c instanceof JPanel)
+			c.setBackground(surface);
+		if (c instanceof Container && !(c instanceof JComboBox)) {
+			Container parent = (Container) c;
+			Component[] children = parent.getComponents();
+			for (int i = 0; i < children.length; i++) {
+				if (children[i] instanceof ArrowButton)
+					replaceArrow(parent, (ArrowButton) children[i]);
+				else
+					stylePopupComponent(children[i], surface);
+			}
+		}
+		if (c instanceof MonthScroller || c instanceof YearScroller)
+			c.setBackground(surface);
+	}
+
+	/** Swaps a painted nachocalendar arrow for a FlatLaf-styled one that forwards its clicks. */
+	private static void replaceArrow(Container parent, final ArrowButton arrow) {
+		int direction = arrow.getDirection();
+		JButton b = new FlatArrowButton(direction, "chevron", //$NON-NLS-1$
+				ModernLaf.TEXT_SECONDARY, UIManager.getColor("Label.disabledForeground"), //$NON-NLS-1$
+				null, UIManager.getColor("Button.toolbar.hoverBackground"), //$NON-NLS-1$
+				null, UIManager.getColor("Button.toolbar.pressedBackground")); //$NON-NLS-1$
+		b.setFocusable(false);
+		b.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				arrow.doClick(0);
+			}});
+		Object constraints = null;
+		if (parent.getLayout() instanceof GridBagLayout)
+			constraints = ((GridBagLayout) parent.getLayout()).getConstraints(arrow);
+		int index = indexOf(parent, arrow);
+		parent.remove(arrow);
+		b.setPreferredSize(new Dimension(22, arrow.getPreferredSize().height));
+		parent.add(b, constraints, index);
+	}
+
+	private static int indexOf(Container parent, Component c) {
+		Component[] children = parent.getComponents();
+		for (int i = 0; i < children.length; i++)
+			if (children[i] == c)
+				return i;
+		return -1;
 	}
 
 	public void setEnabled(boolean enabled) {
