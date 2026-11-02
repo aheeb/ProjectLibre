@@ -70,7 +70,7 @@ public class ScheduleOption {
 	}
 	
 	int schedulingRule = SchedulingType.FIXED_UNITS;
-	boolean effortDriven = true;
+	boolean effortDriven = false; // adding a person keeps the length a newcomer typed; still settable per task
 	int durationEnteredIn = TimeUnit.DAYS;
 	int workUnit = TimeUnit.HOURS;
 	int rateEnteredIn = TimeUnit.HOURS;

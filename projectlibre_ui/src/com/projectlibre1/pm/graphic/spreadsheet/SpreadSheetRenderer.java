@@ -134,7 +134,7 @@ public class SpreadSheetRenderer extends Renderer{
 
 			OfflineRenderer renderer=(OfflineRenderer)c.getHeaderRenderer();
 			if (renderer!=null){ //rowHeader is null
-				JComponent component=(JComponent)renderer.getComponent(((Field)params.getFieldArray().get(col)).getName(), null, (Field)params.getFieldArray().get(col), params);
+				JComponent component=(JComponent)renderer.getComponent(SpreadSheetModel.columnTitle((Field)params.getFieldArray().get(col)), null, (Field)params.getFieldArray().get(col), params);
 		    	boolean opaque=component.isOpaque();
 		    	//component.setDoubleBuffered(false);
 		    	component.setOpaque(false);

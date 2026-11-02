@@ -139,6 +139,7 @@ public class GanttView extends SplittedView implements BaseView, ScheduleEventLi
 		setNeedVoidBar(true);
 		//setScaled(true);
 	}
+	private boolean dividerRestored = false;
 	public void init(ReferenceNodeModelCache cache, NodeModel model,CoordinatesConverter coord){
 		this.coord=coord;
 		this.cache=NodeModelCacheFactory.getInstance().createFilteredCache((ReferenceNodeModelCache)cache,getViewName(),null);
@@ -191,6 +192,18 @@ public class GanttView extends SplittedView implements BaseView, ScheduleEventLi
 
 
 		cache.update();
+
+		// The view is built before the window has its real size; once it has, give the task grid the
+		// room its columns need (up to 60%) so Depends on, Assigned to and % Done are visible from the start.
+		addComponentListener(new java.awt.event.ComponentAdapter() {
+			public void componentResized(java.awt.event.ComponentEvent e) {
+				if (getWidth() < 600) return;
+				removeComponentListener(this);
+				if (dividerRestored || leftScrollPane == null) return;
+				int wanted = Math.min(leftScrollPane.getPreferredSize().width + 2, getWidth() * 3 / 5);
+				if (wanted > getDividerLocation()) setDividerLocation(wanted);
+			}
+		});
 
 		//Call this last to be sure everything is initialized
 		//gantt.insertCacheData(); //useless?
@@ -375,6 +388,7 @@ public class GanttView extends SplittedView implements BaseView, ScheduleEventLi
 		spreadSheet.restoreWorkspace(ws.spreadSheet, context);
 		ganttScrollPane.restoreWorkspace(ws.scrollPane, context);
 		setDividerLocation(ws.dividerLocation);
+		dividerRestored = true;
 	}
 	public WorkspaceSetting createWorkspace(int context) {
 		Workspace ws = new Workspace();

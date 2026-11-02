@@ -65,6 +65,7 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.table.DefaultTableColumnModel;
 import javax.swing.table.TableColumn;
 
+import com.projectlibre1.pm.graphic.spreadsheet.editor.AssigneeEditor;
 import com.projectlibre1.pm.graphic.spreadsheet.editor.MoneyEditor;
 import com.projectlibre1.pm.graphic.spreadsheet.editor.RateEditor;
 import com.projectlibre1.pm.graphic.spreadsheet.editor.SimpleComboBoxEditor;
@@ -89,6 +90,14 @@ import com.projectlibre1.graphic.configuration.SpreadSheetFieldArray;
  *
  */
 public class SpreadSheetColumnModel extends DefaultTableColumnModel {
+	/** Default widths of the everyday task columns, so the default set fits next to the Gantt. */
+	private static final Map<String,Integer> COMPACT_WIDTHS = new HashMap<String,Integer>();
+	static {
+		COMPACT_WIDTHS.put("Field.duration", 76);
+		COMPACT_WIDTHS.put("Field.predecessors", 86);
+		COMPACT_WIDTHS.put("Field.resourceNames", 130);
+		COMPACT_WIDTHS.put("Field.percentComplete", 70);
+	}
 	int columnIndex = 0;
 
 	int colWidth = 0;
@@ -145,7 +154,7 @@ public class SpreadSheetColumnModel extends DefaultTableColumnModel {
 //			System.out.println("setting column " + columnIndex + " to field " + field + " ok = " + (field == getFieldInColumn(columnIndex)));
 
 			if (field.isNameField()) {
-				tc.setPreferredWidth((svg)?170:150);
+				tc.setPreferredWidth((svg)?170:190);
 				tc.setCellRenderer(new SpreadSheetNameCellRenderer());
 //				tc.setCellEditor(new SpreadSheetNameCellEditor(new SimpleEditor(String.class)));
 				tc.setCellEditor(new SpreadSheetCellEditorAdapter(new SimpleEditor(String.class)));
@@ -178,6 +187,7 @@ public class SpreadSheetColumnModel extends DefaultTableColumnModel {
 				} else if (field.isPercent()) {
 					tc.setCellRenderer(new SpreadSheetCellRendererAdapter(new PercentRenderer()));
 				} else if (field.isDate()) {
+					tc.setPreferredWidth(104);
 					tc.setCellRenderer(new SpreadSheetCellRendererAdapter(new DateRenderer()));
 				} else if (field.isBoolean()){
 					tc.setCellRenderer(new SpreadSheetCellRendererAdapter(new OfflineCapableBooleanRenderer()));
@@ -185,7 +195,11 @@ public class SpreadSheetColumnModel extends DefaultTableColumnModel {
 					//SimpleRenderer in other cases, LC 8/2006
 					tc.setCellRenderer(new SpreadSheetCellRendererAdapter(new SimpleRenderer()));
 					tc.setPreferredWidth(field.getColumnWidth(svg));
+					if (field == Configuration.getFieldFromId("Field.resourceNames"))
+						tc.setCellEditor(new SpreadSheetCellEditorAdapter(new AssigneeEditor()));
 				}
+				Integer compact = COMPACT_WIDTHS.get(field.getId());
+				if (compact != null) tc.setPreferredWidth(compact);
 			}
 			Integer size=colWidthMap.get(field.getId());
 			if (size==null||size<=0) colWidthMap.put(field.getId(),tc.getPreferredWidth());

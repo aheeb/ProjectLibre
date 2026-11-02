@@ -491,6 +491,7 @@
 			<column>Field.finish</column>
 			<column>Field.predecessors</column>
 			<column>Field.resourceNames</column>
+			<column>Field.percentComplete</column>
 		</columns>
 	</spreadsheet>
 
