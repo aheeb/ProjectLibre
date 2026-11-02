@@ -65,10 +65,13 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
+import javax.swing.JList;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
@@ -81,6 +84,7 @@ import com.projectlibre1.configuration.Configuration;
 import com.projectlibre1.field.Field;
 import com.projectlibre1.pm.graphic.frames.DocumentFrame;
 import com.projectlibre1.pm.graphic.frames.GraphicManager;
+import com.projectlibre1.pm.graphic.laf.ModernLaf;
 import com.projectlibre1.pm.task.Project;
 import com.projectlibre1.strings.Messages;
 import com.projectlibre1.util.Alert;
@@ -97,6 +101,12 @@ public final class ColumnDialog extends AbstractDialog {
 	private static final String[] KIND_KEYS = {"ColumnDialog.KindText", "ColumnDialog.KindNumber", "ColumnDialog.KindDate", "ColumnDialog.KindFlag", "ColumnDialog.KindCost"};
 
 	JComboBox combo = null;
+	/** Offered first in the list of existing fields, when the sheet has them and doesn't show them yet. */
+	private static final String[] COMMON_FIELDS = {"Field.duration", "Field.work", "Field.start", "Field.finish",
+			"Field.percentComplete", "Field.predecessors", "Field.successors", "Field.resourceNames", "Field.cost",
+			"Field.notes", "Field.wbs", "Field.baselineStart", "Field.baselineFinish", "Field.totalSlack",
+			"Field.maxUnits", "Field.standardRate", "Field.group", "Field.emailAddress"};
+
 	JRadioButton existing;
 	JRadioButton own;
 	JTextField ownName;
@@ -156,10 +166,31 @@ public final class ColumnDialog extends AbstractDialog {
 
 	protected boolean bind(boolean get) {
 		if (get) {
-			ArrayList l = new ArrayList();
-			l.addAll(fieldList);
-			Collections.sort(l);
+			// the fields people add most come first, then all of them by name
+			ArrayList rest = new ArrayList();
+			rest.addAll(fieldList);
+			Collections.sort(rest);
+			final ArrayList l = new ArrayList();
+			for (String id : COMMON_FIELDS) {
+				Field f = Configuration.getFieldFromId(id);
+				if (f != null && rest.contains(f) && !currentFields.contains(f)) {
+					l.add(f);
+					rest.remove(f);
+				}
+			}
+			final int common = l.size();
+			l.addAll(rest);
 			combo = new JComboBox(new DefaultComboBoxModel(l.toArray()));
+			combo.setMaximumRowCount(16);
+			combo.setRenderer(new DefaultListCellRenderer() {
+				private static final long serialVersionUID = 1L;
+				public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+					JComponent c = (JComponent) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+					if (index == common - 1)
+						c.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, ModernLaf.HAIRLINE), c.getBorder()));
+					return c;
+				}
+			});
 		} else if (own.isSelected()) {
 			String name = ownName.getText().trim();
 			if (name.length() == 0) {
