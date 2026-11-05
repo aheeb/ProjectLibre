@@ -854,20 +854,22 @@
 			</fileset>
 		</copy>
 
+		<!-- opened by the class-data-sharing training run in make.ps1 -->
+		<copy tofile="${packages}/jpackage-msi/source/sample.pod" file="${resources}/samples/New Product.pod" />
+
 		<copy todir="${packages}/jpackage-msi" >
 			<fileset dir="resources/win/">
 				<include name="*.properties"/>
 			</fileset>
 		</copy>
 
-
-
+		<!-- Then, on Windows, in packages/jpackage-msi: .\make.ps1 (see the script for the requirements).
+		     .github/workflows/windows.yml builds x64 and arm64 this way. -->
 		<copy todir="${packages}/jpackage-msi/" file="resources/win/make.ps1" >
 			<filterset>
 				<filter token="version" value="${numericVersion3}"/>
 			</filterset>
 		</copy>
-
 
 	</target>
 
